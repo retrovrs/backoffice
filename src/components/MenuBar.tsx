@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useSession } from '@/lib/auth-client'
 import {
   Menubar,
@@ -16,6 +17,7 @@ import {
 export function MenuBar() {
   const { data: session, status } = useSession()
   const isAuthenticated = status === 'authenticated'
+  const router = useRouter()
 
   // Ne pas rendre le menu si l'utilisateur n'est pas connecté
   if (!isAuthenticated) {
@@ -36,15 +38,15 @@ export function MenuBar() {
         <MenubarTrigger className="font-bold">RetroVRS</MenubarTrigger>
         <MenubarContent>
           <MenubarItem>About</MenubarItem>
-          <MenubarItem onClick={() => window.location.href = '/'}>Dashboard</MenubarItem>
+          <MenubarItem onClick={() => router.push('/')}>Dashboard</MenubarItem>
           <MenubarSeparator />
-          <MenubarItem>Mon Profil</MenubarItem>
+          <MenubarItem>My Profil</MenubarItem>
         </MenubarContent>
       </MenubarMenu>
       <MenubarMenu>
-        <MenubarTrigger>SEO Articles</MenubarTrigger>
+        <MenubarTrigger>SEO Posts</MenubarTrigger>
         <MenubarContent>
-          <MenubarItem>Blog Posts</MenubarItem>
+          <MenubarItem onClick={() => router.push('/blog-posts')}>Blog Posts</MenubarItem>
           <MenubarSeparator />
           <MenubarItem>Eductional Posts</MenubarItem>
         </MenubarContent>
