@@ -9,6 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { BlogPostSEOHelper } from '@/components/blog/BlogPostSEOHelper'
 import { BlogPostSEOAssistant } from '@/components/blog/BlogPostSEOAssistant'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
@@ -111,168 +117,178 @@ export default function NewBlogPostPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-lg border border-gray-200">
-        {/* Méta-données de l'article */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold border-b pb-2">Méta-données de l'article</h2>
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Titre de l'article</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Entrez le titre de l'article"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <Label htmlFor="slug">Slug (URL)</Label>
+        <Accordion type="multiple" defaultValue={['meta', 'header', 'intro', 'content']} className="space-y-4">
+          {/* Méta-données de l'article */}
+          <AccordionItem value="meta" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">Méta-données de l'article</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid gap-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Titre de l'article</Label>
                   <Input
-                    id="slug"
-                    name="slug"
-                    value={formData.slug}
+                    id="title"
+                    name="title"
+                    value={formData.title}
                     onChange={handleChange}
-                    placeholder="titre-de-larticle"
+                    placeholder="Entrez le titre de l'article"
                     required
                   />
                 </div>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setShouldAutoUpdateSlug(true)
-                    setFormData(prev => ({
-                      ...prev,
-                      slug: generateSlug(prev.title)
-                    }))
-                  }}
-                  className="mb-0.5"
-                  variant="outline"
-                  disabled={!formData.title}
-                >
-                  Générer depuis le titre
-                </Button>
+
+                <div className="space-y-2">
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <Label htmlFor="slug">Slug (URL)</Label>
+                      <Input
+                        id="slug"
+                        name="slug"
+                        value={formData.slug}
+                        onChange={handleChange}
+                        placeholder="titre-de-larticle"
+                        required
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setShouldAutoUpdateSlug(true)
+                        setFormData(prev => ({
+                          ...prev,
+                          slug: generateSlug(prev.title)
+                        }))
+                      }}
+                      className="mb-0.5"
+                      variant="outline"
+                      disabled={!formData.title}
+                    >
+                      Générer depuis le titre
+                    </Button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {shouldAutoUpdateSlug ? 
+                      'Le slug se mettra à jour automatiquement en fonction du titre. Modifiez-le manuellement pour désactiver cette mise à jour.' : 
+                      'Mise à jour automatique désactivée. Cliquez sur "Générer depuis le titre" pour réactiver.'}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="excerpt">Extrait (meta description)</Label>
+                  <Textarea
+                    id="excerpt"
+                    name="excerpt"
+                    value={formData.excerpt}
+                    onChange={handleChange}
+                    placeholder="Résumé court de l'article (150-160 caractères recommandés)"
+                    className="min-h-[80px]"
+                    required
+                  />
+                  <div className="text-xs text-gray-500 text-right">
+                    {formData.excerpt.length} / 160 caractères
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {shouldAutoUpdateSlug ? 
-                  'Le slug se mettra à jour automatiquement en fonction du titre. Modifiez-le manuellement pour désactiver cette mise à jour.' : 
-                  'Mise à jour automatique désactivée. Cliquez sur "Générer depuis le titre" pour réactiver.'}
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* En-tête de l'article */}
+          <AccordionItem value="header" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">En-tête de l'article</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid gap-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="author">Auteur</Label>
+                  <Input
+                    id="author"
+                    name="author"
+                    value={formData.author}
+                    onChange={handleChange}
+                    placeholder="Nom de l'auteur"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="publishDate">Date de publication</Label>
+                  <Input
+                    id="publishDate"
+                    name="publishDate"
+                    type="date"
+                    value={formData.publishDate}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            <div className="space-y-2">
-              <Label htmlFor="excerpt">Extrait (meta description)</Label>
-              <Textarea
-                id="excerpt"
-                name="excerpt"
-                value={formData.excerpt}
-                onChange={handleChange}
-                placeholder="Résumé court de l'article (150-160 caractères recommandés)"
-                className="min-h-[80px]"
-                required
-              />
-              <div className="text-xs text-gray-500 text-right">
-                {formData.excerpt.length} / 160 caractères
+          {/* Introduction et image principale */}
+          <AccordionItem value="intro" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">Introduction et image principale</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid gap-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="introText">Texte d'introduction</Label>
+                  <Textarea
+                    id="introText"
+                    name="introText"
+                    value={formData.introText}
+                    onChange={handleChange}
+                    placeholder="Paragraphe d'introduction qui capte l'attention et résume l'article"
+                    className="min-h-[100px]"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mainImageUrl">URL de l'image principale</Label>
+                    <Input
+                      id="mainImageUrl"
+                      name="mainImageUrl"
+                      value={formData.mainImageUrl}
+                      onChange={handleChange}
+                      placeholder="https://example.com/images/mon-image.jpg"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="mainImageAlt">Texte alternatif de l'image</Label>
+                    <Input
+                      id="mainImageAlt"
+                      name="mainImageAlt"
+                      value={formData.mainImageAlt}
+                      onChange={handleChange}
+                      placeholder="Description détaillée de l'image pour l'accessibilité et le SEO"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* En-tête de l'article */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold border-b pb-2">En-tête de l'article</h2>
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="author">Auteur</Label>
-              <Input
-                id="author"
-                name="author"
-                value={formData.author}
-                onChange={handleChange}
-                placeholder="Nom de l'auteur"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="publishDate">Date de publication</Label>
-              <Input
-                id="publishDate"
-                name="publishDate"
-                type="date"
-                value={formData.publishDate}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Introduction et image principale */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold border-b pb-2">Introduction et image principale</h2>
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="introText">Texte d'introduction</Label>
-              <Textarea
-                id="introText"
-                name="introText"
-                value={formData.introText}
-                onChange={handleChange}
-                placeholder="Paragraphe d'introduction qui capte l'attention et résume l'article"
-                className="min-h-[100px]"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="mainImageUrl">URL de l'image principale</Label>
-                <Input
-                  id="mainImageUrl"
-                  name="mainImageUrl"
-                  value={formData.mainImageUrl}
+          {/* Contenu principal */}
+          <AccordionItem value="content" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">Contenu principal</AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2 pt-4">
+                <Label htmlFor="content">Contenu de l'article</Label>
+                <Textarea
+                  id="content"
+                  name="content"
+                  value={formData.content}
                   onChange={handleChange}
-                  placeholder="https://example.com/images/mon-image.jpg"
+                  placeholder="Rédigez le contenu de votre article ici..."
+                  className="min-h-[300px]"
+                  required
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mainImageAlt">Texte alternatif de l'image</Label>
-                <Input
-                  id="mainImageAlt"
-                  name="mainImageAlt"
-                  value={formData.mainImageAlt}
-                  onChange={handleChange}
-                  placeholder="Description détaillée de l'image pour l'accessibilité et le SEO"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenu principal */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-semibold border-b pb-2">Contenu principal</h2>
-          <div className="space-y-2">
-            <Label htmlFor="content">Contenu de l'article</Label>
-            <Textarea
-              id="content"
-              name="content"
-              value={formData.content}
-              onChange={handleChange}
-              placeholder="Rédigez le contenu de votre article ici..."
-              className="min-h-[300px]"
-              required
-            />
-          </div>
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         {/* Actions */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-4">
           <Button
             type="button"
             variant="outline"
