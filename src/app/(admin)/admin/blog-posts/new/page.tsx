@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
+import { BlogPostSEOHelper } from '@/components/blog/BlogPostSEOHelper'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
@@ -86,7 +87,10 @@ export default function NewBlogPostPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Create New Blog Post</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Create New Blog Post</h1>
+          <BlogPostSEOHelper />
+        </div>
         <Button
           variant="outline"
           onClick={() => router.push('/blog-posts')}
