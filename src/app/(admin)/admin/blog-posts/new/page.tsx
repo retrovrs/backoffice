@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,11 +28,34 @@ export default function NewBlogPostPage() {
     status: 'draft',
     category: 'blog'
   })
+  const [shouldAutoUpdateSlug, setShouldAutoUpdateSlug] = useState(true)
+
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-')
+  }
+
+  useEffect(() => {
+    if (shouldAutoUpdateSlug && formData.title) {
+      setFormData(prev => ({
+        ...prev,
+        slug: generateSlug(prev.title)
+      }))
+    }
+  }, [formData.title, shouldAutoUpdateSlug])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
+    
+    // When changing slug manually, disable auto-updates
+    if (name === 'slug' && value !== generateSlug(formData.title)) {
+      setShouldAutoUpdateSlug(false)
+    }
+    
     setFormData((prev) => ({
       ...prev,
       [name]: value
@@ -43,18 +66,6 @@ export default function NewBlogPostPage() {
     setFormData((prev) => ({
       ...prev,
       [name]: value
-    }))
-  }
-
-  const generateSlug = () => {
-    const slug = formData.title
-      .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-')
-    
-    setFormData((prev) => ({
-      ...prev,
-      slug
     }))
   }
 
@@ -129,13 +140,24 @@ export default function NewBlogPostPage() {
               </div>
               <Button
                 type="button"
-                onClick={generateSlug}
+                onClick={() => {
+                  setShouldAutoUpdateSlug(true)
+                  setFormData(prev => ({
+                    ...prev,
+                    slug: generateSlug(prev.title)
+                  }))
+                }}
                 className="mb-0.5"
                 variant="outline"
                 disabled={!formData.title}
               >
                 Generate from Title
               </Button>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {shouldAutoUpdateSlug ? 
+                'Slug will automatically update based on title. Edit manually to disable auto-update.' : 
+                'Auto-update disabled. Click "Generate from Title" to re-enable.'}
             </div>
           </div>
 

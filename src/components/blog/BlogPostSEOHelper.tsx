@@ -205,7 +205,7 @@ export function BlogPostSEOHelper() {
                 <article className="p-6">
                   {/* Article header */}
                   <header className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Main Article Title (only one H1 per page)</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Main Article Title</h1>
                     <p className="text-sm text-gray-600">
                       By <a href="#" className="text-blue-600 hover:underline">Author Name</a>
                       {' · '}
