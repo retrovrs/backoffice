@@ -1,36 +1,50 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from '@/lib/auth-client'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
+import { useRouter } from 'next/navigation'
+import { signIn, type SigninFormState } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRouter } from 'next/navigation'
 import { LogoHeader } from '@/components/LogoHeader'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons'
+import { useEffect } from 'react'
+
+const initialState: SigninFormState = {}
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  
+  return (
+    <Button
+      type="submit"
+      className="w-full"
+      disabled={pending}
+    >
+      {pending ? 'Connecting...' : 'Login'}
+    </Button>
+  )
+}
 
 export default function SigninPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const router = useRouter()
+  const [state, formAction] = useActionState(signIn, initialState)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      await signIn.email({
-        email,
-        password
-      })
-      router.push('/') // Redirection vers la page d'accueil après connexion
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue lors de la connexion')
-    } finally {
-      setLoading(false)
+  // Rediriger vers la page d'accueil en cas de succès
+  useEffect(() => {
+    if (state.success) {
+      // Stocker les informations de session (dans un projet réel, utilisez un gestionnaire d'auth approprié)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify({
+          id: state.userId,
+          name: state.userName,
+          email: ''  // L'email n'est pas retourné pour des raisons de sécurité
+        }))
+      }
+      router.push('/')
     }
-  }
+  }, [state.success, router, state.userId, state.userName])
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background">
@@ -41,26 +55,31 @@ export default function SigninPage() {
           Login
         </h1>
 
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-4">
-            {error}
-          </div>
+        {state.errors?._form && (
+          <Alert variant="destructive" className="mb-4">
+            <ExclamationTriangleIcon className="h-4 w-4" />
+            <AlertDescription>
+              {state.errors._form[0]}
+            </AlertDescription>
+          </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form action={formAction} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
               Email
             </label>
             <Input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
               placeholder="your@email.com"
-              className="w-full"
+              className={`w-full ${state.errors?.email ? 'border-destructive' : ''}`}
             />
+            {state.errors?.email && (
+              <p className="text-sm text-destructive">{state.errors.email[0]}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -69,22 +88,18 @@ export default function SigninPage() {
             </label>
             <Input
               id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              className="w-full"
+              className={`w-full ${state.errors?.password ? 'border-destructive' : ''}`}
             />
+            {state.errors?.password && (
+              <p className="text-sm text-destructive">{state.errors.password[0]}</p>
+            )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Connecting...' : 'Login'}
-          </Button>
+          <SubmitButton />
         </form>
 
         <div className="mt-6 text-center text-sm">

@@ -1,34 +1,42 @@
 'use client'
 
-import { useState } from 'react'
-import { signUpEmail } from '@/lib/auth-client'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
+import { signUp, type SignupFormState } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LogoHeader } from '@/components/LogoHeader'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons'
+import { useEffect } from 'react'
+
+const initialState: SignupFormState = {}
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  
+  return (
+    <Button
+      type="submit"
+      className="w-full"
+      disabled={pending}
+    >
+      {pending ? 'Creating account...' : 'Sign up'}
+    </Button>
+  )
+}
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const router = useRouter()
+  const [state, formAction] = useActionState(signUp, initialState)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      await signUpEmail(email, password, name)
-      router.push('/') // Redirection vers la page d'accueil après inscription
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue lors de l\'inscription')
-    } finally {
-      setLoading(false)
+  // Rediriger vers la page d'accueil en cas de succès
+  useEffect(() => {
+    if (state.success) {
+      router.push('/signin')
     }
-  }
+  }, [state.success, router])
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background">
@@ -39,25 +47,39 @@ export default function SignupPage() {
           Create an account
         </h1>
 
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-4">
-            {error}
-          </div>
+        {state.errors?._form && (
+          <Alert variant="destructive" className="mb-4">
+            <ExclamationTriangleIcon className="h-4 w-4" />
+            <AlertDescription>
+              {state.errors._form[0]}
+            </AlertDescription>
+          </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {state.success && (
+          <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <CheckCircledIcon className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              Account created successfully! You can now sign in.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <form action={formAction} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-medium">
               Name
             </label>
             <Input
               id="name"
+              name="name"
               type="text"
-              value={name}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
               placeholder="Your name"
-              className="w-full"
+              className={`w-full ${state.errors?.name ? 'border-destructive' : ''}`}
             />
+            {state.errors?.name && (
+              <p className="text-sm text-destructive">{state.errors.name[0]}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -66,13 +88,15 @@ export default function SignupPage() {
             </label>
             <Input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
-              placeholder="votre@email.com"
-              className="w-full"
+              placeholder="your@email.com"
+              className={`w-full ${state.errors?.email ? 'border-destructive' : ''}`}
             />
+            {state.errors?.email && (
+              <p className="text-sm text-destructive">{state.errors.email[0]}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -81,22 +105,18 @@ export default function SignupPage() {
             </label>
             <Input
               id="password"
+              name="password"
               type="password"
-              value={password}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              className="w-full"
+              className={`w-full ${state.errors?.password ? 'border-destructive' : ''}`}
             />
+            {state.errors?.password && (
+              <p className="text-sm text-destructive">{state.errors.password[0]}</p>
+            )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Signing up...' : 'Sign up'}
-          </Button>
+          <SubmitButton />
         </form>
 
         <div className="mt-6 text-center text-sm">

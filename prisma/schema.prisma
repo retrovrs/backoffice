@@ -5,52 +5,75 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["backoffice"]
 }
 
-model BlogPost {
-  id         Int        @id @default(autoincrement())
-  title      String
-  content    String
-  slug       String     @unique
-  excerpt    String?
-  coverImage String?
-  published  Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  author     User       @relation(fields: [authorId], references: [id])
-  authorId   Int
-  categories Category[]
+model SeoPost {
+  id                Int         @id @default(autoincrement())
+  title             String
+  metaDescription   String
+  metaKeywords      String[]
+  content           String
+  slug              String      @unique
+  excerpt           String?
+  coverImage        String?
+  mediaFiles        Json?       @default("[]")
+  published         Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  author            User        @relation(fields: [authorId], references: [id])
+  authorId          Int
+  viewsCount        Int         @default(0)
+  tags              String[]
+  estimatedReadTime Int?
+  category          SeoCategory @relation(fields: [categoryId], references: [id])
+  categoryId        Int
+
+  @@schema("backoffice")
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  email     String     @unique
+  email     String    @unique
+  pseudo    String    @unique
   password  String
-  role      Role       @default(AUTHOR)
-  posts     BlogPost[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  role      Role      @default(READER)
+  posts     SeoPost[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@schema("backoffice")
 }
 
-model Category {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique
+model SeoCategory {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
   description String?
-  posts       BlogPost[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  posts       SeoPost[]
+
+  @@schema("backoffice")
+}
+
+model UserWhiteListed {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+
+  @@schema("backoffice")
 }
 
 enum Role {
   ADMIN
   EDITOR
-  AUTHOR
+  READER
+
+  @@schema("backoffice")
 }
