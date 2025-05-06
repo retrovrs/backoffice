@@ -3,10 +3,34 @@
 import { useSession } from '@/lib/auth-client'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useEffect, useState } from 'react'
 
 export default function Home() {
-  const { data: session, status } = useSession()
-  const isAuthenticated = status === 'authenticated'
+    const { data } = useSession()
+    const sessionData = data?.session
+    const isAuthenticated = !!sessionData
+    const [userName, setUserName] = useState('Utilisateur')
+
+    // Récupération du nom d'utilisateur à partir de son userId
+    useEffect(() => {
+      async function fetchUserName() {
+        if (sessionData?.userId) {
+          try {
+            const response = await fetch(`/api/users/${sessionData.userId}`)
+            if (response.ok) {
+              const userData = await response.json()
+              setUserName(userData.name || 'Utilisateur')
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération du nom d\'utilisateur:', error)
+          }
+        }
+      }
+
+      if (isAuthenticated) {
+        fetchUserName()
+      }
+    }, [sessionData, isAuthenticated])
 
   return (
     <div className="flex flex-col items-center p-8 bg-background">
@@ -35,7 +59,7 @@ export default function Home() {
           {isAuthenticated && (
             <div className="mt-8">
               <p className="text-muted-foreground mb-4">
-                Bienvenue, {session?.user?.name || 'Utilisateur'}
+                Bienvenue, {userName}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">

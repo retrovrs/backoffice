@@ -15,8 +15,9 @@ import {
 } from '@/components/ui/menubar'
 
 export function MenuBar() {
-  const { data: session, status } = useSession()
-  const isAuthenticated = status === 'authenticated'
+  const { data } = useSession()
+  const sessionData = data?.session
+  const isAuthenticated = !!sessionData;
   const router = useRouter()
 
   // Ne pas rendre le menu si l'utilisateur n'est pas connecté

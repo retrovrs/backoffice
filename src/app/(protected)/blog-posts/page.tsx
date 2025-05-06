@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import { formatDate } from '@/lib/utils'
+import { useUserRole } from '@/hooks/useUserRole'
 
 interface BlogPost {
   id: string
@@ -28,6 +30,8 @@ export default function BlogPostsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
+  const { isAdmin } = useUserRole()
+  const router = useRouter()
 
   // Loading data simulation
   // In a real application, you would use useEffect to load data from an API
@@ -77,6 +81,10 @@ export default function BlogPostsPage() {
     }, 1000)
   }, [toast])
 
+  const handleNewPost = () => {
+    router.push('/admin/blog-posts/new')
+  }
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Loading blog posts...</div>
   }
@@ -94,7 +102,14 @@ export default function BlogPostsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Blog Posts</h1>
-        <Button className="bg-indigo-600 hover:bg-indigo-700 transition-colors">New Post</Button>
+        {isAdmin && (
+          <Button 
+            className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
+            onClick={handleNewPost}
+          >
+            New Post
+          </Button>
+        )}
       </div>
       
       <div className="rounded-md border border-gray-200 overflow-hidden">

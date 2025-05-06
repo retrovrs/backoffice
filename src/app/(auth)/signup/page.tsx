@@ -1,15 +1,17 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { signUp, type SignupFormState } from './actions'
+import { signUp as validateAndSignUp, type SignupFormState } from './actions'
+import { signUp } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LogoHeader } from '@/components/LogoHeader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons'
-import { useEffect } from 'react'
+import { toast } from 'sonner'
 
 const initialState: SignupFormState = {}
 
@@ -22,21 +24,67 @@ function SubmitButton() {
       className="w-full"
       disabled={pending}
     >
-      {pending ? 'Creating account...' : 'Sign up'}
+      {pending ? 'Création du compte...' : 'S\'inscrire'}
     </Button>
   )
 }
 
 export default function SignupPage() {
   const router = useRouter()
-  const [state, formAction] = useActionState(signUp, initialState)
+  const [state, formAction] = useActionState(validateAndSignUp, initialState)
+  const [loading, setLoading] = useState(false)
+  const [registered, setRegistered] = useState(false)
 
-  // Rediriger vers la page d'accueil en cas de succès
+  // Appeler better-auth quand les données sont validées côté serveur
   useEffect(() => {
-    if (state.success) {
-      router.push('/signin')
+    const handleBetterAuthSignup = async () => {
+      if (state.success && state.isWhitelisted && state.validatedData && !registered) {
+        const { name, email, password } = state.validatedData
+
+        try {
+          await signUp.email({
+            email,
+            password,
+            name,
+            fetchOptions: {
+              onRequest: () => {
+                setLoading(true)
+              },
+              onResponse: () => {
+                setLoading(false)
+              },
+              onError: (ctx) => {
+                toast.error(ctx.error.message || 'Error during Signup')
+                setLoading(false)
+              },
+              onSuccess: () => {
+                setRegistered(true)
+                toast.success('Your account has been created successfully')
+                setLoading(false)
+              }
+            }
+          })
+        } catch (error) {
+          console.error('Error during Signup:', error)
+          toast.error('An error occurred during the registration process')
+          setLoading(false)
+        }
+      }
     }
-  }, [state.success, router])
+
+    handleBetterAuthSignup()
+  }, [state, registered])
+
+  // Rediriger vers la page d'accueil après inscription réussie
+  useEffect(() => {
+    if (registered) {
+      const timer = setTimeout(() => {
+        router.push('/')
+      }, 2000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [registered, router])
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background">
@@ -56,11 +104,11 @@ export default function SignupPage() {
           </Alert>
         )}
 
-        {state.success && (
+        {registered && (
           <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
             <CheckCircledIcon className="h-4 w-4 text-green-600" />
             <AlertDescription>
-              Account created successfully! You can now sign in.
+              Compte créé avec succès ! Vous allez être redirigé vers la page d'accueil.
             </AlertDescription>
           </Alert>
         )}
@@ -76,6 +124,7 @@ export default function SignupPage() {
               type="text"
               placeholder="Your name"
               className={`w-full ${state.errors?.name ? 'border-destructive' : ''}`}
+              disabled={loading || registered}
             />
             {state.errors?.name && (
               <p className="text-sm text-destructive">{state.errors.name[0]}</p>
@@ -91,8 +140,9 @@ export default function SignupPage() {
               name="email"
               type="email"
               required
-              placeholder="your@email.com"
+              placeholder="votre@email.com"
               className={`w-full ${state.errors?.email ? 'border-destructive' : ''}`}
+              disabled={loading || registered}
             />
             {state.errors?.email && (
               <p className="text-sm text-destructive">{state.errors.email[0]}</p>
@@ -101,7 +151,7 @@ export default function SignupPage() {
 
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
-              Password
+              Mot de passe
             </label>
             <Input
               id="password"
@@ -110,17 +160,24 @@ export default function SignupPage() {
               required
               placeholder="••••••••"
               className={`w-full ${state.errors?.password ? 'border-destructive' : ''}`}
+              disabled={loading || registered}
             />
             {state.errors?.password && (
               <p className="text-sm text-destructive">{state.errors.password[0]}</p>
             )}
           </div>
 
-          <SubmitButton />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || registered}
+          >
+            {loading ? 'Registration in progress...' : (registered ? 'Registered !' : 'Sign up')}
+          </Button>
         </form>
 
         <div className="mt-6 text-center text-sm">
-          You already have an account?{' '}
+          You already have an account ?{' '}
           <a
             href="/signin"
             className="text-primary font-medium hover:underline"

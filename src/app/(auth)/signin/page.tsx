@@ -1,50 +1,60 @@
 'use client'
 
-import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { signIn, type SigninFormState } from './actions'
+import { signIn } from '@/lib/auth-client'
+import { toast } from 'sonner'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LogoHeader } from '@/components/LogoHeader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons'
-import { useEffect } from 'react'
-
-const initialState: SigninFormState = {}
-
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  
-  return (
-    <Button
-      type="submit"
-      className="w-full"
-      disabled={pending}
-    >
-      {pending ? 'Connecting...' : 'Login'}
-    </Button>
-  )
-}
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 
 export default function SigninPage() {
   const router = useRouter()
-  const [state, formAction] = useActionState(signIn, initialState)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  // Rediriger vers la page d'accueil en cas de succès
-  useEffect(() => {
-    if (state.success) {
-      // Stocker les informations de session (dans un projet réel, utilisez un gestionnaire d'auth approprié)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify({
-          id: state.userId,
-          name: state.userName,
-          email: ''  // L'email n'est pas retourné pour des raisons de sécurité
-        }))
-      }
-      router.push('/')
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get('email')?.toString() || ''
+    const password = formData.get('password')?.toString() || ''
+
+    if (!email || !password) {
+      setError('Please fill in all fields')
+      return
     }
-  }, [state.success, router, state.userId, state.userName])
+
+    try {
+      setLoading(true)
+
+      const response = await signIn.email({
+        email,
+        password,
+      })
+
+      setLoading(false)
+      console.log("response", response)
+      if (response.error) {
+        console.log("CONNECTION ERROR", response)
+        const errorMessage = response.error?.message || 'Connection failed'
+        toast.error(errorMessage)
+        setError(errorMessage)
+      } else {
+        console.log("CONNECTION SUCCESS", response)
+        toast.success('You are connected !')
+        router.push('/')
+      }
+    } catch (err: any) {
+      const errorMessage = err?.message || 'An Error Occured during connection'
+      toast.error(errorMessage)
+      setError(errorMessage)
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-background">
@@ -52,19 +62,19 @@ export default function SigninPage() {
 
       <div className="bg-card text-card-foreground w-full max-w-md shadow-lg rounded-lg border p-6">
         <h1 className="text-2xl font-bold tracking-tight mb-6 text-center">
-          Login
+          Connexion
         </h1>
 
-        {state.errors?._form && (
+        {error && (
           <Alert variant="destructive" className="mb-4">
             <ExclamationTriangleIcon className="h-4 w-4" />
             <AlertDescription>
-              {state.errors._form[0]}
+              {error}
             </AlertDescription>
           </Alert>
         )}
 
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium">
               Email
@@ -74,17 +84,14 @@ export default function SigninPage() {
               name="email"
               type="email"
               required
-              placeholder="your@email.com"
-              className={`w-full ${state.errors?.email ? 'border-destructive' : ''}`}
+              placeholder="votre@email.com"
+              disabled={loading}
             />
-            {state.errors?.email && (
-              <p className="text-sm text-destructive">{state.errors.email[0]}</p>
-            )}
           </div>
 
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
-              Password
+              Mot de passe
             </label>
             <Input
               id="password"
@@ -92,23 +99,26 @@ export default function SigninPage() {
               type="password"
               required
               placeholder="••••••••"
-              className={`w-full ${state.errors?.password ? 'border-destructive' : ''}`}
+              disabled={loading}
             />
-            {state.errors?.password && (
-              <p className="text-sm text-destructive">{state.errors.password[0]}</p>
-            )}
           </div>
 
-          <SubmitButton />
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
+          </Button>
         </form>
 
         <div className="mt-6 text-center text-sm">
-          You don't have an account?{' '}
+          Vous n'avez pas de compte ?{' '}
           <a
             href="/signup"
             className="text-primary font-medium hover:underline"
           >
-            Sign up
+            S'inscrire
           </a>
         </div>
       </div>

@@ -31,7 +31,7 @@ model SeoPost {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   author            User        @relation(fields: [authorId], references: [id])
-  authorId          Int
+  authorId          String
   viewsCount        Int         @default(0)
   tags              String[]
   estimatedReadTime Int?
@@ -42,16 +42,56 @@ model SeoPost {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  pseudo    String    @unique
-  password  String
-  role      Role      @default(READER)
-  posts     SeoPost[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String    @id(map: "user_pkey") @db.VarChar(255)
+  name          String    @db.VarChar(255)
+  email         String    @unique(map: "user_email_key") @db.VarChar(255)
+  emailVerified Boolean
+  image         String?   @db.VarChar(255)
+  role  Role   @default(READER)
+  createdAt     DateTime  @db.Timestamp(6)
+  updatedAt     DateTime  @db.Timestamp(6)
+  accounts      Account[]
+  sessions      Session[]
+  posts         SeoPost[]
 
+  @@map("User")
+  @@schema("backoffice")
+}
+
+model Session {
+  id        String   @id(map: "session_pkey") @db.VarChar(255)
+  expiresAt DateTime @db.Timestamp(6)
+  token     String   @unique(map: "session_token_key") @db.VarChar(255)
+  createdAt DateTime @db.Timestamp(6)
+  updatedAt DateTime @db.Timestamp(6)
+  ipAddress String?  @db.VarChar(255)
+  userAgent String?  @db.VarChar(255)
+  userId    String   @db.VarChar(255)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userId_fkey")
+
+  @@index([userId], map: "session_userId_idx")
+  @@map("Session")
+  @@schema("backoffice")
+}
+
+model Account {
+  id                    String    @id(map: "account_pkey") @db.VarChar(255)
+  accountId             String    @db.VarChar(255)
+  providerId            String    @db.VarChar(255)
+  userId                String    @db.VarChar(255)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamp(6)
+  refreshTokenExpiresAt DateTime? @db.Timestamp(6)
+  scope                 String?   @db.VarChar(255)
+  password              String?   @db.VarChar(255)
+  createdAt             DateTime  @db.Timestamp(6)
+  updatedAt             DateTime  @db.Timestamp(6)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userId_fkey")
+
+  @@index([userId], map: "account_userId_idx")
+  @@map("Account")
   @@schema("backoffice")
 }
 

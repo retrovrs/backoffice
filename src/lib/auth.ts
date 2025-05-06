@@ -1,28 +1,20 @@
-// Implémentation factice des fonctions d'authentification côté serveur
-// Dans un projet réel, utilisez un système comme NextAuth.js pour gérer l'authentification
-
-import { User } from './auth-client';
-
-export const auth = {
-    // Fonctions de vérification
-    checkAuth: async (token: string) => {
-        // Simuler la vérification d'authentification
-        return { isAuthenticated: !!token, user: null };
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { PrismaClient } from "@prisma/client";
+import { nextCookies } from "better-auth/next-js";
+ 
+const prisma = new PrismaClient();
+export const auth = betterAuth({
+    database: prismaAdapter(prisma, {
+        provider: "postgresql",
+    }),
+    emailAndPassword: { 
+        enabled: true,
+        autoSignIn: true,
+        async sendResetPassword(data, request) {
+            // @TODO: Handle the resend password email
+            console.log('Resend password ==> ', data, request);
+        },
+        plugins: [nextCookies()]
     },
-
-    // Handler pour les routes d'API
-    handler: async (req: Request) => {
-        // Simuler un gestionnaire de route API
-        return new Response(JSON.stringify({ message: "Serveur d'authentification prêt" }), {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-    }
-};
-
-// Type d'inférence pour la session
-export type Session = {
-    user: User | null;
-    expires: string;
-}; 
+});

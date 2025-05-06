@@ -9,7 +9,9 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { status } = useSession()
+    const { data } = useSession()
+    const sessionData = data?.session
+    const isAuthenticated = !!sessionData;
 
   if (status === 'loading') {
     return <div>Chargement...</div>
