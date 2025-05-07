@@ -17,12 +17,14 @@ import { formatDate } from '@/lib/utils'
 import { useUserRole } from '@/hooks/useUserRole'
 
 interface BlogPost {
-  id: string
+  id: number
   title: string
   slug: string
   author: string
-  publishDate: string
-  status: 'draft' | 'published' | 'archived'
+  createdAt: string
+  updatedAt: string
+  status: 'DRAFT' | 'PUBLISHED'
+  published: boolean
 }
 
 export default function BlogPostsPage() {
@@ -33,52 +35,31 @@ export default function BlogPostsPage() {
   const { isAdmin } = useUserRole()
   const router = useRouter()
 
-  // Loading data simulation
-  // In a real application, you would use useEffect to load data from an API
   useEffect(() => {
-    // API request simulation
-    setTimeout(() => {
+    const fetchPosts = async () => {
       try {
-        // Mock data for demonstration
-        const mockPosts: BlogPost[] = [
-          {
-            id: '1',
-            title: 'How to optimize your SEO in 2023',
-            slug: 'optimize-seo-2023',
-            author: 'John Smith',
-            publishDate: '2023-05-15T10:00:00Z',
-            status: 'published'
-          },
-          {
-            id: '2',
-            title: 'Best practices for local SEO',
-            slug: 'best-practices-local-seo',
-            author: 'Mary Johnson',
-            publishDate: '2023-06-22T14:30:00Z',
-            status: 'published'
-          },
-          {
-            id: '3',
-            title: 'Keyword analysis for beginners',
-            slug: 'keyword-analysis-beginners',
-            author: 'Paul Wilson',
-            publishDate: '2023-07-10T09:15:00Z', 
-            status: 'draft'
-          }
-        ]
+        const response = await fetch('/api/blog-posts')
         
-        setPosts(mockPosts)
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des articles')
+        }
+        
+        const data = await response.json()
+        setPosts(data)
         setIsLoading(false)
       } catch (err) {
-        setError('Error loading blog posts')
+        console.error('Erreur:', err)
+        setError('Erreur lors du chargement des articles de blog')
         setIsLoading(false)
         toast({
-          title: 'Error',
-          description: 'Unable to load blog posts',
+          title: 'Erreur',
+          description: 'Impossible de charger les articles de blog',
           variant: 'destructive'
         })
       }
-    }, 1000)
+    }
+
+    fetchPosts()
   }, [toast])
 
   const handleNewPost = () => {
@@ -86,14 +67,14 @@ export default function BlogPostsPage() {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading blog posts...</div>
+    return <div className="flex justify-center items-center h-64">Chargement des articles...</div>
   }
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
       </div>
     )
   }
@@ -101,26 +82,26 @@ export default function BlogPostsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Blog Posts</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Articles de Blog</h1>
         {isAdmin && (
           <Button 
             className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
             onClick={handleNewPost}
           >
-            New Post
+            Nouvel Article
           </Button>
         )}
       </div>
       
       <div className="rounded-md border border-gray-200 overflow-hidden">
         <Table>
-          <TableCaption className="mt-4 mb-2 text-gray-500">List of blog posts</TableCaption>
+          <TableCaption className="mt-4 mb-2 text-gray-500">Liste des articles de blog</TableCaption>
           <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead className="w-[300px] py-3 font-semibold text-gray-700">Title</TableHead>
-              <TableHead className="font-semibold text-gray-700">Author</TableHead>
-              <TableHead className="font-semibold text-gray-700">Publication Date</TableHead>
-              <TableHead className="font-semibold text-gray-700">Status</TableHead>
+              <TableHead className="w-[300px] py-3 font-semibold text-gray-700">Titre</TableHead>
+              <TableHead className="font-semibold text-gray-700">Auteur</TableHead>
+              <TableHead className="font-semibold text-gray-700">Date de Création</TableHead>
+              <TableHead className="font-semibold text-gray-700">Statut</TableHead>
               <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -128,7 +109,7 @@ export default function BlogPostsPage() {
             {posts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-gray-500">
-                  No blog posts found
+                  Aucun article trouvé
                 </TableCell>
               </TableRow>
             ) : (
@@ -141,22 +122,26 @@ export default function BlogPostsPage() {
                     {post.title}
                   </TableCell>
                   <TableCell>{post.author}</TableCell>
-                  <TableCell>{formatDate(post.publishDate)}</TableCell>
+                  <TableCell>{formatDate(post.createdAt)}</TableCell>
                   <TableCell>
                     <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                      ${post.status === 'published' ? 'bg-green-100 text-green-800 border border-green-200' : 
-                        post.status === 'draft' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
+                      ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-800 border border-green-200' : 
+                        post.status === 'DRAFT' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
                         'bg-gray-100 text-gray-800 border border-gray-200'}`}>
-                      {post.status === 'published' ? 'Published' : 
-                       post.status === 'draft' ? 'Draft' : 'Archived'}
+                      {post.status === 'PUBLISHED' ? 'Publié' : 'Brouillon'}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="mr-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-                      Edit
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mr-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                      onClick={() => router.push(`/admin/blog-posts/edit/${post.id}`)}
+                    >
+                      Modifier
                     </Button>
                     <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors">
-                      Delete
+                      Supprimer
                     </Button>
                   </TableCell>
                 </TableRow>
