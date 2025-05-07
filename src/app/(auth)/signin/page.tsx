@@ -108,17 +108,17 @@ export default function SigninPage() {
             className="w-full"
             disabled={loading}
           >
-            {loading ? 'Connexion en cours...' : 'Se connecter'}
+            {loading ? 'Connecting...' : 'Connect to Backoffice'}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm">
-          Vous n'avez pas de compte ?{' '}
+          You don't have an account ?{' '}
           <a
             href="/signup"
             className="text-primary font-medium hover:underline"
           >
-            S'inscrire
+            Sign up
           </a>
         </div>
       </div>

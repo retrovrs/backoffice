@@ -31,6 +31,7 @@ type BlogPostFormData = {
   introText: string
   mainImageUrl: string
   mainImageAlt: string
+  mainImageCaption: string
 }
 
 interface BlogPostSEOAssistantProps {

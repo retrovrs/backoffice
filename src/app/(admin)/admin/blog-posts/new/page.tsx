@@ -15,11 +15,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { createBlogPost } from '@/app/actions/blog'
+import { getCategories } from '@/app/actions/category'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [categories, setCategories] = useState<{ id: number; name: string; description: string | null }[]>([])
   const [formData, setFormData] = useState({
     // Méta-données
     title: '',
@@ -36,9 +40,13 @@ export default function NewBlogPostPage() {
     introText: '',
     mainImageUrl: '',
     mainImageAlt: '',
+    mainImageCaption: '',
     
     // Contenu principal
-    content: ''
+    content: '',
+    
+    // Tags
+    tags: ''
   })
   const [shouldAutoUpdateSlug, setShouldAutoUpdateSlug] = useState(true)
 
@@ -58,6 +66,22 @@ export default function NewBlogPostPage() {
     }
   }, [formData.title, shouldAutoUpdateSlug])
 
+  // Load categories
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const result = await getCategories()
+        if (result.success && result.categories) {
+          setCategories(result.categories)
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      }
+    }
+    
+    loadCategories()
+  }, [])
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -76,23 +100,36 @@ export default function NewBlogPostPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate category
+    if (!formData.category) {
+      toast({
+        title: "Error",
+        description: "Please select a category",
+        variant: "destructive"
+      })
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
-      // Here you would typically make an API call to create the post
-      // For demonstration, we'll simulate a successful creation
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const result = await createBlogPost(formData)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
       
       toast({
         title: 'Success',
         description: 'Blog post created successfully',
       })
       
-      router.push('/blog-posts')
+      router.push('/admin/blog-posts')
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to create blog post',
+        description: error instanceof Error ? error.message : 'Failed to create blog post',
         variant: 'destructive'
       })
     } finally {
@@ -117,21 +154,27 @@ export default function NewBlogPostPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-lg border border-gray-200">
-        <Accordion type="multiple" defaultValue={['meta', 'header', 'intro', 'content']} className="space-y-4">
+        <Accordion type="multiple" defaultValue={['meta', 'category', 'header', 'intro', 'content', 'tags']} className="space-y-4">
           {/* Méta-données de l'article */}
           <AccordionItem value="meta" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Méta-données de l'article</AccordionTrigger>
+            <AccordionTrigger className="text-xl font-semibold">Meta-data of the article</AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Titre de l'article</Label>
+                  <Label htmlFor="title">Title of the article</Label>
                   <Input
                     id="title"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder="Entrez le titre de l'article"
+                    placeholder="Enter the title of the article"
                     required
+                    onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                      e.target.setCustomValidity('Please fill out this field')
+                    }
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                      e.currentTarget.setCustomValidity('')
+                    }
                   />
                 </div>
 
@@ -145,7 +188,13 @@ export default function NewBlogPostPage() {
                         value={formData.slug}
                         onChange={handleChange}
                         placeholder="titre-de-larticle"
-                        required
+                        required={!shouldAutoUpdateSlug}
+                        onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                          e.target.setCustomValidity(shouldAutoUpdateSlug ? '' : 'Please fill out this field')
+                        }
+                        onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                          e.currentTarget.setCustomValidity('')
+                        }
                       />
                     </div>
                     <Button
@@ -161,30 +210,121 @@ export default function NewBlogPostPage() {
                       variant="outline"
                       disabled={!formData.title}
                     >
-                      Générer depuis le titre
+                      Generate from title
                     </Button>
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {shouldAutoUpdateSlug ? 
-                      'Le slug se mettra à jour automatiquement en fonction du titre. Modifiez-le manuellement pour désactiver cette mise à jour.' : 
-                      'Mise à jour automatique désactivée. Cliquez sur "Générer depuis le titre" pour réactiver.'}
+                      'The slug will update automatically based on the title. Edit it manually to disable auto-update.' : 
+                      'Auto-update disabled. Click "Generate from title" to re-enable.'}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="excerpt">Extrait (meta description)</Label>
+                  <Label htmlFor="excerpt">Excerpt (meta description)</Label>
                   <Textarea
                     id="excerpt"
                     name="excerpt"
                     value={formData.excerpt}
                     onChange={handleChange}
-                    placeholder="Résumé court de l'article (150-160 caractères recommandés)"
+                    placeholder="Short summary of the article (150-160 characters recommended)"
                     className="min-h-[80px]"
                     required
+                    onInvalid={(e: React.InvalidEvent<HTMLTextAreaElement>) => 
+                      e.target.setCustomValidity('Please fill out this field')
+                    }
+                    onInput={(e: React.FormEvent<HTMLTextAreaElement>) => 
+                      e.currentTarget.setCustomValidity('')
+                    }
                   />
                   <div className="text-xs text-gray-500 text-right">
-                    {formData.excerpt.length} / 160 caractères
+                    {formData.excerpt.length} / 160 characters
                   </div>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Category */}
+          <AccordionItem value="category" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">Category</AccordionTrigger>
+            <AccordionContent>
+              <div className="pt-4">
+                <div className="flex items-center mb-4">
+                  <Label className="text-base font-medium">Select a category</Label>
+                  <span className="text-red-500 ml-1">*</span>
+                </div>
+                <RadioGroup 
+                  value={formData.category} 
+                  onValueChange={(value: string) => setFormData(prev => ({ ...prev, category: value }))}
+                  className="grid grid-cols-2 md:grid-cols-3 gap-4"
+                >
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <div key={category.id} className="flex items-start space-x-2">
+                        <RadioGroupItem 
+                          value={category.name} 
+                          id={`category-${category.id}`} 
+                          className="mt-1" 
+                        />
+                        <div className="grid gap-1.5">
+                          <Label htmlFor={`category-${category.id}`} className="font-medium">
+                            {category.name}
+                          </Label>
+                          {category.description && (
+                            <p className="text-sm text-gray-500">
+                              {category.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-4 text-center">
+                      <p className="text-gray-500">Loading categories...</p>
+                      <div className="mt-2">
+                        <Label htmlFor="manual-category" className="sr-only">Category name</Label>
+                        <Input
+                          id="manual-category"
+                          type="text"
+                          name="category"
+                          value={formData.category}
+                          onChange={handleChange}
+                          placeholder="Enter a category name"
+                          className="max-w-md mx-auto"
+                          required
+                          onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                            e.target.setCustomValidity('Please enter a category name')
+                          }
+                          onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                            e.currentTarget.setCustomValidity('')
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
+                </RadioGroup>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Tags */}
+          <AccordionItem value="tags" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">Tags</AccordionTrigger>
+            <AccordionContent>
+              <div className="pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Article Tags</Label>
+                  <Input
+                    id="tags"
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleChange}
+                    placeholder="Enter tags separated by commas (e.g., technology, business, design)"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Tags help categorize your article and improve discoverability
+                  </p>
                 </div>
               </div>
             </AccordionContent>
@@ -192,23 +332,29 @@ export default function NewBlogPostPage() {
 
           {/* En-tête de l'article */}
           <AccordionItem value="header" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">En-tête de l'article</AccordionTrigger>
+            <AccordionTrigger className="text-xl font-semibold">Header of the article</AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="author">Auteur</Label>
+                  <Label htmlFor="author">Author</Label>
                   <Input
                     id="author"
                     name="author"
                     value={formData.author}
                     onChange={handleChange}
-                    placeholder="Nom de l'auteur"
+                    placeholder="Author name"
                     required
+                    onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                      e.target.setCustomValidity('Please fill out this field')
+                    }
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                      e.currentTarget.setCustomValidity('')
+                    }
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="publishDate">Date de publication</Label>
+                  <Label htmlFor="publishDate">Publication date</Label>
                   <Input
                     id="publishDate"
                     name="publishDate"
@@ -216,6 +362,12 @@ export default function NewBlogPostPage() {
                     value={formData.publishDate}
                     onChange={handleChange}
                     required
+                    onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                      e.target.setCustomValidity('Please fill out this field')
+                    }
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                      e.currentTarget.setCustomValidity('')
+                    }
                   />
                 </div>
               </div>
@@ -224,44 +376,83 @@ export default function NewBlogPostPage() {
 
           {/* Introduction et image principale */}
           <AccordionItem value="intro" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Introduction et image principale</AccordionTrigger>
+            <AccordionTrigger className="text-xl font-semibold">Main Image and Introduction</AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-4 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="introText">Texte d'introduction</Label>
+                  <Label htmlFor="introText">Introduction Text</Label>
                   <Textarea
                     id="introText"
                     name="introText"
                     value={formData.introText}
                     onChange={handleChange}
-                    placeholder="Paragraphe d'introduction qui capte l'attention et résume l'article"
+                    placeholder="Introduction paragraph that captures attention and summarizes the article"
                     className="min-h-[100px]"
                     required
+                    onInvalid={(e: React.InvalidEvent<HTMLTextAreaElement>) => 
+                      e.target.setCustomValidity('Please fill out this field')
+                    }
+                    onInput={(e: React.FormEvent<HTMLTextAreaElement>) => 
+                      e.currentTarget.setCustomValidity('')
+                    }
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="mainImageUrl">URL de l'image principale</Label>
+                    <Label htmlFor="mainImageUrl">Main Image URL</Label>
                     <Input
                       id="mainImageUrl"
                       name="mainImageUrl"
                       value={formData.mainImageUrl}
                       onChange={handleChange}
                       placeholder="https://example.com/images/mon-image.jpg"
+                      required
+                      onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                        e.target.setCustomValidity('Please enter an image URL')
+                      }
+                      onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                        e.currentTarget.setCustomValidity('')
+                      }
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mainImageAlt">Texte alternatif de l'image</Label>
+                    <Label htmlFor="mainImageAlt">Main Image Alt</Label>
                     <Input
                       id="mainImageAlt"
                       name="mainImageAlt"
                       value={formData.mainImageAlt}
                       onChange={handleChange}
-                      placeholder="Description détaillée de l'image pour l'accessibilité et le SEO"
+                      placeholder="Detailed description of the image for accessibility and SEO"
+                      required
+                      onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                        e.target.setCustomValidity('Please enter alt text for the image')
+                      }
+                      onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                        e.currentTarget.setCustomValidity('')
+                      }
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="mainImageCaption">Main Image Caption</Label>
+                    <Input
+                      id="mainImageCaption"
+                      name="mainImageCaption"
+                      value={formData.mainImageCaption}
+                      onChange={handleChange}
+                      placeholder="Detailed description of the image for accessibility and SEO"
+                      required
+                      onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                        e.target.setCustomValidity('Please enter a caption for the image')
+                      }
+                      onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                        e.currentTarget.setCustomValidity('')
+                      }
+                    />
+                  </div>
+
                 </div>
               </div>
             </AccordionContent>
@@ -269,18 +460,24 @@ export default function NewBlogPostPage() {
 
           {/* Contenu principal */}
           <AccordionItem value="content" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Contenu principal</AccordionTrigger>
+            <AccordionTrigger className="text-xl font-semibold">Main Content</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2 pt-4">
-                <Label htmlFor="content">Contenu de l'article</Label>
+                <Label htmlFor="content">Content of the article</Label>
                 <Textarea
                   id="content"
                   name="content"
                   value={formData.content}
                   onChange={handleChange}
-                  placeholder="Rédigez le contenu de votre article ici..."
+                  placeholder="Write the content of your article here..."
                   className="min-h-[300px]"
                   required
+                  onInvalid={(e: React.InvalidEvent<HTMLTextAreaElement>) => 
+                    e.target.setCustomValidity('Please fill out this field')
+                  }
+                  onInput={(e: React.FormEvent<HTMLTextAreaElement>) => 
+                    e.currentTarget.setCustomValidity('')
+                  }
                 />
               </div>
             </AccordionContent>
@@ -292,10 +489,10 @@ export default function NewBlogPostPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push('/blog-posts')}
+            onClick={() => router.push('/admin/blog-posts')}
             disabled={isSubmitting}
           >
-            Annuler
+            Cancel
           </Button>
           <BlogPostSEOAssistant formData={formData} disabled={isSubmitting} />
           <Button 
@@ -303,7 +500,7 @@ export default function NewBlogPostPage() {
             className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Création...' : 'Créer l\'article'}
+            {isSubmitting ? 'Saving...' : 'Save Post'}
           </Button>
         </div>
       </form>
