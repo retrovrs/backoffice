@@ -64,6 +64,16 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             tags: formData.tags
         })
 
+        // Log structured content for debugging
+        console.log('Content structuré avant encodage:',
+            formData.structuredContent
+                ? JSON.stringify(formData.structuredContent, null, 2).substring(0, 500) + '...'
+                : 'Non disponible'
+        );
+        console.log('Content brut avant encodage:',
+            formData.content.substring(0, 500) + '...'
+        );
+
         // Find the category ID or create a new one
         const category = await prisma.seoCategory.upsert({
             where: { name: formData.category },
@@ -100,6 +110,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
 
         // Encoder le contenu structuré s'il existe
         const content = encodeStructuredContent(formData.content, formData.structuredContent)
+
+        // Log encoded content
+        console.log('Contenu encodé (début):', content.substring(0, 500) + '...');
 
         // Prepare minimal data needed for post creation
         const postData = {
@@ -164,6 +177,16 @@ export async function getBlogPost(id: number) {
         // Décoder le contenu structuré s'il existe
         const { rawContent, structuredContent } = decodeStructuredContent(post.content)
 
+        console.log('getBlogPost - Contenu décodé:');
+        console.log('- HTML brut (début):', rawContent.substring(0, 500) + '...');
+        console.log('- JSON structuré disponible:', !!structuredContent);
+
+        if (structuredContent) {
+            console.log('- Structure JSON (aperçu):',
+                JSON.stringify(structuredContent).substring(0, 500) + '...'
+            );
+        }
+
         // Retourner le post avec le contenu décodé
         return {
             success: true,
@@ -188,6 +211,11 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         if (!session?.user) {
             return { error: 'Non authentifié' }
         }
+
+        // Log content data before encoding
+        console.log('updateBlogPost - Content data:');
+        console.log('- HTML brut (début):', formData.content.substring(0, 500) + '...');
+        console.log('- JSON structuré disponible:', !!formData.structuredContent);
 
         // Find the category ID or create a new one
         const category = await prisma.seoCategory.upsert({
@@ -221,6 +249,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
 
         // Encoder le contenu structuré s'il existe
         const content = encodeStructuredContent(formData.content, formData.structuredContent)
+
+        // Log encoded content
+        console.log('Contenu encodé (début):', content.substring(0, 500) + '...');
 
         // Prepare data for update
         const postData = {

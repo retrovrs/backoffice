@@ -7,7 +7,7 @@ import { Circle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const RadioGroup = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Root>,
+  React.ComponentRef<typeof RadioGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
 >(({ className, ...props }, ref) => {
   return (
@@ -21,9 +21,18 @@ const RadioGroup = React.forwardRef<
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
 const RadioGroupItem = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(({ className, ...props }, ref) => {
+  React.ComponentRef<typeof RadioGroupPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item> & {
+    checked?: boolean;
+    onClick?: () => void;
+  }
+>(({ className, children, checked, onClick, ...props }, ref) => {
+  const handleClick = React.useCallback(() => {
+    if (onClick) {
+      onClick()
+    }
+  }, [onClick])
+
   return (
     <RadioGroupPrimitive.Item
       ref={ref}
@@ -31,6 +40,7 @@ const RadioGroupItem = React.forwardRef<
         "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      onClick={handleClick}
       {...props}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
