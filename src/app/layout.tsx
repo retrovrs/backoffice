@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "RetroVRS Backoffice",
   description: "RetroVRS Backoffice",
+  icons: {
+    icon: '/images/retrovrs_favicon.png',
+    shortcut: '/images/retrovrs_favicon.png',
+    apple: '/images/retrovrs_favicon.png',
+  },
 };
 
 export default function RootLayout({
