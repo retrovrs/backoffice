@@ -53,11 +53,11 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
           SEO Assistant
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-screen max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-screen max-w-[95vw] sm:max-w-[95vw] md:max-w-[95vw] lg:max-w-[95vw] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Assistant SEO</DialogTitle>
+          <DialogTitle>SEO Assistant</DialogTitle>
           <DialogDescription>
-            Analysez et optimisez votre article de blog pour les moteurs de recherche
+            Analyze and optimize your blog post for search engines
           </DialogDescription>
         </DialogHeader>
         <div className="mt-6">
@@ -71,83 +71,83 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
               <div className="bg-muted p-4 rounded-lg overflow-x-auto w-full h-[60vh]">
                 <pre className="text-sm whitespace-pre-wrap w-full">
                   {`<!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${formData.title || 'Titre de l\'article'} - Nom du Site</title>
-  <meta name="description" content="${formData.excerpt || 'Résumé de l\'article...'}">
+  <title>${formData.title || 'Article Title'} - RetroVrs</title>
+  <meta name="description" content="${formData.excerpt || 'Article summary...'}">
   
-  <!-- Open Graph Meta pour les réseaux sociaux -->
-  <meta property="og:title" content="${formData.title || 'Titre de l\'article'}">
-  <meta property="og:description" content="${formData.excerpt || 'Résumé de l\'article...'}">
-  <meta property="og:image" content="${formData.mainImageUrl || 'URL de l\'image principale'}">
-  <meta property="og:url" content="https://votresite.com/${formData.slug || 'url-de-larticle'}">
+  <!-- Open Graph Meta for social networks -->
+  <meta property="og:title" content="${formData.title || 'Article Title'}">
+  <meta property="og:description" content="${formData.excerpt || 'Article summary...'}">
+  <meta property="og:image" content="${formData.mainImageUrl || 'Main image URL'}">
+  <meta property="og:url" content="https://retrovrs.com/blog/${formData.slug || 'article-url'}">
   <meta property="og:type" content="article">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${formData.title || 'Titre de l\'article'}">
-  <meta name="twitter:description" content="${formData.excerpt || 'Résumé de l\'article...'}">
-  <meta name="twitter:image" content="${formData.mainImageUrl || 'URL de l\'image principale'}">
+  <meta name="twitter:title" content="${formData.title || 'Article Title'}">
+  <meta name="twitter:description" content="${formData.excerpt || 'Article summary...'}">
+  <meta name="twitter:image" content="${formData.mainImageUrl || 'Main image URL'}">
   
-  <!-- Tag canonique (évite le contenu dupliqué) -->
-  <link rel="canonical" href="https://votresite.com/${formData.slug || 'url-de-larticle'}">
+  <!-- Canonical tag (prevents duplicate content) -->
+  <link rel="canonical" href="https://retrovrs.com/blog/${formData.slug || 'article-url'}">
 </head>
 <body>
   <article>
-    <!-- Entête de l'article -->
+    <!-- Article header -->
     <header>
-      <h1>${formData.title || 'Titre de l\'article'}</h1>
+      <h1>${formData.title || 'Article Title'}</h1>
       <p class="meta">
-        Par <a href="/author/${formData.author.toLowerCase().replace(/\s+/g, '-') || 'auteur'}">${formData.author || 'Auteur'}</a>
-        <time datetime="${formData.publishDate || new Date().toISOString().split('T')[0]}">${new Date(formData.publishDate || Date.now()).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-        dans <a href="/category/${formData.category}">${formData.category}</a>
+        By <a href="/author/${formData.author.toLowerCase().replace(/\s+/g, '-') || 'author'}">${formData.author || 'Author'}</a>
+        <time datetime="${formData.publishDate || new Date().toISOString().split('T')[0]}">${new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+        in <a href="/category/${formData.category}">${formData.category}</a>
       </p>
     </header>
     
     <!-- Introduction -->
-    <p class="lead">${formData.introText || formData.excerpt || 'Résumé de l\'article...'}</p>
+    <p class="lead">${formData.introText || formData.excerpt || 'Article summary...'}</p>
     
-    <!-- Image principale -->
+    <!-- Main image -->
     <figure>
       <img 
         src="${formData.mainImageUrl || 'https://placeholder.com/800x500'}" 
-        alt="${formData.mainImageAlt || 'Image illustrant ' + formData.title}" 
+        alt="${formData.mainImageAlt || 'Image illustrating ' + formData.title}" 
         title="${formData.title}"
         width="800" 
         height="500" 
         loading="lazy">
-      <figcaption>Image illustrant l'article</figcaption>
+      <figcaption>Image illustrating the article</figcaption>
     </figure>
     
-    <!-- Contenu de l'article -->
+    <!-- Article content -->
     <div class="content">
-      ${formData.content || 'Contenu de l\'article...'}
+      ${formData.content || 'Article content...'}
     </div>
     
-    <!-- Structure de données Schema.org pour les moteurs de recherche -->
+    <!-- Schema.org structured data for search engines -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      "headline": "${formData.title || 'Titre de l\'article'}",
-      "image": "${formData.mainImageUrl || 'URL de l\'image principale'}",
+      "headline": "${formData.title || 'Article Title'}",
+      "image": "${formData.mainImageUrl || 'Main image URL'}",
       "datePublished": "${formData.publishDate || new Date().toISOString()}",
       "dateModified": "${new Date().toISOString()}",
       "author": {
         "@type": "Person",
-        "name": "${formData.author || 'Nom de l\'auteur'}"
+        "name": "${formData.author || 'Author Name'}"
       },
       "publisher": {
         "@type": "Organization",
-        "name": "Nom du site",
+        "name": "RetroVrs",
         "logo": {
           "@type": "ImageObject",
-          "url": "URL du logo"
+          "url": "Logo URL"
         }
       },
-      "description": "${formData.excerpt || 'Résumé de l\'article...'}"
+      "description": "${formData.excerpt || 'Article summary...'}"
     }
     </script>
   </article>
@@ -160,27 +160,27 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
               <div className="w-full max-w-4xl mx-auto bg-white rounded-lg shadow overflow-hidden h-[60vh] overflow-y-auto">
                 <article className="p-6">
                   <header className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{formData.title || 'Titre de l\'article'}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{formData.title || 'Article Title'}</h1>
                     <p className="text-sm text-gray-600">
-                      Par <a href="#" className="text-blue-600 hover:underline">{formData.author || 'Auteur'}</a>
+                      By <a href="#" className="text-blue-600 hover:underline">{formData.author || 'Author'}</a>
                       {' · '}
                       <time dateTime={formData.publishDate || new Date().toISOString().split('T')[0]}>
-                        {new Date(formData.publishDate || Date.now()).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        {new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </time>
                       {' · '}
-                      dans <a href="#" className="text-blue-600 hover:underline">{formData.category}</a>
+                      in <a href="#" className="text-blue-600 hover:underline">{formData.category}</a>
                     </p>
                   </header>
                   
                   <p className="text-lg font-medium text-gray-700 mb-6">
-                    {formData.introText || formData.excerpt || 'Résumé de l\'article...'}
+                    {formData.introText || formData.excerpt || 'Article summary...'}
                   </p>
                   
                   {formData.mainImageUrl && (
                     <figure className="mb-6">
                       <img 
                         src={formData.mainImageUrl} 
-                        alt={formData.mainImageAlt || `Image illustrant ${formData.title}`}
+                        alt={formData.mainImageAlt || `Image illustrating ${formData.title}`}
                         className="w-full h-auto rounded-lg"
                       />
                       {formData.mainImageAlt && (
@@ -191,18 +191,18 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                     </figure>
                   )}
                   
-                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formData.content || '<p>Contenu de l\'article...</p>' }} />
+                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formData.content || '<p>Article content...</p>' }} />
                 </article>
               </div>
             </TabsContent>
             <TabsContent value="analyzer" className="space-y-4">
               <div className="bg-white p-6 rounded-lg border border-gray-200 h-[60vh] overflow-y-auto">
-                <h3 className="text-xl font-bold mb-6">Analyse SEO</h3>
+                <h3 className="text-xl font-bold mb-6">SEO Analysis</h3>
                 
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <h4 className="font-medium text-lg mb-4">Éléments essentiels</h4>
+                      <h4 className="font-medium text-lg mb-4">Essential Elements</h4>
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center ${formData.title.length > 0 ? 'bg-green-500' : 'bg-red-500'}`}>
@@ -217,8 +217,8 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                             )}
                           </div>
                           <div>
-                            <p className="font-medium">Titre</p>
-                            <p className="text-sm text-gray-600">{formData.title.length > 0 ? `${formData.title.length} caractères` : 'Manquant'}</p>
+                            <p className="font-medium">Title</p>
+                            <p className="text-sm text-gray-600">{formData.title.length > 0 ? `${formData.title.length} characters` : 'Missing'}</p>
                           </div>
                         </div>
                         
@@ -236,7 +236,7 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                           </div>
                           <div>
                             <p className="font-medium">Meta Description</p>
-                            <p className="text-sm text-gray-600">{formData.excerpt.length > 0 ? `${formData.excerpt.length} caractères` : 'Manquant'}</p>
+                            <p className="text-sm text-gray-600">{formData.excerpt.length > 0 ? `${formData.excerpt.length} characters` : 'Missing'}</p>
                           </div>
                         </div>
                         
@@ -253,8 +253,8 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                             )}
                           </div>
                           <div>
-                            <p className="font-medium">Auteur</p>
-                            <p className="text-sm text-gray-600">{formData.author.length > 0 ? formData.author : 'Recommandé'}</p>
+                            <p className="font-medium">Author</p>
+                            <p className="text-sm text-gray-600">{formData.author.length > 0 ? formData.author : 'Recommended'}</p>
                           </div>
                         </div>
                         
@@ -272,7 +272,7 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                           </div>
                           <div>
                             <p className="font-medium">Introduction</p>
-                            <p className="text-sm text-gray-600">{formData.introText.length > 0 ? `${formData.introText.length} caractères` : 'Recommandé'}</p>
+                            <p className="text-sm text-gray-600">{formData.introText.length > 0 ? `${formData.introText.length} characters` : 'Recommended'}</p>
                           </div>
                         </div>
                         
@@ -289,8 +289,8 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                             )}
                           </div>
                           <div>
-                            <p className="font-medium">Image principale</p>
-                            <p className="text-sm text-gray-600">{formData.mainImageUrl.length > 0 ? 'Présente' : 'Recommandée'}</p>
+                            <p className="font-medium">Main Image</p>
+                            <p className="text-sm text-gray-600">{formData.mainImageUrl.length > 0 ? 'Present' : 'Recommended'}</p>
                           </div>
                         </div>
                         
@@ -307,11 +307,11 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                             )}
                           </div>
                           <div>
-                            <p className="font-medium">Contenu</p>
+                            <p className="font-medium">Content</p>
                             <p className="text-sm text-gray-600">
                               {formData.content.length > 0 
-                                ? `${formData.content.length} caractères ${formData.content.length > 300 ? '(bon)' : '(trop court)'}` 
-                                : 'Manquant'}
+                                ? `${formData.content.length} characters ${formData.content.length > 300 ? '(good)' : '(too short)'}` 
+                                : 'Missing'}
                             </p>
                           </div>
                         </div>
@@ -330,18 +330,18 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                           </div>
                           <div>
                             <p className="font-medium">Slug (URL)</p>
-                            <p className="text-sm text-gray-600">{formData.slug.length > 0 ? formData.slug : 'Manquant'}</p>
+                            <p className="text-sm text-gray-600">{formData.slug.length > 0 ? formData.slug : 'Missing'}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <h4 className="font-medium text-lg mb-4">Score et Recommandations</h4>
+                      <h4 className="font-medium text-lg mb-4">Score and Recommendations</h4>
                       
-                      {/* Score SEO */}
+                      {/* SEO Score */}
                       <div className="mb-6">
-                        <p className="text-sm text-gray-600 mb-2">Score SEO global</p>
+                        <p className="text-sm text-gray-600 mb-2">Overall SEO Score</p>
                         <div className="w-full bg-gray-200 rounded-full h-4">
                           <div 
                             className={`h-4 rounded-full ${
@@ -358,7 +358,7 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                       </div>
                       
                       <div className="mt-6">
-                        <h4 className="font-medium mb-3">Recommandations:</h4>
+                        <h4 className="font-medium mb-3">Recommendations:</h4>
                         <ul className="space-y-2">
                           {getRecommendations(formData).map((recommendation, index) => (
                             <li key={index} className="flex items-start gap-2 text-red-700">
@@ -373,20 +373,20 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                               <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path>
                               </svg>
-                              <span>Tous les éléments essentiels sont présents. Bravo !</span>
+                              <span>All essential elements are present. Great job!</span>
                             </li>
                           )}
                         </ul>
                       </div>
                       
                       <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h4 className="font-medium mb-2 text-blue-800">Conseils pour améliorer votre SEO :</h4>
+                        <h4 className="font-medium mb-2 text-blue-800">Tips to improve your SEO:</h4>
                         <ul className="list-disc pl-5 space-y-1 text-sm text-blue-800">
-                          <li>Utilisez des mots-clés pertinents dans votre titre et au début de votre contenu</li>
-                          <li>Structurez votre contenu avec des sous-titres (H2, H3, H4)</li>
-                          <li>Ajoutez des liens internes vers d'autres articles pertinents</li>
-                          <li>Assurez-vous que votre contenu soit d'au moins 300 mots (idéalement 1000+)</li>
-                          <li>Utilisez des paragraphes courts et des listes pour améliorer la lisibilité</li>
+                          <li>Use relevant keywords in your title and at the beginning of your content</li>
+                          <li>Structure your content with subheadings (H2, H3, H4)</li>
+                          <li>Add internal links to other relevant articles</li>
+                          <li>Ensure your content is at least 300 words (ideally 1000+)</li>
+                          <li>Use short paragraphs and lists to improve readability</li>
                         </ul>
                       </div>
                     </div>
@@ -401,19 +401,19 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
   )
 }
 
-// Fonction pour calculer le score SEO en pourcentage
+// Function to calculate SEO score percentage
 function getScorePercentage(formData: BlogPostFormData): number {
   let score = 0
-  let totalMandatory = 4 // Éléments obligatoires: titre, slug, contenu, extrait
-  let totalOptional = 3 // Éléments optionnels: auteur, introduction, image
+  let totalMandatory = 4 // Mandatory elements: title, slug, content, excerpt
+  let totalOptional = 3 // Optional elements: author, introduction, image
   
-  // Éléments obligatoires
+  // Mandatory elements
   if (formData.title.length > 0) score++
   if (formData.excerpt.length > 0) score++
   if (formData.content.length > 300) score++
   if (formData.slug.length > 0) score++
   
-  // Éléments optionnels (comptent pour un demi-point chacun)
+  // Optional elements (count as half a point each)
   if (formData.author.length > 0) score += 0.5
   if (formData.introText.length > 0) score += 0.5
   if (formData.mainImageUrl.length > 0) score += 0.5
@@ -422,21 +422,21 @@ function getScorePercentage(formData: BlogPostFormData): number {
   return Math.round((score / (totalMandatory + (totalOptional * 0.5))) * 100)
 }
 
-// Fonction pour obtenir la liste des recommandations
+// Function to get recommendations list
 function getRecommendations(formData: BlogPostFormData): string[] {
   const recommendations = []
   
-  // Recommandations pour les éléments obligatoires
-  if (formData.title.length === 0) recommendations.push('Ajoutez un titre à votre article')
-  if (formData.excerpt.length === 0) recommendations.push('Ajoutez un extrait pour améliorer les résultats de recherche')
-  if (formData.content.length < 300) recommendations.push('Votre contenu devrait contenir au moins 300 caractères')
-  if (formData.slug.length === 0) recommendations.push('Créez un slug pour votre URL')
+  // Recommendations for mandatory elements
+  if (formData.title.length === 0) recommendations.push('Add a title to your article')
+  if (formData.excerpt.length === 0) recommendations.push('Add an excerpt to improve search results')
+  if (formData.content.length < 300) recommendations.push('Your content should be at least 300 characters')
+  if (formData.slug.length === 0) recommendations.push('Create a slug for your URL')
   
-  // Recommandations pour les éléments optionnels
-  if (formData.author.length === 0) recommendations.push('Ajoutez le nom de l\'auteur pour améliorer la crédibilité')
-  if (formData.introText.length === 0) recommendations.push('Ajoutez un paragraphe d\'introduction pour capter l\'attention')
-  if (formData.mainImageUrl.length === 0) recommendations.push('Ajoutez une image principale pour un meilleur engagement')
-  if (formData.mainImageUrl.length > 0 && formData.mainImageAlt.length === 0) recommendations.push('Ajoutez un texte alternatif à votre image pour l\'accessibilité et le SEO')
+  // Recommendations for optional elements
+  if (formData.author.length === 0) recommendations.push('Add the author name to improve credibility')
+  if (formData.introText.length === 0) recommendations.push('Add an introduction paragraph to capture attention')
+  if (formData.mainImageUrl.length === 0) recommendations.push('Add a main image for better engagement')
+  if (formData.mainImageUrl.length > 0 && formData.mainImageAlt.length === 0) recommendations.push('Add alt text to your image for accessibility and SEO')
   
   return recommendations
 }
