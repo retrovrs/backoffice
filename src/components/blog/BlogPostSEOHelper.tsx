@@ -239,11 +239,13 @@ export function BlogPostSEOHelper() {
                   {/* First section */}
                   <section className="mb-8">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">First Important Subheading</h2>
-                    <p className="mb-4">
-                      Content of the first paragraph with <strong>important words</strong> highlighted 
-                      and relevant <a href="#" className="text-blue-600 hover:underline">internal links</a>.
-                    </p>
-                    <p className="mb-6">Second paragraph with more details...</p>
+                    <div dangerouslySetInnerHTML={{ __html: `
+                      <p class="mb-4">
+                        Content of the first paragraph with <strong>important words</strong> highlighted 
+                        and relevant <a href="#" class="text-blue-600 hover:underline">internal links</a>.
+                      </p>
+                      <p class="mb-6">Second paragraph with more details...</p>
+                    ` }} />
                     
                     <h3 className="text-xl font-bold text-gray-900 mb-3">Subsection of the first point</h3>
                     <p className="mb-6">Development of the subsection with relevant content...</p>

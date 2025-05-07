@@ -44,6 +44,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
   const [sections, setSections] = useState<ContentSection[]>([])
   const initialContentRef = useRef(initialContent)
   const isInitialMount = useRef(true)
+  const isProcessingChange = useRef(false)
   
   // Convertir le contenu initial en sections structurées si possible
   useEffect(() => {
@@ -53,11 +54,11 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     }
     
     initialContentRef.current = initialContent
-    isInitialMount.current = false
     
     if (!initialContent) {
       // Si aucun contenu initial, créer une section vide
       setSections([createEmptySection()])
+      isInitialMount.current = false
       return
     }
     
@@ -76,6 +77,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
         
         if (isValid) {
           setSections(parsedContent)
+          isInitialMount.current = false
           return
         }
       }
@@ -93,6 +95,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       })
     }
     setSections([initialSection])
+    isInitialMount.current = false
   }, [initialContent]) // Ajouter initialContent comme dépendance
   
   // Référence pour éviter les mises à jour en cascade
@@ -105,42 +108,67 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
   
   // Mettre à jour le contenu parent quand les sections changent, mais sans créer une boucle
   useEffect(() => {
-    // Ne pas déclencher onChange lors du montage initial ou si sections est vide
-    if (isInitialMount.current || sections.length === 0) {
+    // Ne pas déclencher onChange lors du montage initial, si sections est vide ou si on est déjà en train de traiter un changement
+    if (isInitialMount.current || sections.length === 0 || isProcessingChange.current) {
       return
     }
     
-    const jsonContent = JSON.stringify(sections)
-    // Générer aussi un contenu texte brut pour la rétrocompatibilité
-    const rawContent = generateRawContent(sections)
-    onChange(jsonContent, rawContent)
+    isProcessingChange.current = true
+    
+    try {
+      const jsonContent = JSON.stringify(sections)
+      // Générer aussi un contenu texte brut pour la rétrocompatibilité
+      const rawContent = generateRawContent(sections)
+      onChange(jsonContent, rawContent)
+    } finally {
+      // S'assurer que le flag est remis à false même en cas d'erreur
+      isProcessingChange.current = false
+    }
   }, [sections, onChange])
   
   // Générer un contenu texte brut à partir des sections structurées
   const generateRawContent = (sectionsArray: ContentSection[]): string => {
     return sectionsArray.map(section => {
-      return section.elements.map(element => {
+      const sectionContent = section.elements.map(element => {
         switch (element.type) {
           case 'h2':
-            return `## ${element.content}\n\n`
+            return `  <h2>${element.content}</h2>`
           case 'h3':
-            return `### ${element.content}\n\n`
+            return `  <h3>${element.content}</h3>`
           case 'paragraph':
-            return `${element.content}\n\n`
+            return `  <p>${element.content}</p>`
           case 'list':
             if (element.listItems && element.listItems.length > 0) {
-              return element.listItems.map(item => `- ${item}`).join('\n') + '\n\n'
+              const listItems = element.listItems.map(item => `    <li>${item}</li>`).join('\n')
+              return `  <ul>\n${listItems}\n  </ul>`
             }
             return ''
           case 'image':
-            return `![${element.alt || ''}](${element.url || ''})\n${element.content}\n\n`
+            return `  <figure>\n    <img src="${element.url || ''}" alt="${element.alt || ''}" />\n    <figcaption>${element.content}</figcaption>\n  </figure>`
           case 'video':
-            return `[Vidéo: ${element.content}](${element.url || ''})\n\n`
+            // Pour une vidéo, on utilise une iframe si c'est YouTube ou une balise vidéo sinon
+            const isYouTubeUrl = (element.url || '').includes('youtube.com') || (element.url || '').includes('youtu.be')
+            if (isYouTubeUrl) {
+              const youtubeId = extractYouTubeId(element.url || '')
+              return `  <figure class="video">\n    <iframe width="560" height="315" src="https://www.youtube.com/embed/${youtubeId}" frameborder="0" allowfullscreen></iframe>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+            } else {
+              return `  <figure class="video">\n    <video controls src="${element.url || ''}"></video>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+            }
           default:
-            return element.content + '\n\n'
+            return `  <p>${element.content}</p>`
         }
-      }).join('')
-    }).join('\n')
+      }).join('\n\n')
+      
+      // Encapsuler le contenu de la section dans une balise section sans attributs
+      return `<section>\n${sectionContent}\n</section>`
+    }).join('\n\n')
+  }
+  
+  // Fonction pour extraire l'ID YouTube d'une URL
+  const extractYouTubeId = (url: string): string => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : ''
   }
   
   // Créer une section vide
@@ -333,13 +361,14 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
   return (
     <div className="space-y-8">
       {sections.map((section, sectionIndex) => (
-        <Card key={section.id} className="border border-gray-200">
-          <CardHeader className="bg-gray-50 flex flex-row items-center justify-between p-4">
-            <CardTitle className="text-lg font-medium">
+        <Card key={section.id} className="border border-violet-200 shadow-sm">
+          <CardHeader className="bg-violet-50 flex flex-row items-center justify-between p-4">
+            <CardTitle className="text-lg font-medium text-violet-800">
               Section {sectionIndex + 1}
             </CardTitle>
             <div className="flex items-center space-x-2">
               <Button
+                type="button"
                 variant="outline"
                 size="icon"
                 onClick={() => moveSectionUp(sectionIndex)}
@@ -348,6 +377,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <ChevronUp className="h-4 w-4" />
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="icon"
                 onClick={() => moveSectionDown(sectionIndex)}
@@ -356,6 +386,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <ChevronDown className="h-4 w-4" />
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="icon"
                 onClick={() => removeSection(section.id)}
@@ -366,12 +397,31 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
             </div>
           </CardHeader>
           
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-6 space-y-4 bg-violet-50/30">
             {section.elements.map((element, elementIndex) => (
-              <div key={element.id} className="border rounded-md p-4 space-y-3">
+              <div 
+                key={element.id} 
+                className={`border rounded-md p-4 space-y-3 ${
+                  element.type === 'h2' ? 'bg-pink-50 border-pink-200' : 
+                  element.type === 'h3' ? 'bg-pink-100/70 border-pink-200' : 
+                  element.type === 'paragraph' ? 'bg-white border-pink-100' : 
+                  element.type === 'image' ? 'bg-violet-50 border-violet-200' : 
+                  element.type === 'video' ? 'bg-violet-100/70 border-violet-200' : 
+                  element.type === 'list' ? 'bg-pink-50/70 border-pink-100' : 
+                  'bg-white'
+                }`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="text-sm font-medium bg-gray-100 p-1 px-2 rounded">
+                    <div className={`text-sm font-medium p-1 px-2 rounded ${
+                      element.type === 'h2' ? 'bg-pink-200 text-pink-800' : 
+                      element.type === 'h3' ? 'bg-pink-300 text-pink-900' : 
+                      element.type === 'paragraph' ? 'bg-pink-100 text-pink-800' : 
+                      element.type === 'image' ? 'bg-violet-200 text-violet-800' : 
+                      element.type === 'video' ? 'bg-violet-300 text-violet-900' : 
+                      element.type === 'list' ? 'bg-pink-200 text-pink-900' : 
+                      'bg-gray-200 text-gray-800'
+                    }`}>
                       {element.type === 'h2' && 'H2'}
                       {element.type === 'h3' && 'H3'}
                       {element.type === 'paragraph' && 'P'}
@@ -382,25 +432,31 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                   </div>
                   <div className="flex items-center space-x-1">
                     <Button
+                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => moveElementUp(section.id, elementIndex)}
                       disabled={elementIndex === 0}
+                      className="text-violet-700 hover:text-violet-800 hover:bg-violet-100"
                     >
                       <MoveUp className="h-4 w-4" />
                     </Button>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => moveElementDown(section.id, elementIndex)}
                       disabled={elementIndex === section.elements.length - 1}
+                      className="text-violet-700 hover:text-violet-800 hover:bg-violet-100"
                     >
                       <MoveDown className="h-4 w-4" />
                     </Button>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="icon"
                       onClick={() => removeElement(section.id, element.id)}
+                      className="text-pink-700 hover:text-pink-800 hover:bg-pink-100"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -409,37 +465,39 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 
                 {element.type === 'h2' && (
                   <div className="space-y-1">
-                    <Label htmlFor={`h2-${element.id}`}>Titre (H2)</Label>
+                    {/* <Label htmlFor={`h2-${element.id}`} className="text-pink-800">Titre (H2)</Label> */}
                     <Input 
                       id={`h2-${element.id}`}
                       value={element.content}
                       onChange={(e) => updateElement(section.id, element.id, { content: e.target.value })}
-                      placeholder="Titre principal"
+                      placeholder="Main title"
+                      className="border-pink-200 focus:border-pink-300 focus:ring-pink-200"
                     />
                   </div>
                 )}
                 
                 {element.type === 'h3' && (
                   <div className="space-y-1">
-                    <Label htmlFor={`h3-${element.id}`}>Sous-titre (H3)</Label>
+                    {/* <Label htmlFor={`h3-${element.id}`} className="text-pink-900">Sous-titre (H3)</Label> */}
                     <Input 
                       id={`h3-${element.id}`}
                       value={element.content}
                       onChange={(e) => updateElement(section.id, element.id, { content: e.target.value })}
-                      placeholder="Sous-titre"
+                      placeholder="Subtitle"
+                      className="border-pink-200 focus:border-pink-300 focus:ring-pink-200"
                     />
                   </div>
                 )}
                 
                 {element.type === 'paragraph' && (
                   <div className="space-y-1">
-                    <Label htmlFor={`paragraph-${element.id}`}>Paragraphe</Label>
+                    {/* <Label htmlFor={`paragraph-${element.id}`} className="text-pink-800">Paragraphe</Label> */}
                     <Textarea 
                       id={`paragraph-${element.id}`}
                       value={element.content}
                       onChange={(e) => updateElement(section.id, element.id, { content: e.target.value })}
-                      placeholder="Contenu du paragraphe"
-                      className="min-h-[100px]"
+                      placeholder="Paragraph content ..."
+                      className="min-h-[100px] border-pink-100 focus:border-pink-200 focus:ring-pink-100"
                     />
                   </div>
                 )}
@@ -447,30 +505,33 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 {element.type === 'image' && (
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <Label htmlFor={`image-url-${element.id}`}>URL de l'image</Label>
+                      <Label htmlFor={`image-url-${element.id}`} className="text-violet-800">Image URL</Label>
                       <Input 
                         id={`image-url-${element.id}`}
                         value={element.url || ''}
                         onChange={(e) => updateElement(section.id, element.id, { url: e.target.value })}
                         placeholder="https://example.com/image.jpg"
+                        className="border-violet-200 focus:border-violet-300 focus:ring-violet-200"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor={`image-alt-${element.id}`}>Texte alternatif</Label>
+                      <Label htmlFor={`image-alt-${element.id}`} className="text-violet-800">Alternatif Text</Label>
                       <Input 
                         id={`image-alt-${element.id}`}
                         value={element.alt || ''}
                         onChange={(e) => updateElement(section.id, element.id, { alt: e.target.value })}
-                        placeholder="Description de l'image"
+                        placeholder="Image description"
+                        className="border-violet-200 focus:border-violet-300 focus:ring-violet-200"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor={`image-caption-${element.id}`}>Légende</Label>
+                      <Label htmlFor={`image-caption-${element.id}`} className="text-violet-800">Caption</Label>
                       <Input 
                         id={`image-caption-${element.id}`}
                         value={element.content}
                         onChange={(e) => updateElement(section.id, element.id, { content: e.target.value })}
-                        placeholder="Légende de l'image"
+                        placeholder="Image caption"
+                        className="border-violet-200 focus:border-violet-300 focus:ring-violet-200"
                       />
                     </div>
                   </div>
@@ -479,21 +540,23 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 {element.type === 'video' && (
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <Label htmlFor={`video-url-${element.id}`}>URL de la vidéo</Label>
+                      <Label htmlFor={`video-url-${element.id}`} className="text-violet-900">Video URL</Label>
                       <Input 
                         id={`video-url-${element.id}`}
                         value={element.url || ''}
                         onChange={(e) => updateElement(section.id, element.id, { url: e.target.value })}
                         placeholder="https://example.com/video.mp4 ou ID YouTube"
+                        className="border-violet-300 focus:border-violet-400 focus:ring-violet-300"
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor={`video-caption-${element.id}`}>Légende</Label>
+                      <Label htmlFor={`video-caption-${element.id}`} className="text-violet-900">Caption</Label>
                       <Input 
                         id={`video-caption-${element.id}`}
                         value={element.content}
                         onChange={(e) => updateElement(section.id, element.id, { content: e.target.value })}
-                        placeholder="Légende de la vidéo"
+                        placeholder="Video caption"
+                        className="border-violet-300 focus:border-violet-400 focus:ring-violet-300"
                       />
                     </div>
                   </div>
@@ -501,15 +564,15 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 
                 {element.type === 'list' && (
                   <div className="space-y-3">
-                    <Label>Éléments de la liste</Label>
+                    <Label className="text-pink-800">List items</Label>
                     {element.listItems?.map((item, itemIndex) => (
                       <div key={`${element.id}-item-${itemIndex}`} className="flex items-center space-x-2">
-                        <span className="text-gray-500">•</span>
+                        <span className="text-pink-500">•</span>
                         <Input 
                           value={item}
                           onChange={(e) => updateListItem(section.id, element.id, itemIndex, e.target.value)}
-                          placeholder={`Élément ${itemIndex + 1}`}
-                          className="flex-1"
+                          placeholder={`Item ${itemIndex + 1}`}
+                          className="flex-1 border-pink-100 focus:border-pink-200 focus:ring-pink-100"
                         />
                         <Button
                           type="button"
@@ -517,6 +580,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                           size="icon"
                           onClick={() => removeListItem(section.id, element.id, itemIndex)}
                           disabled={(element.listItems?.length || 0) <= 1}
+                          className="text-pink-700 hover:bg-pink-100"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -527,9 +591,9 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                       variant="outline"
                       size="sm"
                       onClick={() => addListItem(section.id, element.id)}
-                      className="mt-2"
+                      className="mt-2 border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100"
                     >
-                      Add an element
+                      Add an item
                     </Button>
                   </div>
                 )}
@@ -537,21 +601,23 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
             ))}
             
             {section.elements.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-12 text-gray-500 bg-violet-50/50 border border-dashed border-violet-200 rounded-lg">
                 No elements in this section. Add elements using the buttons below.
               </div>
             )}
           </CardContent>
           
-          <CardFooter className="border-t border-gray-100 bg-gray-50 p-4">
+          <CardFooter className="border-t border-violet-100 bg-violet-50 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => addElement(section.id, 'h2')}
+                      className="bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100"
                     >
                       <Type className="h-4 w-4 mr-2" /> H2
                     </Button>
@@ -566,9 +632,11 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => addElement(section.id, 'h3')}
+                      className="bg-pink-100/70 border-pink-200 text-pink-800 hover:bg-pink-200/70"
                     >
                       <Type className="h-4 w-4 mr-2" /> H3
                     </Button>
@@ -583,11 +651,13 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => addElement(section.id, 'paragraph')}
+                      className="bg-white border-pink-100 text-pink-700 hover:bg-pink-50"
                     >
-                      <PenSquare className="h-4 w-4 mr-2" /> Paragraphe
+                      <PenSquare className="h-4 w-4 mr-2" /> Paragraph
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -600,11 +670,13 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => addElement(section.id, 'image')}
+                      className="bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100"
                     >
-                      <Image className="h-4 w-4 mr-2" /> Image
+                    <Image className="h-4 w-4 mr-2" /> Image
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -617,11 +689,13 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => addElement(section.id, 'video')}
+                      className="bg-violet-100/70 border-violet-200 text-violet-800 hover:bg-violet-200/70"
                     >
-                      <Play className="h-4 w-4 mr-2" /> Vidéo
+                      <Play className="h-4 w-4 mr-2" /> Video
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -634,11 +708,13 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => addElement(section.id, 'list')}
+                      className="bg-pink-50/70 border-pink-100 text-pink-700 hover:bg-pink-100"
                     >
-                      <List className="h-4 w-4 mr-2" /> Liste
+                      <List className="h-4 w-4 mr-2" /> List
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -656,7 +732,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
           type="button"
           variant="outline"
           onClick={addSection}
-          className="flex items-center"
+          className="flex items-center bg-violet-100 border-violet-300 text-violet-800 hover:bg-violet-200"
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Add a section

@@ -115,12 +115,27 @@ export default function BlogPostForm({
 
   // Gérer les changements du contenu structuré
   const handleContentChange = useCallback((jsonContent: string, rawContent: string) => {
-    setFormData(prev => ({
-      ...prev,
-      content: rawContent,
-      structuredContent: JSON.parse(jsonContent)
-    }))
-  }, [])
+    try {
+      const structuredContent = JSON.parse(jsonContent);
+      
+      setFormData(prev => ({
+        ...prev,
+        content: rawContent,
+        structuredContent: structuredContent
+      }));
+      
+      // Pour diagnostic - vérifier le contenu HTML généré
+      console.log('Content HTML généré:', rawContent);
+      
+    } catch (error) {
+      console.error('Erreur lors du parsing du contenu JSON:', error);
+      // En cas d'erreur, mettre à jour uniquement le contenu brut
+      setFormData(prev => ({
+        ...prev,
+        content: rawContent
+      }));
+    }
+  }, []);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

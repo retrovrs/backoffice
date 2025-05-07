@@ -122,13 +122,11 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
         width="800" 
         height="500" 
         loading="lazy">
-      <figcaption>Image illustrating the article</figcaption>
+      <figcaption>${formData.mainImageCaption || 'Image illustrating the article'}</figcaption>
     </figure>
     
     <!-- Article content -->
-    <div class="content">
-      ${formData.content || 'Article content...'}
-    </div>
+    ${formData.content || 'Article content...'}
     
     <!-- Schema.org structured data for search engines -->
     <script type="application/ld+json">
@@ -171,7 +169,7 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                           : <span>{formData.author || 'Author'}</span>}
                       {' · '}
                       <time dateTime={formData.publishDate || new Date().toISOString().split('T')[0]}>
-                        {new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        {new Date(formData.publishDate || Date.now()).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </time>
                       {' · '}
                       in <a href="#" className="text-blue-600 hover:underline">{formData.category}</a>
@@ -183,22 +181,62 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                   </p>
                   
                   {formData.mainImageUrl && (
-                    <figure className="mb-6">
+                    <figure className="mb-8">
                       <img 
                         src={formData.mainImageUrl} 
                         alt={formData.mainImageAlt || `Image illustrating ${formData.title}`}
                         className="w-full h-auto rounded-lg"
+                        width="800"
+                        height="500"
+                        loading="lazy"
                       />
-                      {formData.mainImageAlt && (
-                        <figcaption className="text-sm text-gray-500 mt-2 text-center">
-                          {formData.mainImageAlt}
+                      {formData.mainImageCaption && (
+                        <figcaption className="text-sm text-gray-600 mt-2 text-center">
+                          {formData.mainImageCaption}
                         </figcaption>
                       )}
                     </figure>
                   )}
                   
-                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formData.content || '<p>Article content...</p>' }} />
+                  <section className="article-content mb-8">
+                    {!formData.content ? (
+                      <>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">First Important Subheading</h2>
+                        <p className="mb-4 text-gray-700">
+                          Content of the first paragraph with <strong className="font-bold text-gray-900">important words</strong> highlighted and relevant <a href="#" className="text-blue-600 hover:underline font-medium">internal links</a>.
+                        </p>
+                        <p className="mb-6 text-gray-700">Second paragraph with more details...</p>
+                        
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">Subsection of the first point</h3>
+                        <p className="mb-6 text-gray-700">Development of the subsection with relevant content...</p>
+                      </>
+                    ) : (
+                      <div className="content-wrapper">
+                        <div
+                          className="blog-content"
+                          dangerouslySetInnerHTML={{
+                            __html: formData.content
+                              .replace(/<h2>/g, '<h2 class="text-2xl font-bold text-gray-900 mb-4">')
+                              .replace(/<h3>/g, '<h3 class="text-xl font-bold text-gray-900 mb-3">')
+                              .replace(/<p>/g, '<p class="mb-4 text-gray-700">')
+                              .replace(/<strong>/g, '<strong class="font-bold text-gray-900">')
+                              .replace(/<a /g, '<a class="text-blue-600 hover:underline font-medium" ')
+                              .replace(/<ul>/g, '<ul class="list-disc pl-5 space-y-2 mb-6">')
+                              .replace(/<ol>/g, '<ol class="list-decimal pl-5 space-y-2 mb-6">')
+                          }}
+                        />
+                      </div>
+                    )}
+                  </section>
                 </article>
+              </div>
+              <div className="w-full max-w-4xl mx-auto">
+                <p className="text-sm text-gray-500 mb-6 text-center italic">
+                  Cette prévisualisation montre le rendu de votre article avec la mise en forme appropriée.
+                </p>
+                <p className="text-sm text-gray-700 bg-yellow-50 p-4 border-l-4 border-yellow-500 rounded">
+                  <strong>Note:</strong> Le balisage final inclut des données structurées (JSON-LD) et des méta-tags qui ne sont pas visibles dans la page rendue, mais qui sont essentiels pour les moteurs de recherche.
+                </p>
               </div>
             </TabsContent>
             <TabsContent value="analyzer" className="space-y-4">
@@ -345,7 +383,6 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <h4 className="font-medium text-lg mb-4">Score and Recommendations</h4>
                       
-                      {/* SEO Score */}
                       <div className="mb-6">
                         <p className="text-sm text-gray-600 mb-2">Overall SEO Score</p>
                         <div className="w-full bg-gray-200 rounded-full h-4">
@@ -411,7 +448,7 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
 function getScorePercentage(formData: BlogPostFormData): number {
   let score = 0
   let totalMandatory = 4 // Mandatory elements: title, slug, content, excerpt
-  let totalOptional = 3 // Optional elements: author, introduction, image
+  let totalOptional = 4 // Optional elements: author, introduction, image, content structure
   
   // Mandatory elements
   if (formData.title.length > 0) score++
@@ -424,6 +461,17 @@ function getScorePercentage(formData: BlogPostFormData): number {
   if (formData.introText.length > 0) score += 0.5
   if (formData.mainImageUrl.length > 0) score += 0.5
   if (formData.mainImageAlt.length > 0 && formData.mainImageUrl.length > 0) score += 0.5
+  
+  // Content structure analysis
+  const hasH2 = formData.content.includes('<h2>')
+  const hasH3 = formData.content.includes('<h3>')
+  const hasParagraphs = formData.content.includes('<p>')
+  const hasList = formData.content.includes('<ul>') || formData.content.includes('<ol>')
+  
+  if (hasH2) score += 0.25
+  if (hasH3) score += 0.25
+  if (hasParagraphs) score += 0.25
+  if (hasList) score += 0.25
   
   return Math.round((score / (totalMandatory + (totalOptional * 0.5))) * 100)
 }
@@ -443,6 +491,17 @@ function getRecommendations(formData: BlogPostFormData): string[] {
   if (formData.introText.length === 0) recommendations.push('Add an introduction paragraph to capture attention')
   if (formData.mainImageUrl.length === 0) recommendations.push('Add a main image for better engagement')
   if (formData.mainImageUrl.length > 0 && formData.mainImageAlt.length === 0) recommendations.push('Add alt text to your image for accessibility and SEO')
+  
+  // Content structure recommendations
+  const hasH2 = formData.content.includes('<h2>')
+  const hasH3 = formData.content.includes('<h3>')
+  const hasParagraphs = formData.content.includes('<p>')
+  const hasList = formData.content.includes('<ul>') || formData.content.includes('<ol>')
+  
+  if (!hasH2 && formData.content.length > 300) recommendations.push('Add H2 headings for better content structure and readability')
+  if (!hasH3 && formData.content.length > 600) recommendations.push('Consider adding H3 subheadings for detailed sections')
+  if (!hasParagraphs && formData.content.length > 0) recommendations.push('Structure your content with paragraphs')
+  if (!hasList && formData.content.length > 500) recommendations.push('Consider using lists for better readability')
   
   return recommendations
 }
