@@ -109,4 +109,107 @@ export async function createBlogPost(formData: BlogPostFormValues) {
         }
         return { error: 'Failed to create blog post' }
     }
+}
+
+export async function getBlogPost(id: number) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        })
+
+        if (!session?.user) {
+            return { error: 'Non authentifié' }
+        }
+
+        const post = await prisma.seoPost.findUnique({
+            where: { id },
+            include: {
+                category: true
+            }
+        })
+
+        if (!post) {
+            return { error: 'Article non trouvé' }
+        }
+
+        return { success: true, post }
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'article:', error)
+        return { error: 'Erreur lors de la récupération de l\'article' }
+    }
+}
+
+export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        })
+
+        if (!session?.user) {
+            return { error: 'Non authentifié' }
+        }
+
+        // Find the category ID or create a new one
+        const category = await prisma.seoCategory.upsert({
+            where: { name: formData.category },
+            update: {},
+            create: {
+                name: formData.category,
+                description: `Catégorie pour les articles ${formData.category}`,
+            },
+        })
+
+        // Parse tags
+        let parsedTags: string[] = []
+        try {
+            if (formData.tags) {
+                if (formData.tags.startsWith('[')) {
+                    // Try parsing as JSON
+                    parsedTags = JSON.parse(formData.tags)
+                } else {
+                    // Parse as comma-separated string
+                    parsedTags = formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+                }
+            }
+        } catch (error) {
+            console.error('Erreur lors du parsing des tags:', error)
+            parsedTags = []
+        }
+
+        // Set the proper status as an enum value
+        const status: PostStatus = formData.status === 'published' ? PostStatus.PUBLISHED : PostStatus.DRAFT
+
+        // Prepare data for update
+        const postData = {
+            title: formData.title,
+            slug: formData.slug,
+            metaDescription: formData.excerpt,
+            metaKeywords: [],
+            excerpt: formData.introText,
+            mainImageUrl: formData.mainImageUrl,
+            mainImageAlt: formData.mainImageAlt,
+            mainImageCaption: formData.mainImageCaption,
+            content: formData.content,
+            status,
+            published: formData.status === 'published',
+            categoryId: category.id,
+            author: formData.author
+        }
+
+        // Update the post
+        const post = await prisma.seoPost.update({
+            where: { id },
+            data: postData
+        })
+
+        revalidatePath('/blog-posts')
+
+        return { success: true, post }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de l\'article:', error)
+        if (error instanceof Error) {
+            console.error('Détails de l\'erreur:', error.message, error.stack)
+        }
+        return { error: 'Erreur lors de la mise à jour de l\'article' }
+    }
 } 
