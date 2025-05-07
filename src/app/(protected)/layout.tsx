@@ -14,7 +14,7 @@ export default function ProtectedLayout({
     const isAuthenticated = !!sessionData;
 
   if (status === 'loading') {
-    return <div>Chargement...</div>
+    return <div>Loading...</div>
   }
 
   if (status === 'unauthenticated') {

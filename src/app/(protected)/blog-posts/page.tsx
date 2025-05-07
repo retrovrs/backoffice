@@ -48,12 +48,12 @@ export default function BlogPostsPage() {
         setPosts(data)
         setIsLoading(false)
       } catch (err) {
-        console.error('Erreur:', err)
-        setError('Erreur lors du chargement des articles de blog')
+        console.error('Error:', err)
+        setError('Error when loading the blog articles')
         setIsLoading(false)
         toast({
-          title: 'Erreur',
-          description: 'Impossible de charger les articles de blog',
+          title: 'Error',
+          description: 'Impossible to load the blog articles',
           variant: 'destructive'
         })
       }
@@ -67,14 +67,14 @@ export default function BlogPostsPage() {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Chargement des articles...</div>
+    return <div className="flex justify-center items-center h-64">Loading the articles...</div>
   }
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+        <Button onClick={() => window.location.reload()}>Try again</Button>
       </div>
     )
   }
@@ -82,26 +82,26 @@ export default function BlogPostsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Articles de Blog</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Blog articles</h1>
         {isAdmin && (
           <Button 
             className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
             onClick={handleNewPost}
           >
-            Nouvel Article
+            New article
           </Button>
         )}
       </div>
       
       <div className="rounded-md border border-gray-200 overflow-hidden">
         <Table>
-          <TableCaption className="mt-4 mb-2 text-gray-500">Liste des articles de blog</TableCaption>
+          <TableCaption className="mt-4 mb-2 text-gray-500">List of blog articles</TableCaption>
           <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead className="w-[300px] py-3 font-semibold text-gray-700">Titre</TableHead>
-              <TableHead className="font-semibold text-gray-700">Auteur</TableHead>
-              <TableHead className="font-semibold text-gray-700">Date de Création</TableHead>
-              <TableHead className="font-semibold text-gray-700">Statut</TableHead>
+              <TableHead className="w-[300px] py-3 font-semibold text-gray-700">Title</TableHead>
+              <TableHead className="font-semibold text-gray-700">Author</TableHead>
+              <TableHead className="font-semibold text-gray-700">Creation date</TableHead>
+              <TableHead className="font-semibold text-gray-700">Status</TableHead>
               <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -109,7 +109,7 @@ export default function BlogPostsPage() {
             {posts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-gray-500">
-                  Aucun article trouvé
+                  No article found
                 </TableCell>
               </TableRow>
             ) : (
@@ -128,7 +128,7 @@ export default function BlogPostsPage() {
                       ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-800 border border-green-200' : 
                         post.status === 'DRAFT' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
                         'bg-gray-100 text-gray-800 border border-gray-200'}`}>
-                      {post.status === 'PUBLISHED' ? 'Publié' : 'Brouillon'}
+                      {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
@@ -138,10 +138,10 @@ export default function BlogPostsPage() {
                       className="mr-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                       onClick={() => router.push(`/admin/blog-posts/edit/${post.id}`)}
                     >
-                      Modifier
+                      Edit
                     </Button>
                     <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors">
-                      Supprimer
+                      Delete
                     </Button>
                   </TableCell>
                 </TableRow>

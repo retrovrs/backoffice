@@ -67,10 +67,10 @@ export default function EditBlogPostPage({ params }: PageProps) {
 
         setIsLoading(false)
       } catch (error) {
-        console.error('Erreur lors du chargement de l\'article:', error)
+        console.error('Error when loading the article:', error)
         toast({
-          title: 'Erreur',
-          description: 'Impossible de charger l\'article',
+          title: 'Error',
+          description: 'Impossible to load the article',
           variant: 'destructive'
         })
         router.push('/blog-posts')
@@ -92,15 +92,15 @@ export default function EditBlogPostPage({ params }: PageProps) {
       }
       
       toast({
-        title: 'Succès',
-        description: 'Article mis à jour avec succès',
+        title: 'Success',
+        description: 'Article updated successfully',
       })
       
       router.push('/blog-posts')
     } catch (error) {
       toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Échec de la mise à jour de l\'article',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update the article',
         variant: 'destructive'
       })
     } finally {
@@ -109,7 +109,7 @@ export default function EditBlogPostPage({ params }: PageProps) {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Chargement de l'article...</div>
+    return <div className="flex justify-center items-center h-64">Loading the article...</div>
   }
 
   return (

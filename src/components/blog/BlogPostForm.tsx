@@ -77,7 +77,7 @@ export default function BlogPostForm({
           setCategories(result.categories)
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des catégories:', error)
+        console.error('Error when loading the categories:', error)
       }
     }
     
