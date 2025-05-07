@@ -27,6 +27,7 @@ type BlogPostFormData = {
   
   // Nouveaux champs
   author: string
+  authorLink: string
   publishDate: string
   introText: string
   mainImageUrl: string
@@ -101,7 +102,9 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
     <header>
       <h1>${formData.title || 'Article Title'}</h1>
       <p class="meta">
-        By <a href="/author/${formData.author.toLowerCase().replace(/\s+/g, '-') || 'author'}">${formData.author || 'Author'}</a>
+        By ${formData.authorLink 
+           ? `<a href="${formData.authorLink}">${formData.author || 'Author'}</a>` 
+           : formData.author || 'Author'}
         <time datetime="${formData.publishDate || new Date().toISOString().split('T')[0]}">${new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
         in <a href="/category/${formData.category}">${formData.category}</a>
       </p>
@@ -138,7 +141,7 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
       "dateModified": "${new Date().toISOString()}",
       "author": {
         "@type": "Person",
-        "name": "${formData.author || 'Author Name'}"
+        "name": "${formData.author || 'Author Name'}"${formData.authorLink ? `,\n        "url": "${formData.authorLink}"` : ''}
       },
       "publisher": {
         "@type": "Organization",
@@ -163,7 +166,9 @@ export function BlogPostSEOAssistant({ formData, disabled = false }: BlogPostSEO
                   <header className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">{formData.title || 'Article Title'}</h1>
                     <p className="text-sm text-gray-600">
-                      By <a href="#" className="text-blue-600 hover:underline">{formData.author || 'Author'}</a>
+                      By {formData.authorLink 
+                          ? <a href={formData.authorLink} className="text-blue-600 hover:underline">{formData.author || 'Author'}</a> 
+                          : <span>{formData.author || 'Author'}</span>}
                       {' · '}
                       <time dateTime={formData.publishDate || new Date().toISOString().split('T')[0]}>
                         {new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}

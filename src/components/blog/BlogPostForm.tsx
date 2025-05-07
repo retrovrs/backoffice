@@ -45,6 +45,7 @@ export default function BlogPostForm({
     
     // Données header
     author: initialData.author || '',
+    authorLink: initialData.authorLink || '',
     publishDate: initialData.publishDate || new Date().toISOString().split('T')[0],
     
     // Données introduction
@@ -349,6 +350,27 @@ export default function BlogPostForm({
                       e.currentTarget.setCustomValidity('')
                     }
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="authorLink">Author link (URL)</Label>
+                  <Input
+                    id="authorLink"
+                    name="authorLink"
+                    type="url"
+                    value={formData.authorLink}
+                    onChange={handleChange}
+                    placeholder="https://example.com/author-profile"
+                    onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
+                      e.target.setCustomValidity('Please enter a valid URL (or leave empty)')
+                    }
+                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
+                      e.currentTarget.setCustomValidity('')
+                    }
+                  />
+                  <p className="text-xs text-gray-500">
+                    Optional URL to the author's profile or website
+                  </p>
                 </div>
 
                 <div className="space-y-2">

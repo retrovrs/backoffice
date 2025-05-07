@@ -55,6 +55,7 @@ export default function EditBlogPostPage({ params }: PageProps) {
             status: result.post.status === 'PUBLISHED' ? 'published' : 'draft',
             category: result.post.category.name,
             author: result.post.author,
+            authorLink: result.post.authorLink || '',
             publishDate: result.post.createdAt ? new Date(result.post.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             introText: result.post.excerpt || '',
             mainImageUrl: result.post.mainImageUrl || '',

@@ -13,6 +13,7 @@ export type BlogPostFormValues = {
     status: string
     category: string
     author: string
+    authorLink: string
     publishDate: string
     introText: string
     mainImageUrl: string
@@ -87,7 +88,8 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             status, // Use the enum value
             published: formData.status === 'published',
             categoryId: category.id,
-            author: formData.author
+            author: formData.author,
+            authorLink: formData.authorLink
         }
 
         console.log('Prepared post data:', postData)
@@ -193,7 +195,8 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             status,
             published: formData.status === 'published',
             categoryId: category.id,
-            author: formData.author
+            author: formData.author,
+            authorLink: formData.authorLink
         }
 
         // Update the post

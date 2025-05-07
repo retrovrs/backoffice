@@ -32,6 +32,7 @@ model SeoPost {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   author            String
+  authorLink        String?
   viewsCount        Int         @default(0)
   estimatedReadTime Int?
   category          SeoCategory @relation(fields: [categoryId], references: [id])
