@@ -5,22 +5,46 @@ import prisma from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { PostStatus } from '@prisma/client'
+import { BlogPostFormValues, StructuredContent } from '@/types/blog'
 
-export type BlogPostFormValues = {
-    title: string
-    slug: string
-    excerpt: string
-    status: string
-    category: string
-    author: string
-    authorLink: string
-    publishDate: string
-    introText: string
-    mainImageUrl: string
-    mainImageAlt: string
-    mainImageCaption: string
-    content: string
-    tags: string
+// Préfixe pour identifier le contenu structuré
+const STRUCTURED_CONTENT_PREFIX = '<!-- STRUCTURED_CONTENT_JSON:'
+const STRUCTURED_CONTENT_SUFFIX = '-->'
+
+// Fonction pour encoder le contenu structuré
+function encodeStructuredContent(rawContent: string, structuredContent?: StructuredContent): string {
+    if (!structuredContent) {
+        return rawContent
+    }
+
+    // Convertir le contenu structuré en JSON et l'envelopper avec les marqueurs
+    const structuredJson = JSON.stringify(structuredContent)
+    return `${STRUCTURED_CONTENT_PREFIX}${structuredJson}${STRUCTURED_CONTENT_SUFFIX}\n\n${rawContent}`
+}
+
+// Fonction pour décoder le contenu structuré
+function decodeStructuredContent(content: string): { rawContent: string, structuredContent?: StructuredContent } {
+    if (!content.startsWith(STRUCTURED_CONTENT_PREFIX)) {
+        return { rawContent: content }
+    }
+
+    try {
+        const endOfJson = content.indexOf(STRUCTURED_CONTENT_SUFFIX)
+        if (endOfJson === -1) {
+            return { rawContent: content }
+        }
+
+        const jsonStr = content.substring(STRUCTURED_CONTENT_PREFIX.length, endOfJson)
+        const structuredContent = JSON.parse(jsonStr) as StructuredContent
+
+        // Extraire le contenu brut après les marqueurs
+        const rawContent = content.substring(endOfJson + STRUCTURED_CONTENT_SUFFIX.length).trim()
+
+        return { rawContent, structuredContent }
+    } catch (e) {
+        console.error('Erreur lors du décodage du contenu structuré:', e)
+        return { rawContent: content }
+    }
 }
 
 export async function createBlogPost(formData: BlogPostFormValues) {
@@ -74,6 +98,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
         // Set the proper status as an enum value
         const status: PostStatus = formData.status === 'published' ? PostStatus.PUBLISHED : PostStatus.DRAFT
 
+        // Encoder le contenu structuré s'il existe
+        const content = encodeStructuredContent(formData.content, formData.structuredContent)
+
         // Prepare minimal data needed for post creation
         const postData = {
             title: formData.title,
@@ -84,7 +111,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             mainImageUrl: formData.mainImageUrl,
             mainImageAlt: formData.mainImageAlt,
             mainImageCaption: formData.mainImageCaption,
-            content: formData.content,
+            content,
             status, // Use the enum value
             published: formData.status === 'published',
             categoryId: category.id,
@@ -134,7 +161,18 @@ export async function getBlogPost(id: number) {
             return { error: 'Article non trouvé' }
         }
 
-        return { success: true, post }
+        // Décoder le contenu structuré s'il existe
+        const { rawContent, structuredContent } = decodeStructuredContent(post.content)
+
+        // Retourner le post avec le contenu décodé
+        return {
+            success: true,
+            post: {
+                ...post,
+                content: rawContent,
+                structuredContent
+            }
+        }
     } catch (error) {
         console.error('Erreur lors de la récupération de l\'article:', error)
         return { error: 'Erreur lors de la récupération de l\'article' }
@@ -181,6 +219,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         // Set the proper status as an enum value
         const status: PostStatus = formData.status === 'published' ? PostStatus.PUBLISHED : PostStatus.DRAFT
 
+        // Encoder le contenu structuré s'il existe
+        const content = encodeStructuredContent(formData.content, formData.structuredContent)
+
         // Prepare data for update
         const postData = {
             title: formData.title,
@@ -191,7 +232,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             mainImageUrl: formData.mainImageUrl,
             mainImageAlt: formData.mainImageAlt,
             mainImageCaption: formData.mainImageCaption,
-            content: formData.content,
+            content,
             status,
             published: formData.status === 'published',
             categoryId: category.id,

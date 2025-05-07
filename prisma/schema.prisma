@@ -47,7 +47,7 @@ model User {
   email         String    @unique(map: "user_email_key") @db.VarChar(255)
   emailVerified Boolean
   image         String?   @db.VarChar(255)
-  role  Role   @default(READER)
+  role          Role      @default(READER)
   createdAt     DateTime  @db.Timestamp(6)
   updatedAt     DateTime  @db.Timestamp(6)
   accounts      Account[]

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { BlogPostSEOHelper } from '@/components/blog/BlogPostSEOHelper'
 import { BlogPostSEOAssistant } from '@/components/blog/BlogPostSEOAssistant'
+import { BlogContentEditor } from '@/components/blog/BlogContentEditor'
 import {
   Accordion,
   AccordionContent,
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/accordion'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { getCategories } from '@/app/actions/category'
-import { BlogPostFormValues } from '@/app/actions/blog'
+import { BlogPostFormValues } from '@/types/blog'
 
 interface BlogPostFormProps {
   initialData?: Partial<BlogPostFormValues>
@@ -56,6 +57,7 @@ export default function BlogPostForm({
     
     // Contenu principal
     content: initialData.content || '',
+    structuredContent: initialData.structuredContent,
     
     // Tags
     tags: initialData.tags || ''
@@ -110,6 +112,15 @@ export default function BlogPostForm({
       [name]: value
     }))
   }
+
+  // Gérer les changements du contenu structuré
+  const handleContentChange = useCallback((jsonContent: string, rawContent: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: rawContent,
+      structuredContent: JSON.parse(jsonContent)
+    }))
+  }, [])
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -483,20 +494,9 @@ export default function BlogPostForm({
             <AccordionContent>
               <div className="space-y-2 pt-4">
                 <Label htmlFor="content">Main content</Label>
-                <Textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  placeholder="Write the content of your article here..."
-                  className="min-h-[300px]"
-                  required
-                  onInvalid={(e: React.InvalidEvent<HTMLTextAreaElement>) => 
-                    e.target.setCustomValidity('Please fill in this field')
-                  }
-                  onInput={(e: React.FormEvent<HTMLTextAreaElement>) => 
-                    e.currentTarget.setCustomValidity('')
-                  }
+                <BlogContentEditor
+                  initialContent={formData.structuredContent ? JSON.stringify(formData.structuredContent) : formData.content}
+                  onChange={handleContentChange}
                 />
               </div>
             </AccordionContent>
