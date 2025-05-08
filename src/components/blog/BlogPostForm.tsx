@@ -178,6 +178,20 @@ export default function BlogPostForm({
 }: BlogPostFormProps) {
   const router = useRouter()
   const { toast } = useToast()
+  
+  console.log('BlogPostForm initialData:', {
+    title: initialData.title,
+    content: typeof initialData.content === 'string' ? initialData.content.substring(0, 100) + '...' : 'N/A',
+    structuredContent: initialData.structuredContent ? 'Present' : 'Absent',
+    structuredContentType: initialData.structuredContent ? typeof initialData.structuredContent : 'N/A'
+  });
+  
+  if (initialData.structuredContent) {
+    console.log('structuredContent preview:', 
+      JSON.stringify(initialData.structuredContent).substring(0, 100) + '...'
+    );
+  }
+  
   const [formData, setFormData] = useState<BlogPostFormValues>({
     // Méta-données
     title: initialData.title || '',
@@ -679,8 +693,16 @@ export default function BlogPostForm({
             <AccordionContent>
               <div className="space-y-2 pt-4">
                 <Label htmlFor="content">Main content</Label>
+                {(() => {
+                  console.log('Rendering BlogContentEditor with:', {
+                    hasStructuredContent: !!formData.structuredContent,
+                    contentPreview: typeof formData.content === 'string' ? formData.content.substring(0, 50) + '...' : 'N/A',
+                    passedContent: formData.structuredContent ? 'Using structuredContent' : 'Using raw content'
+                  });
+                  return null;
+                })()}
                 <BlogContentEditor
-                  initialContent={formData.structuredContent ? JSON.stringify(formData.structuredContent) : formData.content}
+                  initialContent={formData.structuredContent || formData.content}
                   onChange={handleContentChange}
                 />
               </div>

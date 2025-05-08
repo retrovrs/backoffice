@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 import { PostStatus } from '@prisma/client'
 import { BlogPostFormValues, StructuredContent } from '@/types/blog'
 
-// Préfixe pour identifier le contenu structuré
+// Préfixe pour identifier le contenu structuré (pour la rétrocompatibilité avec l'ancien format)
 const STRUCTURED_CONTENT_PREFIX = '<!-- STRUCTURED_CONTENT_JSON:'
 const STRUCTURED_CONTENT_SUFFIX = '-->'
 
@@ -17,34 +17,98 @@ function encodeStructuredContent(rawContent: string, structuredContent?: Structu
         return rawContent
     }
 
-    // Convertir le contenu structuré en JSON et l'envelopper avec les marqueurs
-    const structuredJson = JSON.stringify(structuredContent)
-    return `${STRUCTURED_CONTENT_PREFIX}${structuredJson}${STRUCTURED_CONTENT_SUFFIX}\n\n${rawContent}`
+    // On stocke uniquement le JSON structuré
+    return JSON.stringify(structuredContent)
 }
 
 // Fonction pour décoder le contenu structuré
 function decodeStructuredContent(content: string): { rawContent: string, structuredContent?: StructuredContent } {
-    if (!content.startsWith(STRUCTURED_CONTENT_PREFIX)) {
-        return { rawContent: content }
+    // Si le contenu est vide ou null
+    if (!content) {
+        return { rawContent: '' };
     }
 
+    // Tester d'abord si c'est un JSON valide
     try {
-        const endOfJson = content.indexOf(STRUCTURED_CONTENT_SUFFIX)
-        if (endOfJson === -1) {
-            return { rawContent: content }
+        // Vérifier si le contenu commence par le préfixe (ancien format)
+        if (content.startsWith(STRUCTURED_CONTENT_PREFIX)) {
+            const endOfJson = content.indexOf(STRUCTURED_CONTENT_SUFFIX);
+            if (endOfJson === -1) {
+                return { rawContent: content };
+            }
+
+            const jsonStr = content.substring(STRUCTURED_CONTENT_PREFIX.length, endOfJson);
+            const structuredContent = JSON.parse(jsonStr) as StructuredContent;
+
+            // Extraire le contenu brut après les marqueurs (pour la compatibilité avec l'ancien format)
+            const rawContent = content.substring(endOfJson + STRUCTURED_CONTENT_SUFFIX.length).trim();
+
+            // Générer le HTML à partir de la structure JSON
+            return { rawContent, structuredContent };
         }
 
-        const jsonStr = content.substring(STRUCTURED_CONTENT_PREFIX.length, endOfJson)
-        const structuredContent = JSON.parse(jsonStr) as StructuredContent
+        // Nouveau format: juste du JSON
+        const structuredContent = JSON.parse(content) as StructuredContent;
 
-        // Extraire le contenu brut après les marqueurs
-        const rawContent = content.substring(endOfJson + STRUCTURED_CONTENT_SUFFIX.length).trim()
-
-        return { rawContent, structuredContent }
+        // Vérifier si c'est bien un tableau avec la structure attendue
+        if (Array.isArray(structuredContent) && structuredContent.length > 0) {
+            // Générer le contenu HTML à partir du JSON structuré
+            const rawContent = generateRawContentFromSections(structuredContent);
+            return { rawContent, structuredContent };
+        } else {
+            // Si c'est du JSON mais pas au format attendu
+            console.warn('Le contenu JSON n\'est pas au format structuré attendu');
+            return { rawContent: content };
+        }
     } catch (e) {
-        console.error('Erreur lors du décodage du contenu structuré:', e)
-        return { rawContent: content }
+        console.error('Erreur lors du décodage du contenu structuré:', e);
+        // Si ce n'est pas un JSON valide, considérer que c'est du contenu brut
+        return { rawContent: content };
     }
+}
+
+// Fonction pour générer le contenu HTML à partir des sections structurées
+function generateRawContentFromSections(sectionsArray: StructuredContent): string {
+    return sectionsArray.map(section => {
+        const sectionContent = section.elements.map((element: any) => {
+            switch (element.type) {
+                case 'h2':
+                    return `  <h2>${element.content}</h2>`
+                case 'h3':
+                    return `  <h3>${element.content}</h3>`
+                case 'paragraph':
+                    return `  <p>${element.content}</p>`
+                case 'list':
+                    if (element.listItems && element.listItems.length > 0) {
+                        const listItems = element.listItems.map((item: string) => `    <li>${item}</li>`).join('\n')
+                        return `  <ul>\n${listItems}\n  </ul>`
+                    }
+                    return ''
+                case 'image':
+                    return `  <figure>\n    <img src="${element.url || ''}" alt="${element.alt || ''}" />\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+                case 'video':
+                    // Simplifiée pour l'exemple
+                    const isYouTubeUrl = (element.url || '').includes('youtube.com') || (element.url || '').includes('youtu.be')
+                    if (isYouTubeUrl) {
+                        const youtubeId = extractYouTubeId(element.url || '')
+                        return `  <figure class="video">\n    <iframe width="560" height="315" src="https://www.youtube.com/embed/${youtubeId}" frameborder="0" allowfullscreen></iframe>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+                    } else {
+                        return `  <figure class="video">\n    <video controls src="${element.url || ''}"></video>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+                    }
+                default:
+                    return `  <p>${element.content}</p>`
+            }
+        }).join('\n\n')
+
+        return `<section>\n${sectionContent}\n</section>`
+    }).join('\n\n')
+}
+
+// Fonction pour extraire l'ID YouTube d'une URL
+function extractYouTubeId(url: string): string {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : ''
 }
 
 export async function createBlogPost(formData: BlogPostFormValues) {
@@ -187,12 +251,16 @@ export async function getBlogPost(id: number) {
             );
         }
 
-        // Retourner le post avec le contenu décodé
+        // Pour l'édition, on retourne simplement le contenu original pour que l'éditeur puisse le reconstituer
+        // Si c'est du contenu structuré, on renvoie le JSON structuré
+        // Sinon, on renvoie le contenu brut
         return {
             success: true,
             post: {
                 ...post,
-                content: rawContent,
+                // Lors de l'édition, le contenu brut est généré à la volée par l'éditeur
+                content: structuredContent ? rawContent : post.content,
+                // On transmet directement la structure JSON pour l'éditeur
                 structuredContent
             }
         }

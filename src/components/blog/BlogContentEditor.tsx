@@ -36,7 +36,7 @@ import {
 import { PlusCircle, ChevronUp, ChevronDown, Trash2, Type, Image, Play, List, PenSquare, MoveUp, MoveDown } from 'lucide-react'
 
 interface BlogContentEditorProps {
-  initialContent: string
+  initialContent: string | StructuredContent
   onChange: (jsonContent: string, rawContent: string) => void
 }
 
@@ -78,34 +78,92 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
   useEffect(() => {
     if (dataRef.current.isInitialized && !initialContent) return
     
+    console.log('BlogContentEditor initialContent:', initialContent);
+    console.log('Type of initialContent:', typeof initialContent);
+    
+    if (typeof initialContent === 'object') {
+      console.log('initialContent is already an object, structure:', 
+        Array.isArray(initialContent) ? 'array' : 'object',
+        'length:', Array.isArray(initialContent) ? initialContent.length : 'N/A');
+    }
+    
     try {
       if (initialContent) {
-        const parsedContent = JSON.parse(initialContent) as StructuredContent
+        // Vérifier si le contenu est déjà un objet structuré (déjà parsé) ou une chaîne JSON
+        let parsedContent;
+        
+        if (typeof initialContent === 'string') {
+          // Si c'est un HTML, on le détecte avec des marqueurs comme <h2>, <p>, etc.
+          if (initialContent.includes('<h2>') || 
+              initialContent.includes('<p>') || 
+              initialContent.includes('<section>')) {
+            console.log('Content appears to be HTML, converting to structure');
+            // Convertir le HTML en structure
+            parsedContent = createStructureFromHTML(initialContent);
+            console.log('Created structure from HTML:', parsedContent);
+          } else {
+            // Tenter de parser la chaîne JSON
+            console.log('Attempting to parse string as JSON');
+            parsedContent = JSON.parse(initialContent) as StructuredContent;
+            console.log('Successfully parsed JSON string');
+          }
+        } else if (Array.isArray(initialContent)) {
+          // C'est déjà un tableau d'objets (déjà parsé)
+          console.log('Using provided array structure directly');
+          parsedContent = initialContent as StructuredContent;
+        }
+        
         if (Array.isArray(parsedContent) && parsedContent.length > 0) {
           // Vérifier le format attendu
           let isValid = true
           for (const section of parsedContent) {
             if (!section.id || !Array.isArray(section.elements)) {
               isValid = false
+              console.log('Invalid section found:', section);
               break
             }
           }
           
           if (isValid) {
+            console.log('Valid structure detected, initializing editor with structured content');
             dataRef.current.sections = parsedContent
             dataRef.current.isInitialized = true
             forceUpdate(prev => prev + 1) // Force un re-render
             return
+          } else {
+            console.log('Invalid structure format');
           }
+        } else {
+          console.log('Parsed content is not a valid array or is empty');
         }
       }
     } catch (e) {
-      // Si parsing échoue, pas un JSON valide
+      console.error('Erreur lors du parsing du contenu:', e);
+      
+      // Si le contenu semble être du HTML, essayons de le convertir en structure
+      if (typeof initialContent === 'string' && 
+          (initialContent.includes('<h2>') || 
+           initialContent.includes('<p>') || 
+           initialContent.includes('<section>'))) {
+        console.log('Exception when parsing, but content contains HTML tags, attempting to convert HTML to structure');
+        
+        // Créer une structure à partir du HTML
+        const sections = createStructureFromHTML(initialContent);
+        
+        if (sections.length > 0) {
+          console.log('Successfully created structure from HTML content');
+          dataRef.current.sections = sections;
+          dataRef.current.isInitialized = true;
+          forceUpdate(prev => prev + 1);
+          return;
+        }
+      }
     }
     
     // Fallback: créer une section vide ou avec contenu comme paragraphe
+    console.log('Using fallback: creating empty section');
     const initialSection = createEmptySection()
-    if (initialContent && initialContent.trim() && !initialContent.startsWith('[')) {
+    if (initialContent && typeof initialContent === 'string' && initialContent.trim() && !initialContent.startsWith('[')) {
       initialSection.elements.push({
         id: uuidv4(),
         type: 'paragraph',
@@ -362,6 +420,114 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     sections[index] = sections[index + 1]
     sections[index + 1] = temp
     forceUpdate(prev => prev + 1)
+  }
+  
+  // Créer une structure à partir du contenu HTML
+  const createStructureFromHTML = (htmlContent: string): ContentSection[] => {
+    console.log('Converting HTML to structure:', htmlContent.substring(0, 100) + '...');
+    
+    // Créer une section par défaut
+    const section: ContentSection = {
+      id: uuidv4(),
+      elements: []
+    };
+    
+    // Essayer de détecter les sections dans le HTML
+    const sectionMatches = htmlContent.match(/<section>([\s\S]*?)<\/section>/g);
+    
+    if (sectionMatches && sectionMatches.length > 0) {
+      // Créer une section pour chaque balise <section> trouvée
+      return sectionMatches.map(sectionHTML => {
+        const section: ContentSection = {
+          id: uuidv4(),
+          elements: []
+        };
+        
+        // Extraire le contenu de la section
+        const sectionContent = sectionHTML.replace(/<section>([\s\S]*?)<\/section>/, '$1').trim();
+        
+        // Extraire les h2
+        const h2Matches = sectionContent.match(/<h2>([\s\S]*?)<\/h2>/g);
+        if (h2Matches) {
+          h2Matches.forEach(h2HTML => {
+            const content = h2HTML.replace(/<h2>([\s\S]*?)<\/h2>/, '$1').trim();
+            section.elements.push({
+              id: uuidv4(),
+              type: 'h2',
+              content
+            });
+          });
+        }
+        
+        // Extraire les h3
+        const h3Matches = sectionContent.match(/<h3>([\s\S]*?)<\/h3>/g);
+        if (h3Matches) {
+          h3Matches.forEach(h3HTML => {
+            const content = h3HTML.replace(/<h3>([\s\S]*?)<\/h3>/, '$1').trim();
+            section.elements.push({
+              id: uuidv4(),
+              type: 'h3',
+              content
+            });
+          });
+        }
+        
+        // Extraire les paragraphes
+        const pMatches = sectionContent.match(/<p>([\s\S]*?)<\/p>/g);
+        if (pMatches) {
+          pMatches.forEach(pHTML => {
+            const content = pHTML.replace(/<p>([\s\S]*?)<\/p>/, '$1').trim();
+            section.elements.push({
+              id: uuidv4(),
+              type: 'paragraph',
+              content
+            });
+          });
+        }
+        
+        return section;
+      });
+    } else {
+      // Pas de section trouvée, créer une section avec tout le contenu
+      // Créer un élément pour chaque type qu'on peut détecter
+      
+      // Extraire les h2
+      const h2Matches = htmlContent.match(/<h2>([\s\S]*?)<\/h2>/g);
+      if (h2Matches) {
+        h2Matches.forEach(h2HTML => {
+          const content = h2HTML.replace(/<h2>([\s\S]*?)<\/h2>/, '$1').trim();
+          section.elements.push({
+            id: uuidv4(),
+            type: 'h2',
+            content
+          });
+        });
+      }
+      
+      // Extraire les paragraphes
+      const pMatches = htmlContent.match(/<p>([\s\S]*?)<\/p>/g);
+      if (pMatches) {
+        pMatches.forEach(pHTML => {
+          const content = pHTML.replace(/<p>([\s\S]*?)<\/p>/, '$1').trim();
+          section.elements.push({
+            id: uuidv4(),
+            type: 'paragraph',
+            content
+          });
+        });
+      }
+      
+      // Si aucun élément n'a été trouvé, ajouter tout le contenu comme paragraphe
+      if (section.elements.length === 0) {
+        section.elements.push({
+          id: uuidv4(),
+          type: 'paragraph',
+          content: htmlContent
+        });
+      }
+      
+      return [section];
+    }
   }
   
   // Si l'initialisation n'est pas encore terminée, afficher un indicateur de chargement
