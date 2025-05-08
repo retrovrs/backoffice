@@ -283,8 +283,10 @@ export default function BlogPostForm({
   }, []);
 
   // Fonction pour synchroniser le contenu de l'éditeur avant de l'utiliser
-  const syncBlogEditorContent = useCallback(() => {
+  const syncBlogEditorContent = useCallback((callback?: () => void) => {
     try {
+      console.log("Synchronisation du contenu de l'éditeur...");
+      
       // @ts-ignore
       if (window.syncBlogEditorContent) {
         // @ts-ignore
@@ -292,16 +294,46 @@ export default function BlogPostForm({
         
         // Si la synchronisation a réussi et retourne des données, mettre à jour formData
         if (updatedSections) {
-          const jsonContent = JSON.stringify(updatedSections);
-          const rawContent = generateRawContentFromSections(updatedSections);
+          console.log("Contenu collecté depuis l'éditeur:", 
+            JSON.stringify(updatedSections).substring(0, 100) + "...");
           
-          handleContentChange(jsonContent, rawContent);
+          // Mettre à jour formData avec les nouvelles valeurs
+          // structuredContent = JSON à stocker en base de données
+          // content = HTML généré pour l'affichage uniquement (pas stocké)
+          setFormData(prev => {
+            const newFormData = {
+              ...prev,
+              // Nous gardons content (HTML) pour l'affichage uniquement
+              content: generateRawContentFromSections(updatedSections),
+              // structuredContent est ce qui sera stocké en base de données
+              structuredContent: updatedSections
+            };
+            
+            console.log("État formData mis à jour avec nouveaux contenus");
+            console.log("structuredContent (à stocker en DB):", 
+              JSON.stringify(newFormData.structuredContent).substring(0, 100) + "...");
+            
+            // Exécuter le callback si fourni après la mise à jour
+            if (callback) {
+              setTimeout(() => {
+                console.log("Exécution du callback après mise à jour");
+                callback();
+              }, 50);
+            }
+            
+            return newFormData;
+          });
+          
+          return true;
         }
       }
+      
+      return false;
     } catch (error) {
       console.error('Erreur lors de la synchronisation du contenu de l\'éditeur:', error);
+      return false;
     }
-  }, [handleContentChange]);
+  }, []);
   
   // Fonction pour générer le contenu brut à partir des sections (copie de la fonction dans BlogContentEditor)
   const generateRawContentFromSections = (sectionsArray: any[]): string => {
@@ -335,34 +367,70 @@ export default function BlogPostForm({
   }
 
   const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     
-    // Synchroniser le contenu de l'éditeur avant la soumission
-    syncBlogEditorContent();
+    console.log("Préparation à la soumission du formulaire");
     
-    // Validate category
+    // Validate category first
     if (!formData.category) {
       toast({
         title: "Error",
         description: "Please select a category",
         variant: "destructive"
-      })
-      return
+      });
+      return;
     }
     
     try {
-      await onSubmit(formData)
+      // Synchroniser d'abord le contenu de l'éditeur
+      console.log("Synchronisation du contenu avant soumission");
+      
+      // @ts-ignore
+      if (window.syncBlogEditorContent) {
+        // @ts-ignore
+        const updatedSections = window.syncBlogEditorContent();
+        
+        if (updatedSections) {
+          // Mise à jour manuelle des données du formulaire avant soumission
+          const updatedFormData = {
+            ...formData,
+            content: generateRawContentFromSections(updatedSections),
+            structuredContent: updatedSections
+          };
+          
+          console.log("Contenus mis à jour avant soumission:", {
+            structuredContent: updatedFormData.structuredContent 
+              ? `JSON disponible (${JSON.stringify(updatedFormData.structuredContent).length} caractères)` 
+              : "Absent"
+          });
+          
+          // Soumettre directement avec les données mises à jour
+          await onSubmit(updatedFormData);
+          return;
+        }
+      }
+      
+      // Fallback si la synchronisation ne fonctionne pas
+      console.log("Soumission avec données non synchronisées (fallback)");
+      await onSubmit(formData);
+      
     } catch (error) {
-      console.error('Error when submitting form:', error)
+      console.error('Erreur lors de la soumission du formulaire:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la soumission du formulaire",
+        variant: "destructive"
+      });
     }
-  }, [formData, onSubmit, toast, syncBlogEditorContent]);
+  }, [formData, onSubmit, toast, generateRawContentFromSections]);
 
   // Gestionnaire d'ouverture de l'assistant SEO
   const handleOpenSEOAssistant = useCallback(() => {
     // Synchroniser le contenu de l'éditeur avant d'ouvrir l'assistant
-    syncBlogEditorContent();
-    // Ouvrir la dialog
-    setIsSEODialogOpen(true);
+    syncBlogEditorContent(() => {
+      // Ouvrir la dialog une fois que le contenu est synchronisé
+      setIsSEODialogOpen(true);
+    });
   }, [syncBlogEditorContent]);
 
   const pageTitle = mode === 'create' ? 'Create a new article' : 'Edit the article'

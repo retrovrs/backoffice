@@ -11,7 +11,7 @@ import { BlogPostFormValues, StructuredContent } from '@/types/blog'
 const STRUCTURED_CONTENT_PREFIX = '<!-- STRUCTURED_CONTENT_JSON:'
 const STRUCTURED_CONTENT_SUFFIX = '-->'
 
-// Fonction pour encoder le contenu structuré
+// Fonction pour encoder le contenu structuré (conservée pour compatibilité)
 function encodeStructuredContent(rawContent: string, structuredContent?: StructuredContent): string {
     if (!structuredContent) {
         return rawContent
@@ -28,41 +28,43 @@ function decodeStructuredContent(content: string): { rawContent: string, structu
         return { rawContent: '' };
     }
 
-    // Tester d'abord si c'est un JSON valide
     try {
-        // Vérifier si le contenu commence par le préfixe (ancien format)
+        // Vérifier d'abord si c'est un JSON valide (notre format principal maintenant)
+        try {
+            const structuredContent = JSON.parse(content) as StructuredContent;
+
+            if (Array.isArray(structuredContent) && structuredContent.length > 0) {
+                console.log('Format détecté: JSON pur (format standard)');
+                // Générer le HTML à partir du JSON pour l'affichage
+                const rawContent = generateRawContentFromSections(structuredContent);
+                return { rawContent, structuredContent };
+            }
+        } catch (jsonError) {
+            // Pas un JSON valide, essayons l'ancien format avec commentaires
+        }
+
+        // Vérifier si c'est l'ancien format avec JSON dans commentaires
         if (content.startsWith(STRUCTURED_CONTENT_PREFIX)) {
             const endOfJson = content.indexOf(STRUCTURED_CONTENT_SUFFIX);
-            if (endOfJson === -1) {
-                return { rawContent: content };
+            if (endOfJson !== -1) {
+                // Extraire le JSON des commentaires
+                const jsonStr = content.substring(STRUCTURED_CONTENT_PREFIX.length, endOfJson);
+                const structuredContent = JSON.parse(jsonStr) as StructuredContent;
+
+                // Extraire le contenu HTML après les marqueurs
+                const rawContent = content.substring(endOfJson + STRUCTURED_CONTENT_SUFFIX.length).trim();
+
+                console.log('Format détecté: JSON en commentaire + HTML (ancien format)');
+                return { rawContent, structuredContent };
             }
-
-            const jsonStr = content.substring(STRUCTURED_CONTENT_PREFIX.length, endOfJson);
-            const structuredContent = JSON.parse(jsonStr) as StructuredContent;
-
-            // Extraire le contenu brut après les marqueurs (pour la compatibilité avec l'ancien format)
-            const rawContent = content.substring(endOfJson + STRUCTURED_CONTENT_SUFFIX.length).trim();
-
-            // Générer le HTML à partir de la structure JSON
-            return { rawContent, structuredContent };
         }
 
-        // Nouveau format: juste du JSON
-        const structuredContent = JSON.parse(content) as StructuredContent;
-
-        // Vérifier si c'est bien un tableau avec la structure attendue
-        if (Array.isArray(structuredContent) && structuredContent.length > 0) {
-            // Générer le contenu HTML à partir du JSON structuré
-            const rawContent = generateRawContentFromSections(structuredContent);
-            return { rawContent, structuredContent };
-        } else {
-            // Si c'est du JSON mais pas au format attendu
-            console.warn('Le contenu JSON n\'est pas au format structuré attendu');
-            return { rawContent: content };
-        }
+        // Si on arrive ici, c'est probablement du HTML pur ou un autre format non reconnu
+        console.log('Format détecté: HTML pur ou format inconnu (fallback)');
+        return { rawContent: content };
     } catch (e) {
         console.error('Erreur lors du décodage du contenu structuré:', e);
-        // Si ce n'est pas un JSON valide, considérer que c'est du contenu brut
+        // En cas d'erreur, retourner le contenu tel quel
         return { rawContent: content };
     }
 }
@@ -129,14 +131,40 @@ export async function createBlogPost(formData: BlogPostFormValues) {
         })
 
         // Log structured content for debugging
-        console.log('Content structuré avant encodage:',
-            formData.structuredContent
-                ? JSON.stringify(formData.structuredContent, null, 2).substring(0, 500) + '...'
-                : 'Non disponible'
-        );
-        console.log('Content brut avant encodage:',
-            formData.content.substring(0, 500) + '...'
-        );
+        console.log('structuredContent disponible:', !!formData.structuredContent);
+
+        if (formData.structuredContent) {
+            console.log('structuredContent aperçu:',
+                JSON.stringify(formData.structuredContent).substring(0, 200) + '...');
+
+            // Vérifier que c'est bien un tableau
+            if (!Array.isArray(formData.structuredContent)) {
+                console.error('structuredContent n\'est pas un tableau valide!');
+                try {
+                    // Tentative de parser si c'est une chaîne JSON
+                    if (typeof formData.structuredContent === 'string') {
+                        formData.structuredContent = JSON.parse(formData.structuredContent);
+                        console.log('structuredContent parsé avec succès depuis la chaîne JSON');
+                    } else {
+                        console.error('structuredContent est de type invalide:', typeof formData.structuredContent);
+                    }
+                } catch (err) {
+                    console.error('Erreur lors du parsing de structuredContent:', err);
+                }
+            }
+        } else {
+            console.log('Aucun contenu structuré disponible, création par défaut');
+            // Créer un contenu structuré par défaut si inexistant
+            formData.structuredContent = [{
+                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+                elements: [{
+                    id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+                    type: 'paragraph',
+                    content: formData.content || 'Nouveau contenu'
+                }]
+            }];
+            console.log('Contenu structuré par défaut créé:', formData.structuredContent);
+        }
 
         // Find the category ID or create a new one
         const category = await prisma.seoCategory.upsert({
@@ -172,11 +200,14 @@ export async function createBlogPost(formData: BlogPostFormValues) {
         // Set the proper status as an enum value
         const status: PostStatus = formData.status === 'published' ? PostStatus.PUBLISHED : PostStatus.DRAFT
 
-        // Encoder le contenu structuré s'il existe
-        const content = encodeStructuredContent(formData.content, formData.structuredContent)
+        // Stocker uniquement le JSON structuré dans le champ content
+        // Si structuredContent n'existe pas, on stocke le contenu brut comme fallback
+        const content = formData.structuredContent
+            ? JSON.stringify(formData.structuredContent)
+            : formData.content;
 
-        // Log encoded content
-        console.log('Contenu encodé (début):', content.substring(0, 500) + '...');
+        console.log('Contenu JSON à sauvegarder (début):', content.substring(0, 200) + '...');
+        console.log('Longueur du contenu JSON:', content.length);
 
         // Prepare minimal data needed for post creation
         const postData = {
@@ -280,10 +311,33 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             return { error: 'Non authentifié' }
         }
 
-        // Log content data before encoding
-        console.log('updateBlogPost - Content data:');
-        console.log('- HTML brut (début):', formData.content.substring(0, 500) + '...');
-        console.log('- JSON structuré disponible:', !!formData.structuredContent);
+        // Log détaillé des données reçues
+        console.log('updateBlogPost - Données reçues:');
+        console.log('- titre:', formData.title);
+        console.log('- structuredContent disponible:', !!formData.structuredContent);
+
+        if (formData.structuredContent) {
+            console.log('- structuredContent aperçu:',
+                JSON.stringify(formData.structuredContent).substring(0, 200) + '...');
+
+            // Vérifier spécifiquement les valeurs de h3
+            const h3Elements: Array<{ id: string, content: string }> = [];
+            if (Array.isArray(formData.structuredContent)) {
+                formData.structuredContent.forEach(section => {
+                    if (section.elements) {
+                        section.elements.forEach(element => {
+                            if (element.type === 'h3') {
+                                h3Elements.push({
+                                    id: element.id,
+                                    content: element.content
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            console.log('- h3 elements trouvés:', h3Elements);
+        }
 
         // Find the category ID or create a new one
         const category = await prisma.seoCategory.upsert({
@@ -315,11 +369,13 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         // Set the proper status as an enum value
         const status: PostStatus = formData.status === 'published' ? PostStatus.PUBLISHED : PostStatus.DRAFT
 
-        // Encoder le contenu structuré s'il existe
-        const content = encodeStructuredContent(formData.content, formData.structuredContent)
+        // Stocker uniquement le JSON structuré dans le champ content
+        // Si structuredContent n'existe pas, on stocke le contenu brut comme fallback
+        const content = formData.structuredContent
+            ? JSON.stringify(formData.structuredContent)
+            : formData.content;
 
-        // Log encoded content
-        console.log('Contenu encodé (début):', content.substring(0, 500) + '...');
+        console.log('Contenu JSON à sauvegarder (début):', content.substring(0, 200) + '...');
 
         // Prepare data for update
         const postData = {
@@ -345,6 +401,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             data: postData
         })
 
+        console.log('Article mis à jour avec succès:', post.id);
         revalidatePath('/blog-posts')
 
         return { success: true, post }

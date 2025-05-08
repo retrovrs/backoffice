@@ -74,6 +74,188 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
   // State minimal pour forcer le re-render uniquement quand la structure change
   const [renderCounter, forceUpdate] = useState(0)
   
+  // Créer une section vide
+  const createEmptySection = useCallback((): ContentSection => ({
+    id: uuidv4(),
+    elements: []
+  }), [])
+  
+  // Créer un élément vide du type spécifié
+  const createEmptyElement = useCallback((type: ContentElementType): ContentElement => {
+    const element: ContentElement = {
+      id: uuidv4(),
+      type,
+      content: ''
+    }
+    
+    if (type === 'list') {
+      element.listItems = ['']
+    }
+    
+    return element
+  }, [])
+  
+  // Générer un contenu texte brut à partir des sections structurées
+  const generateRawContent = useCallback((sectionsArray: ContentSection[]): string => {
+    return sectionsArray.map(section => {
+      const sectionContent = section.elements.map(element => {
+        switch (element.type) {
+          case 'h2':
+            return `  <h2>${element.content}</h2>`
+          case 'h3':
+            return `  <h3>${element.content}</h3>`
+          case 'paragraph':
+            return `  <p>${element.content}</p>`
+          case 'list':
+            if (element.listItems && element.listItems.length > 0) {
+              const listItems = element.listItems.map(item => `    <li>${item}</li>`).join('\n')
+              return `  <ul>\n${listItems}\n  </ul>`
+            }
+            return ''
+          case 'image':
+            return `  <figure>\n    <img src="${element.url || ''}" alt="${element.alt || ''}" />\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+          case 'video':
+            // Pour une vidéo, on utilise une iframe si c'est YouTube ou une balise vidéo sinon
+            const isYouTubeUrl = (element.url || '').includes('youtube.com') || (element.url || '').includes('youtu.be')
+            if (isYouTubeUrl) {
+              const youtubeId = extractYouTubeId(element.url || '')
+              return `  <figure class="video">\n    <iframe width="560" height="315" src="https://www.youtube.com/embed/${youtubeId}" frameborder="0" allowfullscreen></iframe>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+            } else {
+              return `  <figure class="video">\n    <video controls src="${element.url || ''}"></video>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
+            }
+          default:
+            return `  <p>${element.content}</p>`
+        }
+      }).join('\n\n')
+      
+      // Encapsuler le contenu de la section dans une balise section sans attributs
+      return `<section>\n${sectionContent}\n</section>`
+    }).join('\n\n')
+  }, [])
+  
+  // Fonction pour extraire l'ID YouTube d'une URL
+  const extractYouTubeId = useCallback((url: string): string => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : ''
+  }, [])
+  
+  // Fonction pour collecter les données du DOM et notifier le parent
+  const collectDataAndNotify = useCallback(() => {
+    console.log('Début de collecte des données depuis le DOM');
+    const updatedSections = [...dataRef.current.sections]
+    
+    // Parcourir toutes les sections et leurs éléments pour récupérer les valeurs du DOM
+    updatedSections.forEach(section => {
+      section.elements.forEach(element => {
+        // Récupérer les valeurs selon le type d'élément
+        if (element.type === 'h2' || element.type === 'h3') {
+          const input = document.getElementById(`${element.type}-${element.id}`) as HTMLInputElement
+          if (input) {
+            const oldValue = element.content;
+            element.content = input.value;
+            console.log(`Élément ${element.type} mis à jour:`, {
+              id: element.id,
+              ancienneValeur: oldValue,
+              nouvelleValeur: input.value,
+              inputId: `${element.type}-${element.id}`,
+              inputTrouvé: !!input
+            });
+          } else {
+            console.warn(`Input non trouvé pour élément ${element.type} avec ID ${element.id}`);
+          }
+        } else if (element.type === 'paragraph') {
+          const textarea = document.getElementById(`paragraph-${element.id}`) as HTMLTextAreaElement
+          if (textarea) {
+            const oldValue = element.content;
+            element.content = textarea.value;
+            console.log(`Élément paragraph mis à jour:`, {
+              id: element.id,
+              ancienneValeur: oldValue.substring(0, 20) + (oldValue.length > 20 ? '...' : ''),
+              nouvelleValeur: textarea.value.substring(0, 20) + (textarea.value.length > 20 ? '...' : ''),
+              textareaId: `paragraph-${element.id}`,
+              textareaTrouvé: !!textarea
+            });
+          } else {
+            console.warn(`Textarea non trouvé pour paragraph avec ID ${element.id}`);
+          }
+        } else if (element.type === 'image' || element.type === 'video') {
+          const urlInput = document.getElementById(`${element.type}-url-${element.id}`) as HTMLInputElement
+          const captionInput = document.getElementById(`${element.type}-caption-${element.id}`) as HTMLInputElement
+          if (urlInput) element.url = urlInput.value
+          if (captionInput) element.content = captionInput.value
+          
+          if (element.type === 'image') {
+            const altInput = document.getElementById(`image-alt-${element.id}`) as HTMLInputElement
+            if (altInput) element.alt = altInput.value
+          }
+        } else if (element.type === 'list') {
+          // Récupérer tous les items de liste par leur index
+          const listItems: string[] = []
+          let index = 0
+          let itemInput = document.getElementById(`list-item-${element.id}-${index}`) as HTMLInputElement
+          
+          while (itemInput) {
+            listItems.push(itemInput.value)
+            index++
+            itemInput = document.getElementById(`list-item-${element.id}-${index}`) as HTMLInputElement
+          }
+          
+          if (listItems.length > 0) {
+            element.listItems = listItems
+          }
+        }
+      })
+    })
+    
+    // Vérifier s'il y a au moins une section avec des éléments
+    let hasContent = false;
+    for (const section of updatedSections) {
+      if (section.elements.length > 0) {
+        hasContent = true;
+        break;
+      }
+    }
+    
+    // Si aucun contenu n'est trouvé, créer une section vide par défaut
+    if (!hasContent && updatedSections.length === 0) {
+      updatedSections.push(createEmptySection());
+      console.log('Aucun contenu trouvé, création d\'une section vide par défaut');
+    }
+    
+    // Mettre à jour la référence avec les nouvelles données
+    dataRef.current.sections = updatedSections
+    
+    // Générer le JSON et le contenu texte brut
+    const jsonContent = JSON.stringify(updatedSections)
+    const rawContent = generateRawContent(updatedSections)
+    
+    console.log('Données collectées:', {
+      sections: updatedSections.length,
+      elementsJSON: jsonContent.substring(0, 100) + '...',
+      htmlGeneré: rawContent.substring(0, 100) + '...'
+    });
+    
+    // Notifier le parent avec les nouvelles données
+    onChange(jsonContent, rawContent)
+    
+    return updatedSections
+  }, [onChange, createEmptySection, generateRawContent])
+  
+  // Exposer la fonction de collecte pour l'utiliser depuis l'extérieur (BlogPostForm)
+  useEffect(() => {
+    // Exposer la fonction de synchronisation pour accès global
+    console.log('Exposant la fonction syncBlogEditorContent au niveau global');
+    // @ts-ignore
+    window.syncBlogEditorContent = collectDataAndNotify
+    
+    return () => {
+      console.log('Nettoyage de la fonction syncBlogEditorContent');
+      // @ts-ignore
+      delete window.syncBlogEditorContent
+    }
+  }, [collectDataAndNotify])
+  
   // Initialiser le contenu une seule fois ou quand initialContent change
   useEffect(() => {
     if (dataRef.current.isInitialized && !initialContent) return
@@ -174,139 +356,6 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     dataRef.current.isInitialized = true
     forceUpdate(prev => prev + 1)
   }, [initialContent])
-  
-  // Fonction pour collecter les données du DOM et notifier le parent
-  const collectDataAndNotify = useCallback(() => {
-    const updatedSections = [...dataRef.current.sections]
-    
-    // Parcourir toutes les sections et leurs éléments pour récupérer les valeurs du DOM
-    updatedSections.forEach(section => {
-      section.elements.forEach(element => {
-        // Récupérer les valeurs selon le type d'élément
-        if (element.type === 'h2' || element.type === 'h3') {
-          const input = document.getElementById(`${element.type}-${element.id}`) as HTMLInputElement
-          if (input) element.content = input.value
-        } else if (element.type === 'paragraph') {
-          const textarea = document.getElementById(`paragraph-${element.id}`) as HTMLTextAreaElement
-          if (textarea) element.content = textarea.value
-        } else if (element.type === 'image' || element.type === 'video') {
-          const urlInput = document.getElementById(`${element.type}-url-${element.id}`) as HTMLInputElement
-          const captionInput = document.getElementById(`${element.type}-caption-${element.id}`) as HTMLInputElement
-          if (urlInput) element.url = urlInput.value
-          if (captionInput) element.content = captionInput.value
-          
-          if (element.type === 'image') {
-            const altInput = document.getElementById(`image-alt-${element.id}`) as HTMLInputElement
-            if (altInput) element.alt = altInput.value
-          }
-        } else if (element.type === 'list') {
-          // Récupérer tous les items de liste par leur index
-          const listItems: string[] = []
-          let index = 0
-          let itemInput = document.getElementById(`list-item-${element.id}-${index}`) as HTMLInputElement
-          
-          while (itemInput) {
-            listItems.push(itemInput.value)
-            index++
-            itemInput = document.getElementById(`list-item-${element.id}-${index}`) as HTMLInputElement
-          }
-          
-          if (listItems.length > 0) {
-            element.listItems = listItems
-          }
-        }
-      })
-    })
-    
-    // Mettre à jour la référence avec les nouvelles données
-    dataRef.current.sections = updatedSections
-    
-    // Générer le JSON et le contenu texte brut
-    const jsonContent = JSON.stringify(updatedSections)
-    const rawContent = generateRawContent(updatedSections)
-    
-    // Notifier le parent avec les nouvelles données
-    onChange(jsonContent, rawContent)
-    
-    return updatedSections
-  }, [onChange])
-  
-  // Exposer la fonction de collecte pour l'utiliser depuis l'extérieur (BlogPostForm)
-  useEffect(() => {
-    // @ts-ignore
-    window.syncBlogEditorContent = collectDataAndNotify
-    
-    return () => {
-      // @ts-ignore
-      delete window.syncBlogEditorContent
-    }
-  }, [collectDataAndNotify])
-  
-  // Créer une section vide
-  const createEmptySection = (): ContentSection => ({
-    id: uuidv4(),
-    elements: []
-  })
-  
-  // Créer un élément vide du type spécifié
-  const createEmptyElement = (type: ContentElementType): ContentElement => {
-    const element: ContentElement = {
-      id: uuidv4(),
-      type,
-      content: ''
-    }
-    
-    if (type === 'list') {
-      element.listItems = ['']
-    }
-    
-    return element
-  }
-  
-  // Générer un contenu texte brut à partir des sections structurées
-  const generateRawContent = (sectionsArray: ContentSection[]): string => {
-    return sectionsArray.map(section => {
-      const sectionContent = section.elements.map(element => {
-        switch (element.type) {
-          case 'h2':
-            return `  <h2>${element.content}</h2>`
-          case 'h3':
-            return `  <h3>${element.content}</h3>`
-          case 'paragraph':
-            return `  <p>${element.content}</p>`
-          case 'list':
-            if (element.listItems && element.listItems.length > 0) {
-              const listItems = element.listItems.map(item => `    <li>${item}</li>`).join('\n')
-              return `  <ul>\n${listItems}\n  </ul>`
-            }
-            return ''
-          case 'image':
-            return `  <figure>\n    <img src="${element.url || ''}" alt="${element.alt || ''}" />\n    <figcaption>${element.content}</figcaption>\n  </figure>`
-          case 'video':
-            // Pour une vidéo, on utilise une iframe si c'est YouTube ou une balise vidéo sinon
-            const isYouTubeUrl = (element.url || '').includes('youtube.com') || (element.url || '').includes('youtu.be')
-            if (isYouTubeUrl) {
-              const youtubeId = extractYouTubeId(element.url || '')
-              return `  <figure class="video">\n    <iframe width="560" height="315" src="https://www.youtube.com/embed/${youtubeId}" frameborder="0" allowfullscreen></iframe>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
-            } else {
-              return `  <figure class="video">\n    <video controls src="${element.url || ''}"></video>\n    <figcaption>${element.content}</figcaption>\n  </figure>`
-            }
-          default:
-            return `  <p>${element.content}</p>`
-        }
-      }).join('\n\n')
-      
-      // Encapsuler le contenu de la section dans une balise section sans attributs
-      return `<section>\n${sectionContent}\n</section>`
-    }).join('\n\n')
-  }
-  
-  // Fonction pour extraire l'ID YouTube d'une URL
-  const extractYouTubeId = (url: string): string => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    const match = url.match(regExp)
-    return (match && match[2].length === 11) ? match[2] : ''
-  }
   
   // Actions qui modifient la structure (nécessitent un re-render)
   
@@ -446,76 +495,15 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
         // Extraire le contenu de la section
         const sectionContent = sectionHTML.replace(/<section>([\s\S]*?)<\/section>/, '$1').trim();
         
-        // Extraire les h2
-        const h2Matches = sectionContent.match(/<h2>([\s\S]*?)<\/h2>/g);
-        if (h2Matches) {
-          h2Matches.forEach(h2HTML => {
-            const content = h2HTML.replace(/<h2>([\s\S]*?)<\/h2>/, '$1').trim();
-            section.elements.push({
-              id: uuidv4(),
-              type: 'h2',
-              content
-            });
-          });
-        }
-        
-        // Extraire les h3
-        const h3Matches = sectionContent.match(/<h3>([\s\S]*?)<\/h3>/g);
-        if (h3Matches) {
-          h3Matches.forEach(h3HTML => {
-            const content = h3HTML.replace(/<h3>([\s\S]*?)<\/h3>/, '$1').trim();
-            section.elements.push({
-              id: uuidv4(),
-              type: 'h3',
-              content
-            });
-          });
-        }
-        
-        // Extraire les paragraphes
-        const pMatches = sectionContent.match(/<p>([\s\S]*?)<\/p>/g);
-        if (pMatches) {
-          pMatches.forEach(pHTML => {
-            const content = pHTML.replace(/<p>([\s\S]*?)<\/p>/, '$1').trim();
-            section.elements.push({
-              id: uuidv4(),
-              type: 'paragraph',
-              content
-            });
-          });
-        }
+        // Analyser le contenu de la section pour extraire les éléments dans leur ordre d'apparition
+        extractElementsInOrder(sectionContent, section);
         
         return section;
       });
     } else {
       // Pas de section trouvée, créer une section avec tout le contenu
-      // Créer un élément pour chaque type qu'on peut détecter
-      
-      // Extraire les h2
-      const h2Matches = htmlContent.match(/<h2>([\s\S]*?)<\/h2>/g);
-      if (h2Matches) {
-        h2Matches.forEach(h2HTML => {
-          const content = h2HTML.replace(/<h2>([\s\S]*?)<\/h2>/, '$1').trim();
-          section.elements.push({
-            id: uuidv4(),
-            type: 'h2',
-            content
-          });
-        });
-      }
-      
-      // Extraire les paragraphes
-      const pMatches = htmlContent.match(/<p>([\s\S]*?)<\/p>/g);
-      if (pMatches) {
-        pMatches.forEach(pHTML => {
-          const content = pHTML.replace(/<p>([\s\S]*?)<\/p>/, '$1').trim();
-          section.elements.push({
-            id: uuidv4(),
-            type: 'paragraph',
-            content
-          });
-        });
-      }
+      // Extraire les éléments dans leur ordre d'apparition
+      extractElementsInOrder(htmlContent, section);
       
       // Si aucun élément n'a été trouvé, ajouter tout le contenu comme paragraphe
       if (section.elements.length === 0) {
@@ -528,6 +516,76 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       
       return [section];
     }
+  }
+  
+  // Fonction auxiliaire pour extraire les éléments dans leur ordre d'apparition
+  const extractElementsInOrder = (htmlContent: string, section: ContentSection) => {
+    console.log('Extracting elements in order from HTML:', htmlContent.substring(0, 100) + '...');
+    
+    // Créer un array pour stocker tous les éléments avec leur position
+    const elements: { type: ContentElementType; content: string; position: number; url?: string; alt?: string; }[] = [];
+    
+    // Extraire les h2 avec leur position
+    const h2Regex = /<h2>([\s\S]*?)<\/h2>/g;
+    let h2Match;
+    while ((h2Match = h2Regex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'h2',
+        content: h2Match[1].trim(),
+        position: h2Match.index
+      });
+    }
+    
+    // Extraire les h3 avec leur position
+    const h3Regex = /<h3>([\s\S]*?)<\/h3>/g;
+    let h3Match;
+    while ((h3Match = h3Regex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'h3',
+        content: h3Match[1].trim(),
+        position: h3Match.index
+      });
+    }
+    
+    // Extraire les paragraphes avec leur position
+    const pRegex = /<p>([\s\S]*?)<\/p>/g;
+    let pMatch;
+    while ((pMatch = pRegex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'paragraph',
+        content: pMatch[1].trim(),
+        position: pMatch.index
+      });
+    }
+    
+    // Trier les éléments par position pour préserver l'ordre original
+    elements.sort((a, b) => a.position - b.position);
+    
+    console.log('Elements sorted by position:', 
+      elements.map(e => ({
+        type: e.type,
+        content: e.content.substring(0, 20) + (e.content.length > 20 ? '...' : ''),
+        position: e.position
+      }))
+    );
+    
+    // Convertir les éléments triés en ContentElement et les ajouter à la section
+    elements.forEach(element => {
+      section.elements.push({
+        id: uuidv4(),
+        type: element.type,
+        content: element.content,
+        url: element.url,
+        alt: element.alt
+      });
+    });
+    
+    console.log('Final section elements:', 
+      section.elements.map(e => ({
+        type: e.type,
+        content: e.content.substring(0, 20) + (e.content.length > 20 ? '...' : '')
+      }))
+    );
   }
   
   // Si l'initialisation n'est pas encore terminée, afficher un indicateur de chargement
