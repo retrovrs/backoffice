@@ -39,6 +39,7 @@ export interface BlogPostFormValues {
     // Contenu principal (deux formats possibles)
     content: string;
     structuredContent?: StructuredContent;
+    generatedHtml?: string; // HTML généré à partir du contenu structuré
 
     // Tags
     tags: string;

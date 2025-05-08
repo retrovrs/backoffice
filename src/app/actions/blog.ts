@@ -70,8 +70,9 @@ function decodeStructuredContent(content: string): { rawContent: string, structu
 }
 
 // Fonction pour générer le contenu HTML à partir des sections structurées
-function generateRawContentFromSections(sectionsArray: StructuredContent): string {
-    return sectionsArray.map(section => {
+function generateRawContentFromSections(sectionsArray: StructuredContent, postData?: any): string {
+    // Générer le contenu HTML des sections
+    const sectionsContent = sectionsArray.map(section => {
         const sectionContent = section.elements.map((element: any) => {
             switch (element.type) {
                 case 'h2':
@@ -104,6 +105,106 @@ function generateRawContentFromSections(sectionsArray: StructuredContent): strin
 
         return `<section>\n${sectionContent}\n</section>`
     }).join('\n\n')
+
+    // Extraire les données du post pour les métadonnées si disponibles
+    const title = postData?.title || 'Article de blog';
+    const description = postData?.metaDescription || postData?.excerpt || '';
+    const authorName = postData?.author || '';
+    const mainImageUrl = postData?.mainImageUrl || '';
+    const mainImageAlt = postData?.mainImageAlt || '';
+    const mainImageCaption = postData?.mainImageCaption || '';
+    const introText = postData?.introText || '';
+
+    // Générer la page HTML complète
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    ${authorName ? `<meta name="author" content="${authorName}">` : ''}
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    ${mainImageUrl ? `<meta property="og:image" content="${mainImageUrl}">` : ''}
+    <meta property="og:type" content="article">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        h3 {
+            font-size: 1.4em;
+            margin-top: 1.2em;
+            margin-bottom: 0.5em;
+        }
+        p {
+            margin-bottom: 1em;
+        }
+        figure {
+            margin: 2em 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        figcaption {
+            text-align: center;
+            font-style: italic;
+            margin-top: 0.5em;
+            color: #666;
+        }
+        .article-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 2em;
+        }
+        .article-intro {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 2em;
+        }
+        .main-image {
+            margin: 2em 0;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <header>
+            <h1>${title}</h1>
+            <div class="article-meta">
+                ${authorName ? `<span class="author">Par ${authorName}</span>` : ''}
+            </div>
+            ${mainImageUrl ?
+            `<figure class="main-image">
+                    <img src="${mainImageUrl}" alt="${mainImageAlt}" />
+                    ${mainImageCaption ? `<figcaption>${mainImageCaption}</figcaption>` : ''}
+                </figure>` : ''
+        }
+            ${introText ? `<div class="article-intro">${introText}</div>` : ''}
+        </header>
+        <div class="article-content">
+${sectionsContent}
+        </div>
+    </article>
+</body>
+</html>`
 }
 
 // Fonction pour extraire l'ID YouTube d'une URL
@@ -206,8 +307,27 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             ? JSON.stringify(formData.structuredContent)
             : formData.content;
 
+        // Préparer les données complètes du post pour générer le HTML
+        const postDataForHTML = {
+            title: formData.title,
+            metaDescription: formData.excerpt,
+            excerpt: formData.introText,
+            mainImageUrl: formData.mainImageUrl,
+            mainImageAlt: formData.mainImageAlt,
+            mainImageCaption: formData.mainImageCaption,
+            author: formData.author,
+            authorLink: formData.authorLink,
+            introText: formData.introText
+        };
+
+        // Générer le HTML à partir du contenu structuré pour le stocker dans generatedHtml
+        const generatedHtml = formData.structuredContent
+            ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
+            : formData.content || '';
+
         console.log('Contenu JSON à sauvegarder (début):', content.substring(0, 200) + '...');
         console.log('Longueur du contenu JSON:', content.length);
+        console.log('HTML généré à sauvegarder (début):', generatedHtml.substring(0, 200) + '...');
 
         // Prepare minimal data needed for post creation
         const postData = {
@@ -220,6 +340,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             mainImageAlt: formData.mainImageAlt,
             mainImageCaption: formData.mainImageCaption,
             content,
+            generatedHtml, // Ajouter le HTML généré
             status, // Use the enum value
             published: formData.status === 'published',
             categoryId: category.id,
@@ -275,6 +396,7 @@ export async function getBlogPost(id: number) {
         console.log('getBlogPost - Contenu décodé:');
         console.log('- HTML brut (début):', rawContent.substring(0, 500) + '...');
         console.log('- JSON structuré disponible:', !!structuredContent);
+        console.log('- HTML généré stocké (début):', post.generatedHtml?.substring(0, 500) + '...');
 
         if (structuredContent) {
             console.log('- Structure JSON (aperçu):',
@@ -292,7 +414,9 @@ export async function getBlogPost(id: number) {
                 // Lors de l'édition, le contenu brut est généré à la volée par l'éditeur
                 content: structuredContent ? rawContent : post.content,
                 // On transmet directement la structure JSON pour l'éditeur
-                structuredContent
+                structuredContent,
+                // On transmet également le HTML généré stocké
+                generatedHtml: post.generatedHtml || rawContent
             }
         }
     } catch (error) {
@@ -375,7 +499,26 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             ? JSON.stringify(formData.structuredContent)
             : formData.content;
 
+        // Préparer les données complètes du post pour générer le HTML
+        const postDataForHTML = {
+            title: formData.title,
+            metaDescription: formData.excerpt,
+            excerpt: formData.introText,
+            mainImageUrl: formData.mainImageUrl,
+            mainImageAlt: formData.mainImageAlt,
+            mainImageCaption: formData.mainImageCaption,
+            author: formData.author,
+            authorLink: formData.authorLink,
+            introText: formData.introText
+        };
+
+        // Générer le HTML à partir du contenu structuré pour le stocker dans generatedHtml
+        const generatedHtml = formData.structuredContent
+            ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
+            : formData.content || '';
+
         console.log('Contenu JSON à sauvegarder (début):', content.substring(0, 200) + '...');
+        console.log('HTML généré à sauvegarder (début):', generatedHtml.substring(0, 200) + '...');
 
         // Prepare data for update
         const postData = {
@@ -388,6 +531,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             mainImageAlt: formData.mainImageAlt,
             mainImageCaption: formData.mainImageCaption,
             content,
+            generatedHtml, // Ajouter le HTML généré
             status,
             published: formData.status === 'published',
             categoryId: category.id,

@@ -214,6 +214,7 @@ export default function BlogPostForm({
     // Contenu principal
     content: initialData.content || '',
     structuredContent: initialData.structuredContent,
+    generatedHtml: initialData.generatedHtml || '',
     
     // Tags
     tags: initialData.tags || ''
@@ -270,14 +271,16 @@ export default function BlogPostForm({
       setFormData(prev => ({
         ...prev,
         content: rawContent,
-        structuredContent: structuredContent
+        structuredContent: structuredContent,
+        generatedHtml: rawContent
       }));
     } catch (error) {
       console.error('Erreur lors du parsing du contenu JSON:', error);
       // En cas d'erreur, mettre à jour uniquement le contenu brut
       setFormData(prev => ({
         ...prev,
-        content: rawContent
+        content: rawContent,
+        generatedHtml: rawContent
       }));
     }
   }, []);
@@ -297,21 +300,29 @@ export default function BlogPostForm({
           console.log("Contenu collecté depuis l'éditeur:", 
             JSON.stringify(updatedSections).substring(0, 100) + "...");
           
+          // Générer le HTML à partir des sections
+          const generatedHtml = generateRawContentFromSections(updatedSections);
+          
           // Mettre à jour formData avec les nouvelles valeurs
           // structuredContent = JSON à stocker en base de données
           // content = HTML généré pour l'affichage uniquement (pas stocké)
+          // generatedHtml = HTML généré pour stocker en DB
           setFormData(prev => {
             const newFormData = {
               ...prev,
               // Nous gardons content (HTML) pour l'affichage uniquement
-              content: generateRawContentFromSections(updatedSections),
+              content: generatedHtml,
               // structuredContent est ce qui sera stocké en base de données
-              structuredContent: updatedSections
+              structuredContent: updatedSections,
+              // generatedHtml est le HTML qui sera stocké en DB
+              generatedHtml: generatedHtml
             };
             
             console.log("État formData mis à jour avec nouveaux contenus");
             console.log("structuredContent (à stocker en DB):", 
               JSON.stringify(newFormData.structuredContent).substring(0, 100) + "...");
+            console.log("generatedHtml (à stocker en DB):", 
+              newFormData.generatedHtml.substring(0, 100) + "...");
             
             // Exécuter le callback si fourni après la mise à jour
             if (callback) {
@@ -391,16 +402,23 @@ export default function BlogPostForm({
         const updatedSections = window.syncBlogEditorContent();
         
         if (updatedSections) {
+          // Générer le HTML à partir des sections
+          const generatedHtml = generateRawContentFromSections(updatedSections);
+          
           // Mise à jour manuelle des données du formulaire avant soumission
           const updatedFormData = {
             ...formData,
-            content: generateRawContentFromSections(updatedSections),
-            structuredContent: updatedSections
+            content: generatedHtml,
+            structuredContent: updatedSections,
+            generatedHtml: generatedHtml
           };
           
           console.log("Contenus mis à jour avant soumission:", {
             structuredContent: updatedFormData.structuredContent 
               ? `JSON disponible (${JSON.stringify(updatedFormData.structuredContent).length} caractères)` 
+              : "Absent",
+            generatedHtml: updatedFormData.generatedHtml
+              ? `HTML disponible (${updatedFormData.generatedHtml.length} caractères)`
               : "Absent"
           });
           

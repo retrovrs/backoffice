@@ -269,8 +269,9 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
   }, [])
   
   // Générer un contenu texte brut à partir des sections structurées
-  const generateRawContent = useCallback((sectionsArray: ContentSection[]): string => {
-    return sectionsArray.map(section => {
+  const generateRawContent = useCallback((sectionsArray: ContentSection[], options?: { onlySections?: boolean, postData?: any }): string => {
+    // Générer le contenu HTML des sections
+    const sectionsContent = sectionsArray.map(section => {
       const sectionContent = section.elements.map(element => {
         switch (element.type) {
           case 'h2':
@@ -304,6 +305,112 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       // Encapsuler le contenu de la section dans une balise section sans attributs
       return `<section>\n${sectionContent}\n</section>`
     }).join('\n\n')
+    
+    // Si on a demandé uniquement les sections, les retourner directement
+    if (options?.onlySections) {
+      return sectionsContent
+    }
+    
+    // Extraire les données du post pour les métadonnées si disponibles
+    const postData = options?.postData || {}
+    const title = postData.title || 'Article de blog'
+    const description = postData.metaDescription || postData.excerpt || ''
+    const authorName = postData.author || ''
+    const mainImageUrl = postData.mainImageUrl || ''
+    const mainImageAlt = postData.mainImageAlt || ''
+    const mainImageCaption = postData.mainImageCaption || ''
+    const introText = postData.introText || ''
+    
+    // Générer la page HTML complète pour l'aperçu
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    ${authorName ? `<meta name="author" content="${authorName}">` : ''}
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+    ${mainImageUrl ? `<meta property="og:image" content="${mainImageUrl}">` : ''}
+    <meta property="og:type" content="article">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        h3 {
+            font-size: 1.4em;
+            margin-top: 1.2em;
+            margin-bottom: 0.5em;
+        }
+        p {
+            margin-bottom: 1em;
+        }
+        figure {
+            margin: 2em 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        figcaption {
+            text-align: center;
+            font-style: italic;
+            margin-top: 0.5em;
+            color: #666;
+        }
+        .article-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 2em;
+        }
+        .article-intro {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 2em;
+        }
+        .main-image {
+            margin: 2em 0;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <header>
+            <h1>${title}</h1>
+            <div class="article-meta">
+                ${authorName ? `<span class="author">Par ${authorName}</span>` : ''}
+            </div>
+            ${mainImageUrl ? 
+                `<figure class="main-image">
+                    <img src="${mainImageUrl}" alt="${mainImageAlt}" />
+                    ${mainImageCaption ? `<figcaption>${mainImageCaption}</figcaption>` : ''}
+                </figure>` : ''
+            }
+            ${introText ? `<div class="article-intro">${introText}</div>` : ''}
+        </header>
+        <div class="article-content">
+${sectionsContent}
+        </div>
+    </article>
+</body>
+</html>`
   }, [extractYouTubeId])
   
   // Fonction pour collecter les données du DOM et notifier le parent
@@ -392,9 +499,10 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     // Mettre à jour la référence avec les nouvelles données
     dataRef.current.sections = updatedSections
     
-    // Générer le JSON et le contenu texte brut
+    // Pour l'éditeur, on génère uniquement le contenu des sections
+    // car le HTML complet sera généré côté serveur avec les données complètes
     const jsonContent = JSON.stringify(updatedSections)
-    const rawContent = generateRawContent(updatedSections)
+    const rawContent = generateRawContent(updatedSections, { onlySections: true })
     
     console.log('Données collectées:', {
       sections: updatedSections.length,
