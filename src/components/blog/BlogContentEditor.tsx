@@ -95,6 +95,179 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     return element
   }, [])
   
+  // Fonction auxiliaire pour extraire les éléments dans leur ordre d'apparition
+  const extractElementsInOrder = useCallback((htmlContent: string, section: ContentSection) => {
+    console.log('Extracting elements in order from HTML:', htmlContent.substring(0, 100) + '...');
+    
+    // Créer un array pour stocker tous les éléments avec leur position
+    const elements: { type: ContentElementType; content: string; position: number; url?: string; alt?: string; listItems?: string[] }[] = [];
+    
+    // Extraire les h2 avec leur position
+    const h2Regex = /<h2>([\s\S]*?)<\/h2>/g;
+    let h2Match;
+    while ((h2Match = h2Regex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'h2',
+        content: h2Match[1].trim(),
+        position: h2Match.index
+      });
+    }
+    
+    // Extraire les h3 avec leur position
+    const h3Regex = /<h3>([\s\S]*?)<\/h3>/g;
+    let h3Match;
+    while ((h3Match = h3Regex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'h3',
+        content: h3Match[1].trim(),
+        position: h3Match.index
+      });
+    }
+    
+    // Extraire les paragraphes avec leur position
+    const pRegex = /<p>([\s\S]*?)<\/p>/g;
+    let pMatch;
+    while ((pMatch = pRegex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'paragraph',
+        content: pMatch[1].trim(),
+        position: pMatch.index
+      });
+    }
+    
+    // Extraire les images avec leur position
+    const imgRegex = /<figure>\s*<img src="([^"]*)" alt="([^"]*)" \/>\s*<figcaption>([\s\S]*?)<\/figcaption>\s*<\/figure>/g;
+    let imgMatch;
+    while ((imgMatch = imgRegex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'image',
+        url: imgMatch[1],
+        alt: imgMatch[2],
+        content: imgMatch[3].trim(),
+        position: imgMatch.index
+      });
+    }
+    
+    // Extraire les vidéos avec leur position
+    const videoRegex = /<figure class="video">\s*<(?:iframe|video)[^>]*src="([^"]*)"[^>]*><\/(?:iframe|video)>\s*<figcaption>([\s\S]*?)<\/figcaption>\s*<\/figure>/g;
+    let videoMatch;
+    while ((videoMatch = videoRegex.exec(htmlContent)) !== null) {
+      elements.push({
+        type: 'video',
+        url: videoMatch[1],
+        content: videoMatch[2].trim(),
+        position: videoMatch.index
+      });
+    }
+    
+    // Extraire les listes avec leur position
+    const listRegex = /<ul>\s*([\s\S]*?)\s*<\/ul>/g;
+    let listMatch;
+    while ((listMatch = listRegex.exec(htmlContent)) !== null) {
+      const listContent = listMatch[1];
+      const listItemRegex = /<li>([\s\S]*?)<\/li>/g;
+      const listItems: string[] = [];
+      let listItemMatch;
+      
+      while ((listItemMatch = listItemRegex.exec(listContent)) !== null) {
+        listItems.push(listItemMatch[1].trim());
+      }
+      
+      if (listItems.length > 0) {
+        elements.push({
+          type: 'list',
+          content: '',
+          listItems,
+          position: listMatch.index
+        });
+      }
+    }
+    
+    // Trier les éléments par position pour préserver l'ordre original
+    elements.sort((a, b) => a.position - b.position);
+    
+    console.log('Elements sorted by position:', 
+      elements.map(e => ({
+        type: e.type,
+        content: e.content?.substring(0, 20) + (e.content?.length > 20 ? '...' : ''),
+        position: e.position
+      }))
+    );
+    
+    // Convertir les éléments triés en ContentElement et les ajouter à la section
+    elements.forEach(element => {
+      section.elements.push({
+        id: uuidv4(),
+        type: element.type,
+        content: element.content,
+        url: element.url,
+        alt: element.alt,
+        listItems: element.listItems
+      });
+    });
+    
+    console.log('Final section elements:', 
+      section.elements.map(e => ({
+        type: e.type,
+        content: e.content?.substring(0, 20) + (e.content?.length > 20 ? '...' : '')
+      }))
+    );
+  }, []);
+  
+  // Créer une structure à partir du contenu HTML
+  const createStructureFromHTML = useCallback((htmlContent: string): ContentSection[] => {
+    console.log('Converting HTML to structure:', htmlContent.substring(0, 100) + '...');
+    
+    // Créer une section par défaut
+    const section: ContentSection = {
+      id: uuidv4(),
+      elements: []
+    };
+    
+    // Essayer de détecter les sections dans le HTML
+    const sectionMatches = htmlContent.match(/<section>([\s\S]*?)<\/section>/g);
+    
+    if (sectionMatches && sectionMatches.length > 0) {
+      // Créer une section pour chaque balise <section> trouvée
+      return sectionMatches.map(sectionHTML => {
+        const section: ContentSection = {
+          id: uuidv4(),
+          elements: []
+        };
+        
+        // Extraire le contenu de la section
+        const sectionContent = sectionHTML.replace(/<section>([\s\S]*?)<\/section>/, '$1').trim();
+        
+        // Analyser le contenu de la section pour extraire les éléments dans leur ordre d'apparition
+        extractElementsInOrder(sectionContent, section);
+        
+        return section;
+      });
+    } else {
+      // Pas de section trouvée, créer une section avec tout le contenu
+      // Extraire les éléments dans leur ordre d'apparition
+      extractElementsInOrder(htmlContent, section);
+      
+      // Si aucun élément n'a été trouvé, ajouter tout le contenu comme paragraphe
+      if (section.elements.length === 0) {
+        section.elements.push({
+          id: uuidv4(),
+          type: 'paragraph',
+          content: htmlContent
+        });
+      }
+      
+      return [section];
+    }
+  }, [extractElementsInOrder]);
+  
+  // Fonction pour extraire l'ID YouTube d'une URL
+  const extractYouTubeId = useCallback((url: string): string => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : ''
+  }, [])
+  
   // Générer un contenu texte brut à partir des sections structurées
   const generateRawContent = useCallback((sectionsArray: ContentSection[]): string => {
     return sectionsArray.map(section => {
@@ -131,14 +304,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       // Encapsuler le contenu de la section dans une balise section sans attributs
       return `<section>\n${sectionContent}\n</section>`
     }).join('\n\n')
-  }, [])
-  
-  // Fonction pour extraire l'ID YouTube d'une URL
-  const extractYouTubeId = useCallback((url: string): string => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-    const match = url.match(regExp)
-    return (match && match[2].length === 11) ? match[2] : ''
-  }, [])
+  }, [extractYouTubeId])
   
   // Fonction pour collecter les données du DOM et notifier le parent
   const collectDataAndNotify = useCallback(() => {
@@ -267,6 +433,31 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       console.log('initialContent is already an object, structure:', 
         Array.isArray(initialContent) ? 'array' : 'object',
         'length:', Array.isArray(initialContent) ? initialContent.length : 'N/A');
+      
+      // Vérification détaillée de la structure
+      if (Array.isArray(initialContent)) {
+        // Log plus détaillé pour déboguer
+        initialContent.forEach((section, sectionIndex) => {
+          console.log(`Section ${sectionIndex + 1} ID:`, section.id);
+          console.log(`Section ${sectionIndex + 1} a ${section.elements?.length || 0} éléments`);
+          
+          if (section.elements && Array.isArray(section.elements)) {
+            section.elements.forEach((element, elementIndex) => {
+              console.log(`  - Élément ${elementIndex + 1} type:`, element.type);
+              console.log(`    Content:`, element.content ? element.content.substring(0, 30) : 'vide');
+              
+              if (element.type === 'image') {
+                console.log(`    Image URL:`, element.url || 'Non définie');
+                console.log(`    Image Alt:`, element.alt || 'Non défini');
+              } else if (element.type === 'video') {
+                console.log(`    Video URL:`, element.url || 'Non définie');
+              } else if (element.type === 'list') {
+                console.log(`    List items:`, element.listItems?.length || 0, 'éléments');
+              }
+            });
+          }
+        });
+      }
     }
     
     try {
@@ -278,7 +469,9 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
           // Si c'est un HTML, on le détecte avec des marqueurs comme <h2>, <p>, etc.
           if (initialContent.includes('<h2>') || 
               initialContent.includes('<p>') || 
-              initialContent.includes('<section>')) {
+              initialContent.includes('<section>') ||
+              initialContent.includes('<figure>') ||
+              initialContent.includes('<ul>')) {
             console.log('Content appears to be HTML, converting to structure');
             // Convertir le HTML en structure
             parsedContent = createStructureFromHTML(initialContent);
@@ -297,23 +490,35 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
         
         if (Array.isArray(parsedContent) && parsedContent.length > 0) {
           // Vérifier le format attendu
-          let isValid = true
+          let isValid = true;
+          let missingElements = [];
+          
           for (const section of parsedContent) {
             if (!section.id || !Array.isArray(section.elements)) {
-              isValid = false
+              isValid = false;
+              missingElements.push('section.id ou section.elements manquant');
               console.log('Invalid section found:', section);
-              break
+              break;
+            }
+            
+            // Vérifier chaque élément de la section
+            for (const element of section.elements) {
+              if (!element.id || !element.type) {
+                isValid = false;
+                missingElements.push(`élément manquant id ou type: ${JSON.stringify(element)}`);
+                break;
+              }
             }
           }
           
           if (isValid) {
             console.log('Valid structure detected, initializing editor with structured content');
-            dataRef.current.sections = parsedContent
-            dataRef.current.isInitialized = true
-            forceUpdate(prev => prev + 1) // Force un re-render
-            return
+            dataRef.current.sections = parsedContent;
+            dataRef.current.isInitialized = true;
+            forceUpdate(prev => prev + 1); // Force un re-render
+            return;
           } else {
-            console.log('Invalid structure format');
+            console.log('Format invalide. Éléments manquants:', missingElements);
           }
         } else {
           console.log('Parsed content is not a valid array or is empty');
@@ -326,7 +531,9 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       if (typeof initialContent === 'string' && 
           (initialContent.includes('<h2>') || 
            initialContent.includes('<p>') || 
-           initialContent.includes('<section>'))) {
+           initialContent.includes('<section>') ||
+           initialContent.includes('<figure>') ||
+           initialContent.includes('<ul>'))) {
         console.log('Exception when parsing, but content contains HTML tags, attempting to convert HTML to structure');
         
         // Créer une structure à partir du HTML
@@ -355,7 +562,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     dataRef.current.sections = [initialSection]
     dataRef.current.isInitialized = true
     forceUpdate(prev => prev + 1)
-  }, [initialContent])
+  }, [initialContent, createEmptySection, createStructureFromHTML])
   
   // Actions qui modifient la structure (nécessitent un re-render)
   
@@ -469,123 +676,6 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     sections[index] = sections[index + 1]
     sections[index + 1] = temp
     forceUpdate(prev => prev + 1)
-  }
-  
-  // Créer une structure à partir du contenu HTML
-  const createStructureFromHTML = (htmlContent: string): ContentSection[] => {
-    console.log('Converting HTML to structure:', htmlContent.substring(0, 100) + '...');
-    
-    // Créer une section par défaut
-    const section: ContentSection = {
-      id: uuidv4(),
-      elements: []
-    };
-    
-    // Essayer de détecter les sections dans le HTML
-    const sectionMatches = htmlContent.match(/<section>([\s\S]*?)<\/section>/g);
-    
-    if (sectionMatches && sectionMatches.length > 0) {
-      // Créer une section pour chaque balise <section> trouvée
-      return sectionMatches.map(sectionHTML => {
-        const section: ContentSection = {
-          id: uuidv4(),
-          elements: []
-        };
-        
-        // Extraire le contenu de la section
-        const sectionContent = sectionHTML.replace(/<section>([\s\S]*?)<\/section>/, '$1').trim();
-        
-        // Analyser le contenu de la section pour extraire les éléments dans leur ordre d'apparition
-        extractElementsInOrder(sectionContent, section);
-        
-        return section;
-      });
-    } else {
-      // Pas de section trouvée, créer une section avec tout le contenu
-      // Extraire les éléments dans leur ordre d'apparition
-      extractElementsInOrder(htmlContent, section);
-      
-      // Si aucun élément n'a été trouvé, ajouter tout le contenu comme paragraphe
-      if (section.elements.length === 0) {
-        section.elements.push({
-          id: uuidv4(),
-          type: 'paragraph',
-          content: htmlContent
-        });
-      }
-      
-      return [section];
-    }
-  }
-  
-  // Fonction auxiliaire pour extraire les éléments dans leur ordre d'apparition
-  const extractElementsInOrder = (htmlContent: string, section: ContentSection) => {
-    console.log('Extracting elements in order from HTML:', htmlContent.substring(0, 100) + '...');
-    
-    // Créer un array pour stocker tous les éléments avec leur position
-    const elements: { type: ContentElementType; content: string; position: number; url?: string; alt?: string; }[] = [];
-    
-    // Extraire les h2 avec leur position
-    const h2Regex = /<h2>([\s\S]*?)<\/h2>/g;
-    let h2Match;
-    while ((h2Match = h2Regex.exec(htmlContent)) !== null) {
-      elements.push({
-        type: 'h2',
-        content: h2Match[1].trim(),
-        position: h2Match.index
-      });
-    }
-    
-    // Extraire les h3 avec leur position
-    const h3Regex = /<h3>([\s\S]*?)<\/h3>/g;
-    let h3Match;
-    while ((h3Match = h3Regex.exec(htmlContent)) !== null) {
-      elements.push({
-        type: 'h3',
-        content: h3Match[1].trim(),
-        position: h3Match.index
-      });
-    }
-    
-    // Extraire les paragraphes avec leur position
-    const pRegex = /<p>([\s\S]*?)<\/p>/g;
-    let pMatch;
-    while ((pMatch = pRegex.exec(htmlContent)) !== null) {
-      elements.push({
-        type: 'paragraph',
-        content: pMatch[1].trim(),
-        position: pMatch.index
-      });
-    }
-    
-    // Trier les éléments par position pour préserver l'ordre original
-    elements.sort((a, b) => a.position - b.position);
-    
-    console.log('Elements sorted by position:', 
-      elements.map(e => ({
-        type: e.type,
-        content: e.content.substring(0, 20) + (e.content.length > 20 ? '...' : ''),
-        position: e.position
-      }))
-    );
-    
-    // Convertir les éléments triés en ContentElement et les ajouter à la section
-    elements.forEach(element => {
-      section.elements.push({
-        id: uuidv4(),
-        type: element.type,
-        content: element.content,
-        url: element.url,
-        alt: element.alt
-      });
-    });
-    
-    console.log('Final section elements:', 
-      section.elements.map(e => ({
-        type: e.type,
-        content: e.content.substring(0, 20) + (e.content.length > 20 ? '...' : '')
-      }))
-    );
   }
   
   // Si l'initialisation n'est pas encore terminée, afficher un indicateur de chargement
