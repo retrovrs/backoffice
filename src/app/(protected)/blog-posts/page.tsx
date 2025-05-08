@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
 import { formatDate } from '@/lib/utils'
 import { useUserRole } from '@/hooks/useUserRole'
+import { Spinner } from '@/components/ui/spinner'
 
 interface BlogPost {
   id: number
@@ -30,6 +31,7 @@ interface BlogPost {
 export default function BlogPostsPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingPostId, setLoadingPostId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
   const { isAdmin } = useUserRole()
@@ -64,6 +66,15 @@ export default function BlogPostsPage() {
 
   const handleNewPost = () => {
     router.push('/admin/blog-posts/new')
+  }
+
+  const handleEditPost = (postId: number) => {
+    setLoadingPostId(postId)
+    // Utilise setTimeout pour simuler un délai réseau et montrer le spinner
+    // Dans un cas réel, la navigation sera suffisante pour voir le spinner
+    setTimeout(() => {
+      router.push(`/admin/blog-posts/edit/${postId}`)
+    }, 500)
   }
 
   if (isLoading) {
@@ -102,13 +113,15 @@ export default function BlogPostsPage() {
               <TableHead className="font-semibold text-gray-700">Author</TableHead>
               <TableHead className="font-semibold text-gray-700">Creation date</TableHead>
               <TableHead className="font-semibold text-gray-700">Status</TableHead>
-              <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
+              {isAdmin && (
+                <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {posts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-gray-500">
                   No article found
                 </TableCell>
               </TableRow>
@@ -116,10 +129,14 @@ export default function BlogPostsPage() {
               posts.map((post, index) => (
                 <TableRow 
                   key={post.id}
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-50 cursor-pointer transition-colors`}
+                  onClick={() => handleEditPost(post.id)}
                 >
-                  <TableCell className="font-medium text-indigo-700 hover:text-indigo-800 transition-colors cursor-pointer">
-                    {post.title}
+                  <TableCell className="font-medium text-indigo-700">
+                    <div className="flex items-center gap-2">
+                      {post.title}
+                      {loadingPostId === post.id && <Spinner size="sm" />}
+                    </div>
                   </TableCell>
                   <TableCell>{post.author}</TableCell>
                   <TableCell>{formatDate(post.createdAt)}</TableCell>
@@ -131,19 +148,17 @@ export default function BlogPostsPage() {
                       {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mr-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                      onClick={() => router.push(`/admin/blog-posts/edit/${post.id}`)}
-                    >
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors">
-                      Delete
-                    </Button>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
