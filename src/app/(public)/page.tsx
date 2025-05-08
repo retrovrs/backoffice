@@ -10,6 +10,9 @@ export default function Home() {
     const sessionData = data?.session
     const isAuthenticated = !!sessionData
     const [userName, setUserName] = useState('Utilisateur')
+    const [draftPostsCount, setDraftPostsCount] = useState(0)
+    const [publishedPostsCount, setPublishedPostsCount] = useState(0)
+    const [isLoadingMetrics, setIsLoadingMetrics] = useState(false)
 
     // Récupération du nom d'utilisateur à partir de son userId
     useEffect(() => {
@@ -31,6 +34,31 @@ export default function Home() {
         fetchUserName()
       }
     }, [sessionData, isAuthenticated])
+    
+    // Récupération des métriques des blog posts
+    useEffect(() => {
+      async function fetchBlogMetrics() {
+        if (isAuthenticated) {
+          setIsLoadingMetrics(true)
+          try {
+            const response = await fetch('/api/blog-metrics')
+            if (response.ok) {
+              const metrics = await response.json()
+              setDraftPostsCount(metrics.draftCount || 0)
+              setPublishedPostsCount(metrics.publishedCount || 0)
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération des métriques:', error)
+          } finally {
+            setIsLoadingMetrics(false)
+          }
+        }
+      }
+
+      if (isAuthenticated) {
+        fetchBlogMetrics()
+      }
+    }, [isAuthenticated])
 
   return (
     <div className="flex flex-col items-center p-8 bg-background">
@@ -59,19 +87,26 @@ export default function Home() {
           {isAuthenticated && (
             <div className="mt-8">
               <p className="text-muted-foreground mb-4">
-                Bienvenue, {userName}
+                Welcome, {userName}
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <Link href="/blog-posts" className="block">
+              <div className="flex justify-center mt-6">
+                <Link href="/blog-posts" className="block w-full max-w-sm">
                   <div className="group h-full rounded-md border p-6 shadow-sm transition-all hover:shadow-md hover:border-primary">
                     <h3 className="text-xl font-semibold mb-2">Blog Posts</h3>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-sm mb-4">
                       Manage your blog posts and track their performance
                     </p>
+                    <div className="flex items-center justify-center gap-4 mt-2">
+                      <div className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-medium">
+                        {isLoadingMetrics ? '...' : `${draftPostsCount} DRAFT`}
+                      </div>
+                      <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
+                        {isLoadingMetrics ? '...' : `${publishedPostsCount} PUBLISHED`}
+                      </div>
+                    </div>
                   </div>
                 </Link>
-                
               </div>
             </div>
           )}
