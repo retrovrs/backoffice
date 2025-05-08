@@ -50,8 +50,6 @@ export function MenuBar() {
           <MenubarTrigger>SEO Posts</MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={() => router.push('/blog-posts')}>Blog Posts</MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem>Eductional Posts</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </div>

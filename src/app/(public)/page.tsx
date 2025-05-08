@@ -72,14 +72,6 @@ export default function Home() {
                   </div>
                 </Link>
                 
-                <Link href="/educational-posts" className="block">
-                  <div className="group h-full rounded-md border p-6 shadow-sm transition-all hover:shadow-md hover:border-primary">
-                    <h3 className="text-xl font-semibold mb-2">Educational Posts</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Create and organize your educational content
-                    </p>
-                  </div>
-                </Link>
               </div>
             </div>
           )}
