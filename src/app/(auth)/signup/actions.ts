@@ -26,7 +26,7 @@ export async function checkEmailInWhitelist(email: string): Promise<CheckEmailRe
         if (!whitelisted) {
             return {
                 isWhitelisted: false,
-                message: 'Vous n\'êtes pas autorisé à utiliser cette application. Veuillez contacter un administrateur.'
+                message: 'You are not authorized to use this application. Please contact an administrator.'
             }
         }
 
@@ -34,10 +34,10 @@ export async function checkEmailInWhitelist(email: string): Promise<CheckEmailRe
             isWhitelisted: true
         }
     } catch (error) {
-        console.error('Vérification whitelist erreur:', error)
+        console.error('Whitelist check error:', error)
         return {
             isWhitelisted: false,
-            message: 'Une erreur s\'est produite lors de la vérification de votre email.'
+            message: 'An error occurred while checking your email.'
         }
     }
 }
@@ -99,7 +99,7 @@ export async function validateSignupForm(prevState: SignupFormState, formData: F
         console.error('Validation erreur:', error)
         return {
             errors: {
-                _form: ['Une erreur s\'est produite. Veuillez réessayer.']
+                _form: ['An Error occurred. Please try again.']
             },
             success: false
         }
@@ -133,7 +133,7 @@ export async function signUp(prevState: SignupFormState, formData: FormData): Pr
         if (!whitelisted) {
             return {
                 errors: {
-                    _form: ['Vous n\'êtes pas autorisé à utiliser cette application. Veuillez contacter un administrateur.']
+                    _form: ['You are not authorized to use this application. Please contact an administrator.']
                 },
                 success: false
             }
@@ -153,7 +153,7 @@ export async function signUp(prevState: SignupFormState, formData: FormData): Pr
         console.error('Signup error:', error)
         return {
             errors: {
-                _form: ['Une erreur s\'est produite lors de l\'inscription. Veuillez réessayer.']
+                _form: ['An Error occurred. Please try again.']
             },
             success: false
         }
