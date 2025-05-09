@@ -798,7 +798,7 @@ ${sectionsContent}
         type="button"
         variant="outline"
         onClick={addSection}
-        className="w-full py-6 border-dashed border-violet-200 bg-violet-50/50 hover:bg-violet-100/50 text-violet-700"
+        className="w-full py-6 border-dashed border-violet-200 bg-violet-50/50 hover:bg-violet-100/50 text-violet-700 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:bg-slate-700 dark:text-slate-300"
       >
         <PlusCircle className="h-5 w-5 mr-2" />
         Add a new section
@@ -807,9 +807,9 @@ ${sectionsContent}
       {/* Liste des sections */}
       <TooltipProvider>
         {dataRef.current.sections.map((section, sectionIndex) => (
-          <Card key={section.id} className="border border-violet-200 shadow-sm">
-            <CardHeader className="bg-violet-50 flex flex-row items-center justify-between p-4">
-              <CardTitle className="text-lg font-medium text-violet-800">
+          <Card key={section.id} className="border border-violet-200 shadow-sm dark:border-slate-700 dark:shadow-slate-800/10">
+            <CardHeader className="bg-violet-50 flex flex-row items-center justify-between p-4 dark:bg-slate-800/40">
+              <CardTitle className="text-lg font-medium text-violet-800 dark:text-violet-300">
                 Section {sectionIndex + 1}
               </CardTitle>
               <div className="flex items-center space-x-2">
@@ -819,6 +819,7 @@ ${sectionsContent}
                   size="icon"
                   onClick={() => moveSectionUp(sectionIndex)}
                   disabled={sectionIndex === 0}
+                  className="dark:bg-violet-900/50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-800"
                 >
                   <ChevronUp className="h-4 w-4" />
                 </Button>
@@ -828,6 +829,7 @@ ${sectionsContent}
                   size="icon"
                   onClick={() => moveSectionDown(sectionIndex)}
                   disabled={sectionIndex === dataRef.current.sections.length - 1}
+                  className="dark:bg-violet-900/50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-800"
                 >
                   <ChevronDown className="h-4 w-4" />
                 </Button>
@@ -837,36 +839,37 @@ ${sectionsContent}
                   size="icon"
                   onClick={() => removeSection(section.id)}
                   disabled={dataRef.current.sections.length === 1}
+                  className="dark:bg-violet-900/50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-800"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </CardHeader>
             
-            <CardContent className="p-6 space-y-4 bg-violet-50/30">
+            <CardContent className="p-6 space-y-4 bg-violet-50/30 dark:bg-slate-900/60">
               {section.elements.map((element, elementIndex) => (
                 <div 
                   key={element.id} 
                   className={`border rounded-md p-4 space-y-3 ${
-                    element.type === 'h2' ? 'bg-pink-50 border-pink-200' : 
-                    element.type === 'h3' ? 'bg-pink-100/70 border-pink-200' : 
-                    element.type === 'paragraph' ? 'bg-white border-pink-100' : 
-                    element.type === 'image' ? 'bg-violet-50 border-violet-200' : 
-                    element.type === 'video' ? 'bg-violet-100/70 border-violet-200' : 
-                    element.type === 'list' ? 'bg-pink-50/70 border-pink-100' : 
-                    'bg-white'
+                    element.type === 'h2' ? 'bg-pink-50 border-pink-200 dark:bg-slate-800 dark:border-slate-700' : 
+                    element.type === 'h3' ? 'bg-pink-100/70 border-pink-200 dark:bg-slate-800 dark:border-slate-700' : 
+                    element.type === 'paragraph' ? 'bg-white border-pink-100 dark:bg-slate-800 dark:border-slate-700' : 
+                    element.type === 'image' ? 'bg-violet-50 border-violet-200 dark:bg-slate-800 dark:border-slate-700' : 
+                    element.type === 'video' ? 'bg-violet-100/70 border-violet-200 dark:bg-slate-800 dark:border-slate-700' : 
+                    element.type === 'list' ? 'bg-pink-50/70 border-pink-100 dark:bg-slate-800 dark:border-slate-700' : 
+                    'bg-white dark:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className={`text-sm font-medium p-1 px-2 rounded ${
-                        element.type === 'h2' ? 'bg-pink-200 text-pink-800' : 
-                        element.type === 'h3' ? 'bg-pink-300 text-pink-900' : 
-                        element.type === 'paragraph' ? 'bg-pink-100 text-pink-800' : 
-                        element.type === 'image' ? 'bg-violet-200 text-violet-800' : 
-                        element.type === 'video' ? 'bg-violet-300 text-violet-900' : 
-                        element.type === 'list' ? 'bg-pink-200 text-pink-900' : 
-                        'bg-gray-200 text-gray-800'
+                        element.type === 'h2' ? 'bg-pink-200 text-pink-800 dark:bg-slate-700 dark:text-slate-200' : 
+                        element.type === 'h3' ? 'bg-pink-300 text-pink-900 dark:bg-slate-700 dark:text-slate-200' : 
+                        element.type === 'paragraph' ? 'bg-pink-100 text-pink-800 dark:bg-slate-700 dark:text-slate-200' : 
+                        element.type === 'image' ? 'bg-violet-200 text-violet-800 dark:bg-slate-700 dark:text-slate-200' : 
+                        element.type === 'video' ? 'bg-violet-300 text-violet-900 dark:bg-slate-700 dark:text-slate-200' : 
+                        element.type === 'list' ? 'bg-pink-200 text-pink-900 dark:bg-slate-700 dark:text-slate-200' : 
+                        'bg-gray-200 text-gray-800 dark:bg-slate-700 dark:text-slate-200'
                       }`}>
                         {element.type === 'h2' && 'H2'}
                         {element.type === 'h3' && 'H3'}
@@ -915,7 +918,7 @@ ${sectionsContent}
                         id={`h2-${element.id}`}
                         defaultValue={element.content}
                         placeholder="Main title"
-                        className="border-pink-200 focus:border-pink-300 focus:ring-pink-200"
+                        className="border-pink-200 focus:border-pink-300 focus:ring-pink-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                       />
                     </div>
                   )}
@@ -926,7 +929,7 @@ ${sectionsContent}
                         id={`h3-${element.id}`}
                         defaultValue={element.content}
                         placeholder="Subtitle"
-                        className="border-pink-200 focus:border-pink-300 focus:ring-pink-200"
+                        className="border-pink-200 focus:border-pink-300 focus:ring-pink-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                       />
                     </div>
                   )}
@@ -937,7 +940,7 @@ ${sectionsContent}
                         id={`paragraph-${element.id}`}
                         defaultValue={element.content}
                         placeholder="Paragraph content ..."
-                        className="min-h-[100px] border-pink-100 focus:border-pink-200 focus:ring-pink-100"
+                        className="min-h-[100px] border-pink-100 focus:border-pink-200 focus:ring-pink-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                       />
                     </div>
                   )}
@@ -945,30 +948,30 @@ ${sectionsContent}
                   {element.type === 'image' && (
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <Label htmlFor={`image-url-${element.id}`} className="text-violet-800">Image URL</Label>
+                        <Label htmlFor={`image-url-${element.id}`} className="text-violet-800 dark:text-slate-300">Image URL</Label>
                         <Input 
                           id={`image-url-${element.id}`}
                           defaultValue={element.url || ''}
                           placeholder="https://example.com/image.jpg"
-                          className="border-violet-200 focus:border-violet-300 focus:ring-violet-200"
+                          className="border-violet-200 focus:border-violet-300 focus:ring-violet-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor={`image-alt-${element.id}`} className="text-violet-800">Alternatif Text</Label>
+                        <Label htmlFor={`image-alt-${element.id}`} className="text-violet-800 dark:text-slate-300">Alternatif Text</Label>
                         <Input 
                           id={`image-alt-${element.id}`}
                           defaultValue={element.alt || ''}
                           placeholder="Image description"
-                          className="border-violet-200 focus:border-violet-300 focus:ring-violet-200"
+                          className="border-violet-200 focus:border-violet-300 focus:ring-violet-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor={`image-caption-${element.id}`} className="text-violet-800">Caption</Label>
+                        <Label htmlFor={`image-caption-${element.id}`} className="text-violet-800 dark:text-slate-300">Caption</Label>
                         <Input 
                           id={`image-caption-${element.id}`}
                           defaultValue={element.content}
                           placeholder="Image caption"
-                          className="border-violet-200 focus:border-violet-300 focus:ring-violet-200"
+                          className="border-violet-200 focus:border-violet-300 focus:ring-violet-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                         />
                       </div>
                     </div>
@@ -977,21 +980,21 @@ ${sectionsContent}
                   {element.type === 'video' && (
                     <div className="space-y-3">
                       <div className="space-y-1">
-                        <Label htmlFor={`video-url-${element.id}`} className="text-violet-900">Video URL</Label>
+                        <Label htmlFor={`video-url-${element.id}`} className="text-violet-900 dark:text-slate-300">Video URL</Label>
                         <Input 
                           id={`video-url-${element.id}`}
                           defaultValue={element.url || ''}
                           placeholder="https://example.com/video.mp4 ou ID YouTube"
-                          className="border-violet-300 focus:border-violet-400 focus:ring-violet-300"
+                          className="border-violet-300 focus:border-violet-400 focus:ring-violet-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor={`video-caption-${element.id}`} className="text-violet-900">Caption</Label>
+                        <Label htmlFor={`video-caption-${element.id}`} className="text-violet-900 dark:text-slate-300">Caption</Label>
                         <Input 
                           id={`video-caption-${element.id}`}
                           defaultValue={element.content}
                           placeholder="Video caption"
-                          className="border-violet-300 focus:border-violet-400 focus:ring-violet-300"
+                          className="border-violet-300 focus:border-violet-400 focus:ring-violet-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                         />
                       </div>
                     </div>
@@ -999,15 +1002,15 @@ ${sectionsContent}
                   
                   {element.type === 'list' && (
                     <div className="space-y-3">
-                      <Label className="text-pink-800">List items</Label>
+                      <Label className="text-pink-800 dark:text-slate-300">List items</Label>
                       {element.listItems?.map((item, itemIndex) => (
                         <div key={`${element.id}-item-${itemIndex}`} className="flex items-center space-x-2">
-                          <span className="text-pink-500">•</span>
+                          <span className="text-pink-500 dark:text-slate-400">•</span>
                           <Input 
                             id={`list-item-${element.id}-${itemIndex}`}
                             defaultValue={item}
                             placeholder={`Item ${itemIndex + 1}`}
-                            className="flex-1 border-pink-100 focus:border-pink-200 focus:ring-pink-100"
+                            className="flex-1 border-pink-100 focus:border-pink-200 focus:ring-pink-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
                           />
                           <Button
                             type="button"
@@ -1015,7 +1018,7 @@ ${sectionsContent}
                             size="icon"
                             onClick={() => removeListItem(section.id, element.id, itemIndex)}
                             disabled={(element.listItems?.length || 0) <= 1}
-                            className="text-pink-700 hover:bg-pink-100"
+                            className="text-pink-700 hover:bg-pink-100 dark:text-slate-400 dark:hover:bg-slate-700"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -1026,7 +1029,7 @@ ${sectionsContent}
                         variant="outline"
                         size="sm"
                         onClick={() => addListItem(section.id, element.id)}
-                        className="mt-2 border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100"
+                        className="mt-2 border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                       >
                         Add an item
                       </Button>
@@ -1036,13 +1039,13 @@ ${sectionsContent}
               ))}
               
               {section.elements.length === 0 && (
-                <div className="text-center py-12 text-gray-500 bg-violet-50/50 border border-dashed border-violet-200 rounded-lg">
+                <div className="text-center py-12 text-gray-500 bg-violet-50/50 border border-dashed border-violet-200 rounded-lg dark:bg-slate-800/50 dark:border-slate-700 dark:text-gray-400">
                   No elements in this section. Add elements using the buttons below.
                 </div>
               )}
             </CardContent>
             
-            <CardFooter className="border-t border-violet-100 bg-violet-50 p-4">
+            <CardFooter className="border-t border-violet-100 bg-violet-50 p-4 dark:border-slate-700 dark:bg-slate-800">
               <div className="flex flex-wrap items-center gap-2">
                 <ActionTooltip label="Add a main title for the section">
                   <Button
@@ -1050,7 +1053,7 @@ ${sectionsContent}
                     variant="outline"
                     size="sm"
                     onClick={() => addElement(section.id, 'h2')}
-                    className="bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100"
+                    className="bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     <Type className="h-4 w-4 mr-2" /> H2
                   </Button>
@@ -1062,7 +1065,7 @@ ${sectionsContent}
                     variant="outline"
                     size="sm"
                     onClick={() => addElement(section.id, 'h3')}
-                    className="bg-pink-100/70 border-pink-200 text-pink-800 hover:bg-pink-200/70"
+                    className="bg-pink-100/70 border-pink-200 text-pink-800 hover:bg-pink-200/70 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     <Type className="h-4 w-4 mr-2" /> H3
                   </Button>
@@ -1074,7 +1077,7 @@ ${sectionsContent}
                     variant="outline"
                     size="sm"
                     onClick={() => addElement(section.id, 'paragraph')}
-                    className="bg-white border-pink-100 text-pink-700 hover:bg-pink-50"
+                    className="bg-white border-pink-100 text-pink-700 hover:bg-pink-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     <PenSquare className="h-4 w-4 mr-2" /> Paragraph
                   </Button>
@@ -1086,7 +1089,7 @@ ${sectionsContent}
                     variant="outline"
                     size="sm"
                     onClick={() => addElement(section.id, 'image')}
-                    className="bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100"
+                    className="bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     <Image className="h-4 w-4 mr-2" /> Image
                   </Button>
@@ -1098,7 +1101,7 @@ ${sectionsContent}
                     variant="outline"
                     size="sm"
                     onClick={() => addElement(section.id, 'video')}
-                    className="bg-violet-100/70 border-violet-200 text-violet-800 hover:bg-violet-200/70"
+                    className="bg-violet-100/70 border-violet-200 text-violet-800 hover:bg-violet-200/70 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     <Play className="h-4 w-4 mr-2" /> Video
                   </Button>
@@ -1110,7 +1113,7 @@ ${sectionsContent}
                     variant="outline"
                     size="sm"
                     onClick={() => addElement(section.id, 'list')}
-                    className="bg-pink-50/70 border-pink-100 text-pink-700 hover:bg-pink-100/70"
+                    className="bg-pink-50/70 border-pink-100 text-pink-700 hover:bg-pink-100/70 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     <List className="h-4 w-4 mr-2" /> List
                   </Button>
@@ -1122,13 +1125,13 @@ ${sectionsContent}
       </TooltipProvider>
       
       {dataRef.current.sections.length === 0 && (
-        <div className="text-center p-12 border-2 border-dashed border-gray-200 rounded-lg">
-          <p className="text-gray-500 mb-4">No sections yet. Add your first section to start.</p>
+        <div className="text-center p-12 border-2 border-dashed border-gray-200 rounded-lg dark:border-slate-700 dark:text-slate-300">
+          <p className="text-gray-500 mb-4 dark:text-slate-400">No sections yet. Add your first section to start.</p>
           <Button
             type="button"
             variant="default"
             onClick={addSection}
-            className="bg-violet-600 hover:bg-violet-700"
+            className="bg-violet-600 hover:bg-violet-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-white"
           >
             <PlusCircle className="h-5 w-5 mr-2" />
             Add first section

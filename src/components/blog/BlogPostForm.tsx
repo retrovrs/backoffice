@@ -560,7 +560,7 @@ export default function BlogPostForm({
       {/* Bouton SEO Assistant en position fixe */}
       <Button 
         variant="outline"
-        className="fixed left-60 top-1/2 transform -translate-y-1/2 z-50 bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200 shadow-md"
+        className="fixed left-60 top-1/2 transform -translate-y-1/2 z-50 bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200 shadow-md dark:bg-purple-900 dark:text-purple-100 dark:border-purple-800 dark:hover:bg-purple-800"
         onClick={handleOpenSEOAssistant}
         disabled={isSubmitting}
       >
@@ -611,12 +611,12 @@ export default function BlogPostForm({
         </Button>
       </div>
 
-      <form onSubmit={handleFormSubmit} className="space-y-8 bg-white p-6 rounded-lg border border-gray-200">
-        <Accordion type="multiple" defaultValue={['meta', 'category', 'header', 'intro', 'content', 'tags']} className="space-y-4">
+      <form onSubmit={handleFormSubmit} className="space-y-8 bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-700 dark:shadow-[0_0_15px_rgba(59,130,246,0.07)]">
+        <Accordion type="multiple" defaultValue={['meta', 'category', 'header', 'intro', 'content', 'tags']} className="space-y-4 [&_input]:dark:bg-slate-800 [&_input]:dark:border-slate-700 [&_input]:dark:text-slate-200 [&_input::placeholder]:dark:text-slate-500 [&_textarea]:dark:bg-slate-800 [&_textarea]:dark:border-slate-700 [&_textarea]:dark:text-slate-200 [&_textarea::placeholder]:dark:text-slate-500 [&_[role=tablist]]:dark:bg-slate-800 [&_label]:dark:text-slate-300 [&_p]:dark:text-slate-400 [&_h3]:dark:text-slate-200 [&_div.border]:dark:border-slate-700 [&_.accordion-item]:dark:bg-slate-850 [&_button]:dark:border-slate-700 [&_button]:dark:text-slate-300">
           
           {/* Category */}
-          <AccordionItem value="category" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Category</AccordionTrigger>
+          <AccordionItem value="category" className="border rounded-md px-4 dark:bg-slate-800/60">
+            <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Category</AccordionTrigger>
             <AccordionContent>
               <CategorySelector 
                 selectedCategory={formData.category}
@@ -626,8 +626,8 @@ export default function BlogPostForm({
           </AccordionItem>
           
           {/* Méta-données de l'article */}
-          <AccordionItem value="meta" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Article meta-data</AccordionTrigger>
+          <AccordionItem value="meta" className="border rounded-md px-4 dark:bg-slate-800/60">
+            <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Article meta-data</AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-4 pt-4">
                 <div className="space-y-2">
@@ -715,11 +715,9 @@ export default function BlogPostForm({
             </AccordionContent>
           </AccordionItem>
 
-          
-
           {/* Tags */}
-          <AccordionItem value="tags" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Tags</AccordionTrigger>
+          <AccordionItem value="tags" className="border rounded-md px-4 dark:bg-slate-800/60">
+            <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Tags</AccordionTrigger>
             <AccordionContent>
               <div className="pt-4">
                 <div className="space-y-2">
@@ -740,8 +738,8 @@ export default function BlogPostForm({
           </AccordionItem>
 
           {/* En-tête de l'article */}
-          <AccordionItem value="header" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Article header</AccordionTrigger>
+          <AccordionItem value="header" className="border rounded-md px-4 dark:bg-slate-800/60">
+            <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Article header</AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-4 pt-4">
                 <div className="space-y-2">
@@ -805,8 +803,8 @@ export default function BlogPostForm({
           </AccordionItem>
 
           {/* Introduction et image principale */}
-          <AccordionItem value="intro" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Main image and introduction</AccordionTrigger>
+          <AccordionItem value="intro" className="border rounded-md px-4 dark:bg-slate-800/60">
+            <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Main image and introduction</AccordionTrigger>
             <AccordionContent>
               <div className="grid gap-4 pt-4">
                 <div className="space-y-2">
@@ -888,8 +886,8 @@ export default function BlogPostForm({
           </AccordionItem>
 
           {/* Contenu principal */}
-          <AccordionItem value="content" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Main content</AccordionTrigger>
+          <AccordionItem value="content" className="border rounded-md px-4 dark:bg-slate-800/60">
+            <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Main content</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2 pt-4">
                 <Label htmlFor="content">Main content</Label>
@@ -917,13 +915,14 @@ export default function BlogPostForm({
             variant="outline"
             onClick={() => router.push('/blog-posts')}
             disabled={isSubmitting}
+            className="dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
           >
             Cancel
           </Button>
           {mode === 'edit' && formData.status === 'draft' && (
             <Button 
               type="button" 
-              className="bg-green-600 hover:bg-green-700 transition-colors"
+              className="bg-green-600 hover:bg-green-700 transition-colors dark:bg-green-700 dark:hover:bg-green-800 dark:text-white"
               onClick={handlePublish}
               disabled={isSubmitting}
             >
@@ -933,7 +932,7 @@ export default function BlogPostForm({
           {mode === 'edit' && formData.status === 'published' && (
             <Button 
               type="button" 
-              className="bg-amber-600 hover:bg-amber-700 transition-colors"
+              className="bg-amber-600 hover:bg-amber-700 transition-colors dark:bg-amber-700 dark:hover:bg-amber-800 dark:text-white"
               onClick={handleUnpublish}
               disabled={isSubmitting}
             >
@@ -942,7 +941,7 @@ export default function BlogPostForm({
           )}
           <Button 
             type="submit" 
-            className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
+            className="bg-indigo-600 hover:bg-indigo-700 transition-colors dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:text-white"
             disabled={isSubmitting}
           >
             {submitButtonText}
