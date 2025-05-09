@@ -17,6 +17,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Badge } from '@/components/ui/badge'
 import { getCategories } from '@/app/actions/category'
 import { BlogPostFormValues } from '@/types/blog'
 import {
@@ -587,6 +588,18 @@ export default function BlogPostForm({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+          {mode === 'edit' && (
+            <Badge 
+              variant="outline" 
+              className={`ml-2 ${
+                formData.status === 'published' 
+                  ? 'bg-green-100 text-green-800 border-green-300' 
+                  : 'bg-amber-100 text-amber-800 border-amber-300'
+              }`}
+            >
+              {formData.status === 'published' ? 'PUBLISHED' : 'DRAFT'}
+            </Badge>
+          )}
           <BlogPostSEOHelper />
         </div>
         <Button
