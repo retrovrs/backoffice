@@ -16,6 +16,23 @@ import { useToast } from '@/components/ui/use-toast'
 import { formatDate } from '@/lib/utils'
 import { useUserRole } from '@/hooks/useUserRole'
 import { Spinner } from '@/components/ui/spinner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { BlogPostSEOAssistantContent } from '@/components/blog/BlogPostSEOAssistant'
+import { BlogPostFormValues } from '@/types/blog'
+
+// Styles pour empêcher le déplacement de la page lors de l'ouverture de la modale
+const fixedStyles = {
+  '.dialog-open': {
+    paddingRight: '0px !important',
+    overflow: 'auto !important',
+  },
+}
 
 interface BlogPost {
   id: number
@@ -26,6 +43,7 @@ interface BlogPost {
   updatedAt: string
   status: 'DRAFT' | 'PUBLISHED'
   published: boolean
+  generatedHtml?: string
 }
 
 export default function BlogPostsPage() {
@@ -33,9 +51,28 @@ export default function BlogPostsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadingPostId, setLoadingPostId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewHtml, setPreviewHtml] = useState<string>('')
   const { toast } = useToast()
   const { isAdmin } = useUserRole()
   const router = useRouter()
+
+  // Empêcher le scroll du body lorsque la modale est ouverte
+  useEffect(() => {
+    if (isPreviewOpen) {
+      document.body.classList.add('overflow-hidden')
+      document.documentElement.classList.add('dialog-open')
+    } else {
+      document.body.classList.remove('overflow-hidden')
+      document.documentElement.classList.remove('dialog-open')
+    }
+
+    return () => {
+      document.body.classList.remove('overflow-hidden')
+      document.documentElement.classList.remove('dialog-open')
+    }
+  }, [isPreviewOpen])
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -70,11 +107,44 @@ export default function BlogPostsPage() {
 
   const handleEditPost = (postId: number) => {
     setLoadingPostId(postId)
-    // Utilise setTimeout pour simuler un délai réseau et montrer le spinner
-    // Dans un cas réel, la navigation sera suffisante pour voir le spinner
-    setTimeout(() => {
-      router.push(`/admin/blog-posts/edit/${postId}`)
-    }, 500)
+    
+    if (isAdmin) {
+      // Pour les admins, rediriger vers le formulaire d'édition
+      setTimeout(() => {
+        router.push(`/admin/blog-posts/edit/${postId}`)
+      }, 500)
+    } else {
+      // Pour les non-admins, récupérer le HTML généré et l'afficher dans une modale
+      const fetchPostHtml = async () => {
+        try {
+          const response = await fetch(`/api/blog-posts/${postId}/generated-html`)
+          
+          if (!response.ok) {
+            throw new Error("Erreur lors de la récupération de l'aperçu HTML")
+          }
+          
+          const data = await response.json()
+          const post = posts.find(p => p.id === postId)
+          
+          if (post) {
+            setSelectedPost(post)
+            setPreviewHtml(data.generatedHtml || '')
+            setIsPreviewOpen(true)
+          }
+        } catch (err) {
+          console.error('Error:', err)
+          toast({
+            title: 'Erreur',
+            description: "Impossible de charger l'aperçu HTML",
+            variant: 'destructive'
+          })
+        } finally {
+          setLoadingPostId(null)
+        }
+      }
+      
+      fetchPostHtml()
+    }
   }
 
   if (isLoading) {
@@ -91,80 +161,117 @@ export default function BlogPostsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Blog articles</h1>
-        {isAdmin && (
-          <Button 
-            className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
-            onClick={handleNewPost}
-          >
-            New article
-          </Button>
+    <>
+      <style jsx global>{`
+        .dialog-open .fixed:has([role="dialog"]) ~ * {
+          width: 100% !important;
+          transform: none !important;
+        }
+        body.overflow-hidden {
+          padding-right: 0 !important;
+        }
+      `}</style>
+      <div className="space-y-6 w-full">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">Blog articles</h1>
+          {isAdmin && (
+            <Button 
+              className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
+              onClick={handleNewPost}
+            >
+              New article
+            </Button>
+          )}
+        </div>
+        
+        <div className="rounded-md border border-gray-200 overflow-hidden w-full">
+          <Table>
+            <TableCaption className="mt-4 mb-2 text-gray-500">List of blog articles</TableCaption>
+            <TableHeader className="bg-gray-50">
+              <TableRow>
+                <TableHead className="w-[300px] py-3 font-semibold text-gray-700">Title</TableHead>
+                <TableHead className="font-semibold text-gray-700">Author</TableHead>
+                <TableHead className="font-semibold text-gray-700">Creation date</TableHead>
+                <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                {isAdmin && (
+                  <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {posts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-gray-500">
+                    No article found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                posts.map((post, index) => (
+                  <TableRow 
+                    key={post.id}
+                    className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-50 cursor-pointer transition-colors`}
+                    onClick={() => handleEditPost(post.id)}
+                  >
+                    <TableCell className="font-medium text-indigo-700">
+                      <div className="flex items-center gap-2">
+                        {post.title}
+                        {loadingPostId === post.id && <Spinner size="sm" />}
+                      </div>
+                    </TableCell>
+                    <TableCell>{post.author}</TableCell>
+                    <TableCell>{formatDate(post.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                        ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-800 border border-green-200' : 
+                          post.status === 'DRAFT' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
+                          'bg-gray-100 text-gray-800 border border-gray-200'}`}>
+                        {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                      </div>
+                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Modale d'aperçu HTML pour les non-admins */}
+        {selectedPost && (
+          <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogContent className="w-screen max-w-[90vw] md:max-w-[80vw] max-h-[85vh] overflow-y-auto fixed">
+              <DialogHeader>
+                <DialogTitle>Aperçu de l'article - {selectedPost.title}</DialogTitle>
+                <DialogDescription>
+                  Prévisualisation de l'article de blog
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mt-4 bg-white p-6 rounded-lg border border-gray-200 overflow-auto max-h-[60vh]">
+                {previewHtml ? (
+                  <div 
+                    className="prose lg:prose-lg mx-auto" 
+                    dangerouslySetInnerHTML={{ __html: previewHtml }} 
+                  />
+                ) : (
+                  <div className="text-center text-gray-500 py-12">
+                    Aucun aperçu HTML disponible pour cet article
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
-      
-      <div className="rounded-md border border-gray-200 overflow-hidden">
-        <Table>
-          <TableCaption className="mt-4 mb-2 text-gray-500">List of blog articles</TableCaption>
-          <TableHeader className="bg-gray-50">
-            <TableRow>
-              <TableHead className="w-[300px] py-3 font-semibold text-gray-700">Title</TableHead>
-              <TableHead className="font-semibold text-gray-700">Author</TableHead>
-              <TableHead className="font-semibold text-gray-700">Creation date</TableHead>
-              <TableHead className="font-semibold text-gray-700">Status</TableHead>
-              {isAdmin && (
-                <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {posts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-gray-500">
-                  No article found
-                </TableCell>
-              </TableRow>
-            ) : (
-              posts.map((post, index) => (
-                <TableRow 
-                  key={post.id}
-                  className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-50 cursor-pointer transition-colors`}
-                  onClick={() => handleEditPost(post.id)}
-                >
-                  <TableCell className="font-medium text-indigo-700">
-                    <div className="flex items-center gap-2">
-                      {post.title}
-                      {loadingPostId === post.id && <Spinner size="sm" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>{post.author}</TableCell>
-                  <TableCell>{formatDate(post.createdAt)}</TableCell>
-                  <TableCell>
-                    <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                      ${post.status === 'PUBLISHED' ? 'bg-green-100 text-green-800 border border-green-200' : 
-                        post.status === 'DRAFT' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
-                        'bg-gray-100 text-gray-800 border border-gray-200'}`}>
-                      {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
-                    </div>
-                  </TableCell>
-                  {isAdmin && (
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    </>
   )
 } 
