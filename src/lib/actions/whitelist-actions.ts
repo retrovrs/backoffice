@@ -2,6 +2,8 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { auth } from '../auth'
+import { headers } from 'next/headers'
 
 export type WhitelistedUser = {
     id: number
@@ -31,6 +33,14 @@ export async function getWhitelistedUsers() {
 
 export async function addWhitelistedUser(email: string) {
     try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        })
+
+        if (!session?.user) {
+            return { error: 'Non authentifié' }
+        }
+        
         // Vérifier que l'email est valide
         if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
             return {

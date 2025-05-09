@@ -59,6 +59,10 @@ export function MenuBar() {
               <MenubarItem onClick={() => router.push('/users/whitelist')}>
                 Handle White Listed Users
               </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem onClick={() => router.push('/users/roles')}>
+                Handle Users Roles
+              </MenubarItem>
             </MenubarContent>
           </MenubarMenu>
         )}

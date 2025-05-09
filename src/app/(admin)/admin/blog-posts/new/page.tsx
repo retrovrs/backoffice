@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
-import { createBlogPost } from '@/app/actions/blog'
+import { createBlogPost } from '@/lib/actions/blog'
 import { BlogPostFormValues } from '@/types/blog'
 import BlogPostForm from '@/components/blog/BlogPostForm'
 

@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/accordion'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
-import { getCategories } from '@/app/actions/category'
+import { getCategories } from '@/lib/actions/category'
 import { BlogPostFormValues } from '@/types/blog'
 import {
   Dialog,
