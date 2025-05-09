@@ -613,6 +613,18 @@ export default function BlogPostForm({
 
       <form onSubmit={handleFormSubmit} className="space-y-8 bg-white p-6 rounded-lg border border-gray-200">
         <Accordion type="multiple" defaultValue={['meta', 'category', 'header', 'intro', 'content', 'tags']} className="space-y-4">
+          
+          {/* Category */}
+          <AccordionItem value="category" className="border rounded-md px-4">
+            <AccordionTrigger className="text-xl font-semibold">Category</AccordionTrigger>
+            <AccordionContent>
+              <CategorySelector 
+                selectedCategory={formData.category}
+                onCategoryChange={handleCategoryChange}
+              />
+            </AccordionContent>
+          </AccordionItem>
+          
           {/* Méta-données de l'article */}
           <AccordionItem value="meta" className="border rounded-md px-4">
             <AccordionTrigger className="text-xl font-semibold">Article meta-data</AccordionTrigger>
@@ -703,16 +715,7 @@ export default function BlogPostForm({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Category */}
-          <AccordionItem value="category" className="border rounded-md px-4">
-            <AccordionTrigger className="text-xl font-semibold">Category</AccordionTrigger>
-            <AccordionContent>
-              <CategorySelector 
-                selectedCategory={formData.category}
-                onCategoryChange={handleCategoryChange}
-              />
-            </AccordionContent>
-          </AccordionItem>
+          
 
           {/* Tags */}
           <AccordionItem value="tags" className="border rounded-md px-4">
