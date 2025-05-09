@@ -454,7 +454,105 @@ export default function BlogPostForm({
   const pageTitle = mode === 'create' ? 'Create a new article' : 'Edit the article'
   const submitButtonText = isSubmitting 
     ? 'Saving...' 
-    : (mode === 'create' ? 'Save the article' : 'Save the modifications')
+    : (mode === 'create' ? 'Create the article' : 'Save')
+
+  // Fonction pour gérer le clic sur le bouton Publier
+  const handlePublish = useCallback(async () => {
+    // Mettre à jour l'état local avec le nouveau statut
+    setFormData(prev => {
+      const updatedFormData = {
+        ...prev,
+        status: 'published'
+      };
+      
+      // Synchroniser le contenu de l'éditeur si disponible
+      try {
+        // @ts-ignore
+        if (window.syncBlogEditorContent) {
+          // @ts-ignore
+          const updatedSections = window.syncBlogEditorContent();
+          
+          if (updatedSections) {
+            // Générer le HTML à partir des sections
+            const generatedHtml = generateRawContentFromSections(updatedSections);
+            
+            // Mettre à jour avec le contenu synchronisé
+            updatedFormData.content = generatedHtml;
+            updatedFormData.structuredContent = updatedSections;
+            updatedFormData.generatedHtml = generatedHtml;
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la synchronisation du contenu pour publication:', error);
+      }
+      
+      // Soumettre les données mises à jour à la base de données
+      setTimeout(async () => {
+        try {
+          console.log("Soumission du formulaire pour publication:", updatedFormData);
+          await onSubmit(updatedFormData);
+        } catch (error) {
+          console.error('Erreur lors de la publication de l\'article:', error);
+          toast({
+            title: "Erreur",
+            description: "Une erreur est survenue lors de la publication de l'article",
+            variant: "destructive"
+          });
+        }
+      }, 0);
+      
+      return updatedFormData;
+    });
+  }, [onSubmit, generateRawContentFromSections, toast]);
+
+  // Fonction pour gérer le clic sur le bouton Dépublier
+  const handleUnpublish = useCallback(async () => {
+    // Mettre à jour l'état local avec le nouveau statut
+    setFormData(prev => {
+      const updatedFormData = {
+        ...prev,
+        status: 'draft'
+      };
+      
+      // Synchroniser le contenu de l'éditeur si disponible
+      try {
+        // @ts-ignore
+        if (window.syncBlogEditorContent) {
+          // @ts-ignore
+          const updatedSections = window.syncBlogEditorContent();
+          
+          if (updatedSections) {
+            // Générer le HTML à partir des sections
+            const generatedHtml = generateRawContentFromSections(updatedSections);
+            
+            // Mettre à jour avec le contenu synchronisé
+            updatedFormData.content = generatedHtml;
+            updatedFormData.structuredContent = updatedSections;
+            updatedFormData.generatedHtml = generatedHtml;
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la synchronisation du contenu pour dépublication:', error);
+      }
+      
+      // Soumettre les données mises à jour à la base de données
+      setTimeout(async () => {
+        try {
+          console.log("Soumission du formulaire pour dépublication:", updatedFormData);
+          await onSubmit(updatedFormData);
+        } catch (error) {
+          console.error('Erreur lors de la dépublication de l\'article:', error);
+          toast({
+            title: "Erreur",
+            description: "Une erreur est survenue lors de la dépublication de l'article",
+            variant: "destructive"
+          });
+        }
+      }, 0);
+      
+      return updatedFormData;
+    });
+  }, [onSubmit, generateRawContentFromSections, toast]);
 
   return (
     <div className="space-y-6 relative ml-16">
@@ -806,6 +904,26 @@ export default function BlogPostForm({
           >
             Cancel
           </Button>
+          {mode === 'edit' && formData.status === 'draft' && (
+            <Button 
+              type="button" 
+              className="bg-green-600 hover:bg-green-700 transition-colors"
+              onClick={handlePublish}
+              disabled={isSubmitting}
+            >
+              Publish
+            </Button>
+          )}
+          {mode === 'edit' && formData.status === 'published' && (
+            <Button 
+              type="button" 
+              className="bg-amber-600 hover:bg-amber-700 transition-colors"
+              onClick={handleUnpublish}
+              disabled={isSubmitting}
+            >
+              Unpublish
+            </Button>
+          )}
           <Button 
             type="submit" 
             className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
