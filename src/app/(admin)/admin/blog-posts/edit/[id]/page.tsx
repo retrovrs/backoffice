@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
-import { getBlogPost, updateBlogPost, BlogPostFormValues } from '@/lib/actions/blog'
+import { getBlogPost, updateBlogPost } from '@/lib/actions/blog'
+import { BlogPostFormValues } from '@/types/blog'
 import BlogPostForm from '@/components/blog/BlogPostForm'
 
 interface PageProps {

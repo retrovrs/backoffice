@@ -445,11 +445,18 @@ export default function BlogPostForm({
 
   // Gestionnaire d'ouverture de l'assistant SEO
   const handleOpenSEOAssistant = useCallback(() => {
-    // Synchroniser le contenu de l'éditeur avant d'ouvrir l'assistant
-    syncBlogEditorContent(() => {
-      // Ouvrir la dialog une fois que le contenu est synchronisé
+    try {
+      // Synchroniser le contenu de l'éditeur avant d'ouvrir l'assistant
+      syncBlogEditorContent();
+      
+      // Ouvrir la dialog immédiatement sans attendre le callback
+      // qui peut ne jamais être appelé si la synchronisation échoue
       setIsSEODialogOpen(true);
-    });
+    } catch (error) {
+      console.error('Erreur lors de l\'ouverture de l\'assistant SEO:', error);
+      // En cas d'erreur, ouvrir quand même la modale
+      setIsSEODialogOpen(true);
+    }
   }, [syncBlogEditorContent]);
 
   const pageTitle = mode === 'create' ? 'Create a new article' : 'Edit the article'
