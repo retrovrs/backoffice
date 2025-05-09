@@ -30,7 +30,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   const seoScore = getScorePercentage(formData)
   
   return (
-    <Tabs defaultValue="html" className="w-full">
+    <Tabs defaultValue="preview" className="w-full">
       <TabsList className="grid w-full grid-cols-3 mb-6">
         <TabsTrigger value="html">Generated HTML</TabsTrigger>
         <TabsTrigger value="preview">Preview</TabsTrigger>
