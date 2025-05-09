@@ -36,9 +36,9 @@ export async function GET() {
             publishedCount
         })
     } catch (error) {
-        console.error('Erreur lors de la récupération des métriques:', error)
+        console.error('Error when loading the metrics:', error)
         return NextResponse.json(
-            { error: 'Erreur lors de la récupération des métriques' },
+            { error: 'Error when loading the metrics' },
             { status: 500 }
         )
     }

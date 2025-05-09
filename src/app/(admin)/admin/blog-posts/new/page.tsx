@@ -23,15 +23,15 @@ export default function NewBlogPostPage() {
       }
       
       toast({
-        title: 'Succès',
-        description: 'Article créé avec succès',
+        title: 'Success',
+        description: 'Article created successfully',
       })
       
       router.push('/blog-posts')
     } catch (error) {
       toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Échec de la création de l\'article',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create the article',
         variant: 'destructive'
       })
     } finally {

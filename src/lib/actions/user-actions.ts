@@ -9,7 +9,7 @@ export async function getUserRoleById(userId: string) {
         if (!userId) {
             return {
                 role: null as UserRole,
-                error: 'ID utilisateur requis'
+                error: 'User ID required'
             }
         }
 
@@ -21,7 +21,7 @@ export async function getUserRoleById(userId: string) {
         if (!user) {
             return {
                 role: null as UserRole,
-                error: 'Utilisateur non trouvé'
+                error: 'User not found'
             }
         }
 
@@ -30,10 +30,10 @@ export async function getUserRoleById(userId: string) {
             error: null
         }
     } catch (error) {
-        console.error('Erreur lors de la récupération du rôle:', error)
+        console.error('Error when retrieving the role:', error)
         return {
             role: null as UserRole,
-            error: 'Erreur serveur'
+            error: 'Server error'
         }
     }
 } 

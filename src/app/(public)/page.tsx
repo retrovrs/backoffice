@@ -25,7 +25,7 @@ export default function Home() {
               setUserName(userData.name || 'Utilisateur')
             }
           } catch (error) {
-            console.error('Erreur lors de la récupération du nom d\'utilisateur:', error)
+            console.error('Error when loading the user name:', error)
           }
         }
       }
@@ -48,7 +48,7 @@ export default function Home() {
               setPublishedPostsCount(metrics.publishedCount || 0)
             }
           } catch (error) {
-            console.error('Erreur lors de la récupération des métriques:', error)
+            console.error('Error when loading the metrics:', error)
           } finally {
             setIsLoadingMetrics(false)
           }

@@ -276,7 +276,7 @@ export default function BlogPostForm({
         generatedHtml: rawContent
       }));
     } catch (error) {
-      console.error('Erreur lors du parsing du contenu JSON:', error);
+      console.error('Error when parsing the JSON content:', error);
       // En cas d'erreur, mettre à jour uniquement le contenu brut
       setFormData(prev => ({
         ...prev,
@@ -342,7 +342,7 @@ export default function BlogPostForm({
       
       return false;
     } catch (error) {
-      console.error('Erreur lors de la synchronisation du contenu de l\'éditeur:', error);
+      console.error('Error when synchronizing the editor content:', error);
       return false;
     }
   }, []);
@@ -434,10 +434,10 @@ export default function BlogPostForm({
       await onSubmit(formData);
       
     } catch (error) {
-      console.error('Erreur lors de la soumission du formulaire:', error);
+      console.error('Error when submitting the form:', error);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la soumission du formulaire",
+        title: "Error",
+        description: "An error occurred when submitting the form",
         variant: "destructive"
       });
     }
@@ -453,7 +453,7 @@ export default function BlogPostForm({
       // qui peut ne jamais être appelé si la synchronisation échoue
       setIsSEODialogOpen(true);
     } catch (error) {
-      console.error('Erreur lors de l\'ouverture de l\'assistant SEO:', error);
+      console.error('Error when opening the SEO assistant:', error);
       // En cas d'erreur, ouvrir quand même la modale
       setIsSEODialogOpen(true);
     }
@@ -491,7 +491,7 @@ export default function BlogPostForm({
           }
         }
       } catch (error) {
-        console.error('Erreur lors de la synchronisation du contenu pour publication:', error);
+        console.error('Error when synchronizing the content for publication:', error);
       }
       
       // Soumettre les données mises à jour à la base de données
@@ -500,10 +500,10 @@ export default function BlogPostForm({
           console.log("Soumission du formulaire pour publication:", updatedFormData);
           await onSubmit(updatedFormData);
         } catch (error) {
-          console.error('Erreur lors de la publication de l\'article:', error);
+          console.error('Error when publishing the article:', error);
           toast({
-            title: "Erreur",
-            description: "Une erreur est survenue lors de la publication de l'article",
+            title: "Error",
+            description: "An error occurred when publishing the article",
             variant: "destructive"
           });
         }
@@ -540,19 +540,19 @@ export default function BlogPostForm({
           }
         }
       } catch (error) {
-        console.error('Erreur lors de la synchronisation du contenu pour dépublication:', error);
+        console.error('Error when synchronizing the content for unpublishing:', error);
       }
       
       // Soumettre les données mises à jour à la base de données
       setTimeout(async () => {
         try {
-          console.log("Soumission du formulaire pour dépublication:", updatedFormData);
+          console.log("Submission of the form for unpublishing:", updatedFormData);
           await onSubmit(updatedFormData);
         } catch (error) {
-          console.error('Erreur lors de la dépublication de l\'article:', error);
+          console.error('Error when unpublishing the article:', error);
           toast({
-            title: "Erreur",
-            description: "Une erreur est survenue lors de la dépublication de l'article",
+            title: "Error",
+            description: "An error occurred when unpublishing the article",
             variant: "destructive"
           });
         }

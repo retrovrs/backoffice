@@ -23,7 +23,7 @@ export function useUserRole() {
 
                     const userId = session.data.user.id
                     if (!userId) {
-                        setError('ID utilisateur manquant')
+                        setError('User ID missing')
                         setUserRole(null)
                         return
                     }
@@ -36,8 +36,8 @@ export function useUserRole() {
                         setUserRole(result.role)
                     }
                 } catch (err) {
-                    console.error('Erreur lors de la récupération du rôle:', err)
-                    setError('Erreur serveur')
+                    console.error('Error when loading the role:', err)
+                    setError('Server error')
                     setUserRole(null)
                 } finally {
                     setIsLoading(false)

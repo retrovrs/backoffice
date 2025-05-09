@@ -53,9 +53,9 @@ export async function GET(
             generatedHtml: post.generatedHtml || ''
         })
     } catch (error) {
-        console.error('Erreur lors de la récupération du HTML généré:', error)
+        console.error('Error when loading the generated HTML:', error)
         return NextResponse.json(
-            { error: 'Erreur serveur lors de la récupération du HTML généré' },
+            { error: 'Server error when loading the generated HTML' },
             { status: 500 }
         )
     }

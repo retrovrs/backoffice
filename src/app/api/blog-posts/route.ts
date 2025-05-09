@@ -29,9 +29,9 @@ export async function GET() {
 
         return NextResponse.json(posts)
     } catch (error) {
-        console.error('Erreur lors de la récupération des articles de blog:', error)
+        console.error('Error when loading the blog articles:', error)
         return NextResponse.json(
-            { error: 'Erreur lors de la récupération des articles de blog' },
+            { error: 'Error when loading the blog articles' },
             { status: 500 }
         )
     }

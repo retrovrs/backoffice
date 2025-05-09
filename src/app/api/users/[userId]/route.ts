@@ -10,7 +10,7 @@ export async function GET(
 
         if (!userId) {
             return NextResponse.json(
-                { error: 'L\'ID utilisateur est requis' },
+                { error: 'The user ID is required' },
                 { status: 400 }
             )
         }
@@ -28,16 +28,16 @@ export async function GET(
 
         if (!user) {
             return NextResponse.json(
-                { error: 'Utilisateur non trouvé' },
+                { error: 'User not found' },
                 { status: 404 }
             )
         }
 
         return NextResponse.json(user)
     } catch (error) {
-        console.error('Erreur lors de la récupération de l\'utilisateur:', error)
+        console.error('Error when loading the user:', error)
         return NextResponse.json(
-            { error: 'Erreur lors de la récupération de l\'utilisateur' },
+            { error: 'Error when loading the user' },
             { status: 500 }
         )
     }

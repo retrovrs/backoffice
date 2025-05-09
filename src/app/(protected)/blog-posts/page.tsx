@@ -80,7 +80,7 @@ export default function BlogPostsPage() {
         const response = await fetch('/api/blog-posts')
         
         if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des articles')
+          throw new Error('Error when loading the blog articles')
         }
         
         const data = await response.json()
@@ -120,7 +120,7 @@ export default function BlogPostsPage() {
           const response = await fetch(`/api/blog-posts/${postId}/generated-html`)
           
           if (!response.ok) {
-            throw new Error("Erreur lors de la récupération de l'aperçu HTML")
+            throw new Error("Error when loading the HTML preview")
           }
           
           const data = await response.json()
@@ -134,8 +134,8 @@ export default function BlogPostsPage() {
         } catch (err) {
           console.error('Error:', err)
           toast({
-            title: 'Erreur',
-            description: "Impossible de charger l'aperçu HTML",
+            title: 'Error',
+            description: "Impossible to load the HTML preview",
             variant: 'destructive'
           })
         } finally {
@@ -251,9 +251,9 @@ export default function BlogPostsPage() {
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
             <DialogContent className="w-screen max-w-[90vw] md:max-w-[80vw] max-h-[85vh] overflow-y-auto fixed">
               <DialogHeader>
-                <DialogTitle>Aperçu de l'article - {selectedPost.title}</DialogTitle>
+                <DialogTitle>Preview of the blog article - {selectedPost.title}</DialogTitle>
                 <DialogDescription>
-                  Prévisualisation de l'article de blog
+                  Preview of the blog article
                 </DialogDescription>
               </DialogHeader>
               <div className="mt-4 bg-white p-6 rounded-lg border border-gray-200 overflow-auto max-h-[60vh]">
@@ -264,7 +264,7 @@ export default function BlogPostsPage() {
                   />
                 ) : (
                   <div className="text-center text-gray-500 py-12">
-                    Aucun aperçu HTML disponible pour cet article
+                    No HTML preview available for this article
                   </div>
                 )}
               </div>

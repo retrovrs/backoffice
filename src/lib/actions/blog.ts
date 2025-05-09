@@ -60,10 +60,10 @@ function decodeStructuredContent(content: string): { rawContent: string, structu
         }
 
         // Si on arrive ici, c'est probablement du HTML pur ou un autre format non reconnu
-        console.log('Format détecté: HTML pur ou format inconnu (fallback)');
+        console.log('Detected format: HTML pure or unknown format (fallback)');
         return { rawContent: content };
     } catch (e) {
-        console.error('Erreur lors du décodage du contenu structuré:', e);
+        console.error('Error when decoding the structured content:', e);
         // En cas d'erreur, retourner le contenu tel quel
         return { rawContent: content };
     }
@@ -245,16 +245,16 @@ export async function createBlogPost(formData: BlogPostFormValues) {
                     // Tentative de parser si c'est une chaîne JSON
                     if (typeof formData.structuredContent === 'string') {
                         formData.structuredContent = JSON.parse(formData.structuredContent);
-                        console.log('structuredContent parsé avec succès depuis la chaîne JSON');
+                        console.log('structuredContent parsed successfully from the JSON string');
                     } else {
-                        console.error('structuredContent est de type invalide:', typeof formData.structuredContent);
+                        console.error('structuredContent is of invalid type:', typeof formData.structuredContent);
                     }
                 } catch (err) {
-                    console.error('Erreur lors du parsing de structuredContent:', err);
+                    console.error('Error when parsing structuredContent:', err);
                 }
             }
         } else {
-            console.log('Aucun contenu structuré disponible, création par défaut');
+            console.log('No structured content available, default creation');
             // Créer un contenu structuré par défaut si inexistant
             formData.structuredContent = [{
                 id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
@@ -264,7 +264,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
                     content: formData.content || 'Nouveau contenu'
                 }]
             }];
-            console.log('Contenu structuré par défaut créé:', formData.structuredContent);
+            console.log('Default structured content created:', formData.structuredContent);
         }
 
         // Find the category ID or create a new one
@@ -325,9 +325,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
             : formData.content || '';
 
-        console.log('Contenu JSON à sauvegarder (début):', content.substring(0, 200) + '...');
-        console.log('Longueur du contenu JSON:', content.length);
-        console.log('HTML généré à sauvegarder (début):', generatedHtml.substring(0, 200) + '...');
+        console.log('Content to save (start):', content.substring(0, 200) + '...');
+        console.log('Length of the content JSON:', content.length);
+        console.log('Generated HTML to save (start):', generatedHtml.substring(0, 200) + '...');
 
         // Prepare minimal data needed for post creation
         const postData = {
@@ -387,7 +387,7 @@ export async function getBlogPost(id: number) {
         })
 
         if (!post) {
-            return { error: 'Article non trouvé' }
+            return { error: 'Article not found' }
         }
 
         // Décoder le contenu structuré s'il existe
@@ -420,8 +420,8 @@ export async function getBlogPost(id: number) {
             }
         }
     } catch (error) {
-        console.error('Erreur lors de la récupération de l\'article:', error)
-        return { error: 'Erreur lors de la récupération de l\'article' }
+        console.error('Error when retrieving the article:', error)
+        return { error: 'Error when retrieving the article' }
     }
 }
 
@@ -432,7 +432,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         })
 
         if (!session?.user) {
-            return { error: 'Non authentifié' }
+            return { error: 'Not authenticated' }
         }
 
         // Log détaillé des données reçues
@@ -469,7 +469,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             update: {},
             create: {
                 name: formData.category,
-                description: `Catégorie pour les articles ${formData.category}`,
+                description: `Category for ${formData.category} posts`,
             },
         })
 
@@ -486,7 +486,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
                 }
             }
         } catch (error) {
-            console.error('Erreur lors du parsing des tags:', error)
+            console.error('Error when parsing tags:', error)
             parsedTags = []
         }
 
@@ -517,8 +517,8 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
             : formData.content || '';
 
-        console.log('Contenu JSON à sauvegarder (début):', content.substring(0, 200) + '...');
-        console.log('HTML généré à sauvegarder (début):', generatedHtml.substring(0, 200) + '...');
+        console.log('Content to save (start):', content.substring(0, 200) + '...');
+        console.log('Generated HTML to save (start):', generatedHtml.substring(0, 200) + '...');
 
         // Prepare data for update
         const postData = {
@@ -550,10 +550,10 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
 
         return { success: true, post }
     } catch (error) {
-        console.error('Erreur lors de la mise à jour de l\'article:', error)
+        console.error('Error when updating the article:', error)
         if (error instanceof Error) {
-            console.error('Détails de l\'erreur:', error.message, error.stack)
+            console.error('Error details:', error.message, error.stack)
         }
-        return { error: 'Erreur lors de la mise à jour de l\'article' }
+        return { error: 'Error when updating the article' }
     }
 } 

@@ -604,7 +604,7 @@ ${sectionsContent}
           for (const section of parsedContent) {
             if (!section.id || !Array.isArray(section.elements)) {
               isValid = false;
-              missingElements.push('section.id ou section.elements manquant');
+              missingElements.push('section.id or section.elements missing');
               console.log('Invalid section found:', section);
               break;
             }
@@ -613,7 +613,7 @@ ${sectionsContent}
             for (const element of section.elements) {
               if (!element.id || !element.type) {
                 isValid = false;
-                missingElements.push(`élément manquant id ou type: ${JSON.stringify(element)}`);
+                missingElements.push(`missing element id or type: ${JSON.stringify(element)}`);
                 break;
               }
             }
@@ -626,14 +626,14 @@ ${sectionsContent}
             forceUpdate(prev => prev + 1); // Force un re-render
             return;
           } else {
-            console.log('Format invalide. Éléments manquants:', missingElements);
+            console.log('Invalid format. Missing elements:', missingElements);
           }
         } else {
           console.log('Parsed content is not a valid array or is empty');
         }
       }
     } catch (e) {
-      console.error('Erreur lors du parsing du contenu:', e);
+      console.error('Error when parsing the content:', e);
       
       // Si le contenu semble être du HTML, essayons de le convertir en structure
       if (typeof initialContent === 'string' && 

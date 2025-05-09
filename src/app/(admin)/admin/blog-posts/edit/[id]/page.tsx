@@ -27,8 +27,8 @@ export default function EditBlogPostPage({ params }: PageProps) {
         const id = parseInt(params.id)
         if (isNaN(id)) {
           toast({
-            title: 'Erreur',
-            description: 'ID d\'article invalide',
+            title: 'Error',
+            description: 'Invalid article ID',
             variant: 'destructive'
           })
           router.push('/blog-posts')
@@ -39,7 +39,7 @@ export default function EditBlogPostPage({ params }: PageProps) {
         
         if (result.error) {
           toast({
-            title: 'Erreur',
+            title: 'Error',
             description: result.error,
             variant: 'destructive'
           })
