@@ -42,14 +42,14 @@ export default function SigninPage() {
     const password = formData.get('password')?.toString() || ''
 
     if (!email || !password) {
-      setError('Veuillez remplir tous les champs')
+      setError('Please fill in all fields')
       return
     }
 
     try {
       setLoading(true)
 
-      // Vérifier si l'email est dans la liste blanche
+      // Check if the email is in the whitelist
       const whitelistCheck = await checkEmailInWhitelist(email)
       
       if (!whitelistCheck.isWhitelisted) {
