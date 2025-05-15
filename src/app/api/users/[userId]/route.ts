@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
 
 export async function GET(
     request: NextRequest,
     { params }: { params: { userId: string } }
 ) {
     try {
+        // Vérification de l'authentification
+        const session = await auth.api.getSession({
+            headers: await headers()
+        })
+
+        if (!session?.user) {
+            return NextResponse.json(
+                { error: 'Non authentifié' },
+                { status: 401 }
+            )
+        }
+        
         const { userId } = params
 
         if (!userId) {

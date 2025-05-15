@@ -11,6 +11,24 @@ import { LogoHeader } from '@/components/LogoHeader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
 
+// Fonction pour vérifier si un email est dans la liste blanche
+async function checkEmailInWhitelist(email: string) {
+  try {
+    const response = await fetch('/api/whitelist/check', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    })
+    
+    return response.json()
+  } catch (error) {
+    console.error('Error checking whitelist:', error)
+    return { isWhitelisted: false, error: 'Erreur lors de la vérification de la liste blanche' }
+  }
+}
+
 export default function SigninPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -24,12 +42,23 @@ export default function SigninPage() {
     const password = formData.get('password')?.toString() || ''
 
     if (!email || !password) {
-      setError('Please fill in all fields')
+      setError('Veuillez remplir tous les champs')
       return
     }
 
     try {
       setLoading(true)
+
+      // Vérifier si l'email est dans la liste blanche
+      const whitelistCheck = await checkEmailInWhitelist(email)
+      
+      if (!whitelistCheck.isWhitelisted) {
+        setLoading(false)
+        const errorMessage = whitelistCheck.message || 'You are not authorized to use this application. Please contact an administrator.'
+        toast.error(errorMessage)
+        setError(errorMessage)
+        return
+      }
 
       const response = await signIn.email({
         email,
@@ -49,7 +78,7 @@ export default function SigninPage() {
         router.push('/')
       }
     } catch (err: any) {
-      const errorMessage = err?.message || 'An Error Occured during connection'
+      const errorMessage = err?.message || 'An error occurred during connection'
       toast.error(errorMessage)
       setError(errorMessage)
       setLoading(false)
@@ -84,14 +113,14 @@ export default function SigninPage() {
               name="email"
               type="email"
               required
-              placeholder="votre@email.com"
+              placeholder="your@email.com"
               disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
-              Mot de passe
+              Password
             </label>
             <Input
               id="password"
@@ -108,7 +137,7 @@ export default function SigninPage() {
             className="w-full"
             disabled={loading}
           >
-            {loading ? 'Connecting...' : 'Connect to Backoffice'}
+            {loading ? 'Connection in progress...' : 'Sign in to the Backoffice'}
           </Button>
         </form>
 
