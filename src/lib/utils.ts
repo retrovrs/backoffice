@@ -13,5 +13,5 @@ export function formatDate(dateString: string): string {
     hour: '2-digit',
     minute: '2-digit'
   }
-  return new Date(dateString).toLocaleDateString('fr-FR', options)
+  return new Date(dateString).toLocaleDateString('en-US', options)
 }
