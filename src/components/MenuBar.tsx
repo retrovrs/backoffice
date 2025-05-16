@@ -18,7 +18,8 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 
 export function MenuBar() {
   const { data } = useSession()
-  const { isAdmin, isAuthenticated } = useUserRole()
+  const { isAdmin, isEditor, isAuthenticated } = useUserRole()
+  const canCreatePost = isAdmin || isEditor
   const sessionData = data?.session
   const router = useRouter()
 
@@ -50,6 +51,11 @@ export function MenuBar() {
           <MenubarTrigger>SEO Posts</MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={() => router.push('/blog-posts')}>Blog Posts</MenubarItem>
+            {canCreatePost && (
+              <MenubarItem onClick={() => router.push('/blog-posts/new')}>
+                Nouvel article
+              </MenubarItem>
+            )}
           </MenubarContent>
         </MenubarMenu>
         {isAdmin && (

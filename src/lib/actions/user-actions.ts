@@ -1,14 +1,14 @@
 'use server'
 
 import prisma from '@/lib/prisma'
+import { UserRole } from '@/types/user-types'
 
-type UserRole = 'ADMIN' | 'EDITOR' | 'READER' | null
 
 export async function getUserRoleById(userId: string) {
     try {
         if (!userId) {
             return {
-                role: null as UserRole,
+                role: null as UserRole | null,
                 error: 'User ID required'
             }
         }
@@ -20,7 +20,7 @@ export async function getUserRoleById(userId: string) {
 
         if (!user) {
             return {
-                role: null as UserRole,
+                role: null as UserRole | null,
                 error: 'User not found'
             }
         }
@@ -32,7 +32,7 @@ export async function getUserRoleById(userId: string) {
     } catch (error) {
         console.error('Error when retrieving the role:', error)
         return {
-            role: null as UserRole,
+            role: null as UserRole | null,
             error: 'Server error'
         }
     }

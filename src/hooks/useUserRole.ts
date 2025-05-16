@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useSession } from '@/lib/auth-client'
 import { getUserRoleById } from '@/lib/actions/user-actions'
+import { UserRole } from '@/types/user-types'
 
-// Correspondre à l'enum Role du schéma Prisma
-type UserRole = 'ADMIN' | 'EDITOR' | 'READER' | null
 
 export function useUserRole() {
     const session = useSession()
-    const [userRole, setUserRole] = useState<UserRole>(null)
+    const [userRole, setUserRole] = useState<UserRole | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -53,13 +52,13 @@ export function useUserRole() {
 
     // Dériver les valeurs booléennes à partir du rôle
     const isAdmin = userRole === 'ADMIN'
-    const isReader = userRole === 'READER'
+    const isEditor = userRole === 'EDITOR'
     const isAuthenticated = !!session.data?.user
 
     return {
         role: userRole,
         isAdmin,
-        isReader,
+        isEditor,
         isAuthenticated,
         isLoading,
         error,

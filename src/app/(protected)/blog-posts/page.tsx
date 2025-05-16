@@ -55,7 +55,7 @@ export default function BlogPostsPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewHtml, setPreviewHtml] = useState<string>('')
   const { toast } = useToast()
-  const { isAdmin } = useUserRole()
+  const { isAdmin, isEditor } = useUserRole()
   const router = useRouter()
 
   // Empêcher le scroll du body lorsque la modale est ouverte
@@ -102,19 +102,19 @@ export default function BlogPostsPage() {
   }, [toast])
 
   const handleNewPost = () => {
-    router.push('/admin/blog-posts/new')
+    router.push('/blog-posts/new')
   }
 
   const handleEditPost = (postId: number) => {
     setLoadingPostId(postId)
     
-    if (isAdmin) {
-      // Pour les admins, rediriger vers le formulaire d'édition
+    if (isAdmin || isEditor) {
+      // Pour les admins et les éditeurs, rediriger vers le formulaire d'édition
       setTimeout(() => {
-        router.push(`/admin/blog-posts/edit/${postId}`)
+        router.push(`/blog-posts/edit/${postId}`)
       }, 500)
     } else {
-      // Pour les non-admins, récupérer le HTML généré et l'afficher dans une modale
+      // Pour les autres utilisateurs, récupérer le HTML généré et l'afficher dans une modale
       const fetchPostHtml = async () => {
         try {
           const response = await fetch(`/api/blog-posts/${postId}/generated-html`)
@@ -174,7 +174,7 @@ export default function BlogPostsPage() {
       <div className="space-y-6 w-full">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">Blog articles</h1>
-          {isAdmin && (
+          {(isAdmin || isEditor) && (
             <Button 
               className="bg-indigo-600 hover:bg-indigo-700 transition-colors"
               onClick={handleNewPost}

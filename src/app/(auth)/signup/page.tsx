@@ -108,7 +108,7 @@ export default function SignupPage() {
           <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
             <CheckCircledIcon className="h-4 w-4 text-green-600" />
             <AlertDescription>
-              Compte créé avec succès ! Vous allez être redirigé vers la page d'accueil.
+              Account created successfully ! You will be redirected to the home page.
             </AlertDescription>
           </Alert>
         )}

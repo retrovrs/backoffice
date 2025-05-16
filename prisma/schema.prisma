@@ -12,8 +12,8 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-  schemas   = ["backoffice"]
+  //directUrl = env("DIRECT_URL")
+  schemas   = ["backoffice", "public"]
 }
 
 model SeoPost {
@@ -48,7 +48,7 @@ model User {
   email         String    @unique(map: "user_email_key") @db.VarChar(255)
   emailVerified Boolean
   image         String?   @db.VarChar(255)
-  role          Role      @default(READER)
+  role          Role      @default(EDITOR)
   createdAt     DateTime  @db.Timestamp(6)
   updatedAt     DateTime  @db.Timestamp(6)
   accounts      Account[]
@@ -114,7 +114,6 @@ model UserWhiteListed {
 enum Role {
   ADMIN
   EDITOR
-  READER
 
   @@schema("backoffice")
 }

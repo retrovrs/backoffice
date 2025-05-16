@@ -23,6 +23,7 @@ export async function checkEmailInWhitelist(email: string): Promise<CheckEmailRe
             where: { email }
         })
 
+        console.log('whitelisted', whitelisted)
         if (!whitelisted) {
             return {
                 isWhitelisted: false,
@@ -80,6 +81,7 @@ export async function validateSignupForm(prevState: SignupFormState, formData: F
         // Vérifier si l'email est dans la liste blanche
         const whitelistCheck = await checkEmailInWhitelist(email)
 
+        console.log('whitelistCheck', whitelistCheck)
         if (!whitelistCheck.isWhitelisted) {
             return {
                 errors: {
@@ -124,12 +126,16 @@ export async function signUp(prevState: SignupFormState, formData: FormData): Pr
 
     const { name, email, password } = validatedFields.data
 
+    console.log('name', name)
+    console.log('email', email)
+    console.log('password', password)
     try {
         // Vérifier si l'email est dans la liste blanche
         const whitelisted = await prisma.userWhiteListed.findUnique({
             where: { email }
         })
 
+        console.log('whitelisted', whitelisted)
         if (!whitelisted) {
             return {
                 errors: {

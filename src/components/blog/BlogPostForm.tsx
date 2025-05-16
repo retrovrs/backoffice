@@ -698,7 +698,7 @@ export default function BlogPostForm({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="excerpt">Extrait (meta description)</Label>
+                  <Label htmlFor="excerpt">Excerpt (meta description)</Label>
                   <Textarea
                     id="excerpt"
                     name="excerpt"

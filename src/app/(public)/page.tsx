@@ -4,8 +4,10 @@ import { useSession } from '@/lib/auth-client'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+    const router = useRouter()
     const { data } = useSession()
     const sessionData = data?.session
     const isAuthenticated = !!sessionData
@@ -13,6 +15,7 @@ export default function Home() {
     const [draftPostsCount, setDraftPostsCount] = useState(0)
     const [publishedPostsCount, setPublishedPostsCount] = useState(0)
     const [isLoadingMetrics, setIsLoadingMetrics] = useState(false)
+    const [isSigningUp, setIsSigningUp] = useState(false)
 
     // Récupération du nom d'utilisateur à partir de son userId
     useEffect(() => {
@@ -59,6 +62,11 @@ export default function Home() {
         fetchBlogMetrics()
       }
     }, [isAuthenticated])
+    
+    const handleSignUp = () => {
+      setIsSigningUp(true)
+      router.push('/signup')
+    }
 
   return (
     <div className="flex flex-col items-center p-8 bg-background">
@@ -77,8 +85,12 @@ export default function Home() {
                 <Button asChild variant="default">
                   <Link href="/signin">Login</Link>
                 </Button>
-                <Button asChild variant="outline">
-                  <Link href="/signup">Sign up</Link>
+                <Button 
+                  variant="outline" 
+                  disabled={isSigningUp}
+                  onClick={handleSignUp}
+                >
+                  {isSigningUp ? 'Chargement...' : 'Sign up'}
                 </Button>
               </div>
             </div>
