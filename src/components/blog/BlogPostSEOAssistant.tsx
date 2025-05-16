@@ -96,6 +96,22 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     <!-- Article content -->
     ${formData.content || 'Article content...'}
     
+    ${formData.tags && formData.tags.trim() !== '' ? `
+    <!-- Tags -->
+    <footer>
+      <section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Tags</h2>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+          ${formData.tags.split(',').map(tag => {
+            const tagText = tag.trim();
+            if (!tagText) return '';
+            const tagSlug = tagText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-');
+            return `<li><a href="/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">${tagText}</a></li>`;
+          }).join('\n          ')}
+        </ul>
+      </section>
+    </footer>` : ''}
+    
     <!-- Schema.org structured data for search engines -->
     <script type="application/ld+json">
     {
@@ -208,6 +224,32 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                 </div>
               )}
             </section>
+            
+            {formData.tags && formData.tags.trim() !== '' && (
+              <footer className="mt-8 pt-6 border-t border-gray-200">
+                <section className="tags">
+                  <h2 className="text-xl font-semibold mb-3">Tags</h2>
+                  <ul className="flex flex-wrap gap-2">
+                    {formData.tags.split(',').map((tag, index) => {
+                      const tagText = tag.trim();
+                      if (!tagText) return null;
+                      const tagSlug = tagText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-');
+                      return (
+                        <li key={index}>
+                          <a 
+                            href={`/tags/${tagSlug}`} 
+                            rel="tag"
+                            className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full border border-gray-300 transition-colors"
+                          >
+                            {tagText}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              </footer>
+            )}
           </article>
         </div>
       </TabsContent>

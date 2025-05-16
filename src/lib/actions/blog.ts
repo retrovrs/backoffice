@@ -114,8 +114,12 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
     const mainImageAlt = postData?.mainImageAlt || '';
     const mainImageCaption = postData?.mainImageCaption || '';
     const introText = postData?.introText || '';
+    const tags = postData?.tags || '';
 
-    // Générer la page HTML complète
+    // Générer le HTML des tags en utilisant notre fonction utilitaire
+    const tagsHTML = generateTagsHTML(tags);
+
+    // Générer la page HTML complète avec le contenu des sections, sans les tags dupliqués
     return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -182,6 +186,24 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
         .main-image {
             margin: 2em 0;
         }
+        @media (prefers-color-scheme: dark) {
+            body {
+                color: #e5e7eb;
+                background-color: #1f2937;
+            }
+            h1, h2, h3 {
+                color: #f9fafb;
+            }
+            p {
+                color: #d1d5db;
+            }
+            figcaption {
+                color: #9ca3af;
+            }
+            .article-meta {
+                color: #9ca3af;
+            }
+        }
     </style>
 </head>
 <body>
@@ -202,6 +224,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
         <div class="article-content">
 ${sectionsContent}
         </div>
+        ${tagsHTML}
     </article>
 </body>
 </html>`
@@ -212,6 +235,66 @@ function extractYouTubeId(url: string): string {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
     const match = url.match(regExp)
     return (match && match[2].length === 11) ? match[2] : ''
+}
+
+// Fonction utilitaire pour générer le HTML des tags
+function generateTagsHTML(tags: string | string[]): string {
+    if (!tags) return '';
+
+    // On s'assure de traiter correctement les tags, qu'ils soient sous forme de chaîne ou de tableau
+    let tagsArray: string[] = [];
+
+    if (typeof tags === 'string') {
+        tagsArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    } else if (Array.isArray(tags)) {
+        tagsArray = tags.filter(Boolean);
+    }
+
+    if (tagsArray.length === 0) return '';
+
+    const tagsList = tagsArray
+        .map((tag: string) => {
+            const tagSlug = tag.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+            return `    <li><a href="/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">
+  ${tag}
+  <style>
+    @media (prefers-color-scheme: dark) {
+      a[rel="tag"] {
+        background-color: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
+      }
+      a[rel="tag"]:hover {
+        background-color: #4b5563;
+      }
+    }
+    a[rel="tag"]:hover {
+      background-color: #e0e0e0;
+    }
+  </style>
+</a></li>`
+        })
+        .join('\n')
+
+    return `
+<footer>
+  <section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
+    <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Tags</h2>
+    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+${tagsList}
+    </ul>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        footer .tags {
+          border-top-color: #374151;
+        }
+        footer .tags h2 {
+          color: #e5e7eb;
+        }
+      }
+    </style>
+  </section>
+</footer>`;
 }
 
 export async function createBlogPost(formData: BlogPostFormValues) {
@@ -317,7 +400,8 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             mainImageCaption: formData.mainImageCaption,
             author: formData.author,
             authorLink: formData.authorLink,
-            introText: formData.introText
+            introText: formData.introText,
+            tags: formData.tags
         };
 
         // Générer le HTML à partir du contenu structuré pour le stocker dans generatedHtml
@@ -345,7 +429,8 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             published: formData.status === 'published',
             categoryId: category.id,
             author: formData.author,
-            authorLink: formData.authorLink
+            authorLink: formData.authorLink,
+            tags: formData.tags
         }
 
         console.log('Prepared post data:', postData)
@@ -397,6 +482,7 @@ export async function getBlogPost(id: number) {
         console.log('- HTML brut (début):', rawContent.substring(0, 500) + '...');
         console.log('- JSON structuré disponible:', !!structuredContent);
         console.log('- HTML généré stocké (début):', post.generatedHtml?.substring(0, 500) + '...');
+        console.log('- Tags récupérés:', post.tags);
 
         if (structuredContent) {
             console.log('- Structure JSON (aperçu):',
@@ -509,7 +595,8 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             mainImageCaption: formData.mainImageCaption,
             author: formData.author,
             authorLink: formData.authorLink,
-            introText: formData.introText
+            introText: formData.introText,
+            tags: formData.tags
         };
 
         // Générer le HTML à partir du contenu structuré pour le stocker dans generatedHtml
@@ -534,9 +621,12 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             generatedHtml, // Ajouter le HTML généré
             status,
             published: formData.status === 'published',
-            categoryId: category.id,
+            category: {
+                connect: { id: category.id }
+            },
             author: formData.author,
-            authorLink: formData.authorLink
+            authorLink: formData.authorLink,
+            tags: formData.tags
         }
 
         // Update the post

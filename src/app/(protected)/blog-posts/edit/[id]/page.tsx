@@ -49,6 +49,11 @@ export default function EditBlogPostPage({ params }: PageProps) {
 
         if (result.post) {
           // Formater les données pour le formulaire
+          console.log('Données du post chargées:', {
+            tags: result.post.tags,
+            metaKeywords: result.post.metaKeywords
+          });
+          
           setInitialData({
             title: result.post.title,
             slug: result.post.slug,
@@ -63,8 +68,11 @@ export default function EditBlogPostPage({ params }: PageProps) {
             mainImageAlt: result.post.mainImageAlt || '',
             mainImageCaption: result.post.mainImageCaption || '',
             content: result.post.content,
-            tags: result.post.metaKeywords ? result.post.metaKeywords.join(', ') : ''
+            structuredContent: result.post.structuredContent,
+            tags: result.post.tags || ''
           })
+          
+          console.log('initialData préparé avec tags:', result.post.tags);
         }
 
         setIsLoading(false)

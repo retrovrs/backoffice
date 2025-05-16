@@ -63,7 +63,8 @@ export default function EditBlogPostPage({ params }: PageProps) {
             mainImageAlt: result.post.mainImageAlt || '',
             mainImageCaption: result.post.mainImageCaption || '',
             content: result.post.content,
-            tags: result.post.metaKeywords ? result.post.metaKeywords.join(', ') : ''
+            structuredContent: result.post.structuredContent,
+            tags: result.post.tags || ''
           })
         }
 

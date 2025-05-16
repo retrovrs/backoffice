@@ -193,6 +193,17 @@ export default function BlogPostForm({
     );
   }
   
+  // Ajoutons un log pour voir les tags initiaux
+  console.log('Initial tags:', initialData.tags);
+  
+  // Ajoutons plus de détails pour le débogage
+  console.log('BlogPostForm - Initialisation avec:', {
+    tagsFromServer: initialData.tags,
+    tagsType: typeof initialData.tags,
+    tagsLength: initialData.tags ? initialData.tags.length : 0,
+    mode: mode
+  });
+  
   const [formData, setFormData] = useState<BlogPostFormValues>({
     // Méta-données
     title: initialData.title || '',
@@ -222,6 +233,43 @@ export default function BlogPostForm({
   })
   const [shouldAutoUpdateSlug, setShouldAutoUpdateSlug] = useState(mode === 'create')
   const [isSEODialogOpen, setIsSEODialogOpen] = useState(false)
+  const [currentTag, setCurrentTag] = useState('')
+  
+  // Initialisons correctement les tags à partir des données initiales
+  let initialTagsArray: string[] = [];
+  if (initialData.tags && typeof initialData.tags === 'string' && initialData.tags.trim() !== '') {
+    initialTagsArray = initialData.tags
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(Boolean);
+    console.log('Tags initiaux après parsing:', initialTagsArray);
+  } else {
+    console.log('Aucun tag initial ou format invalide');
+  }
+  
+  const [parsedTags, setParsedTags] = useState<string[]>(initialTagsArray)
+  
+  // Synchroniser parsedTags avec formData.tags
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      tags: parsedTags.join(',')
+    }))
+  }, [parsedTags])
+  
+  // Log pour débogage des tags
+  useEffect(() => {
+    console.log('Tags updated:', parsedTags)
+  }, [parsedTags])
+  
+  // Ce useEffect n'est plus nécessaire car nous initialisons directement les tags à partir des données initiales
+  // useEffect(() => {
+  //   if (formData.tags && !parsedTags.length) {
+  //     setParsedTags(
+  //       formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+  //     )
+  //   }
+  // }, [formData.tags])
 
   const generateSlug = useCallback((title: string) => {
     return title
@@ -349,7 +397,7 @@ export default function BlogPostForm({
   
   // Fonction pour générer le contenu brut à partir des sections (copie de la fonction dans BlogContentEditor)
   const generateRawContentFromSections = (sectionsArray: any[]): string => {
-    return sectionsArray.map(section => {
+    let content = sectionsArray.map(section => {
       const sectionContent = section.elements.map((element: any) => {
         switch (element.type) {
           case 'h2':
@@ -376,6 +424,11 @@ export default function BlogPostForm({
       
       return `<section>\n${sectionContent}\n</section>`
     }).join('\n\n')
+    
+    // Note: Nous ne générons plus le footer avec les tags ici
+    // pour éviter la duplication avec l'assistant SEO
+    
+    return content
   }
 
   const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
@@ -562,6 +615,24 @@ export default function BlogPostForm({
     });
   }, [onSubmit, generateRawContentFromSections, toast]);
 
+  const handleTagKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  }, []);
+
+  const handleAddTag = useCallback(() => {
+    if (currentTag.trim()) {
+      setParsedTags(prev => [...prev, currentTag.trim()]);
+      setCurrentTag('');
+    }
+  }, [currentTag]);
+
+  const handleRemoveTag = useCallback((index: number) => {
+    setParsedTags(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
   return (
     <div className="space-y-6 relative ml-16">
       {/* Bouton SEO Assistant en position fixe */}
@@ -727,18 +798,57 @@ export default function BlogPostForm({
             <AccordionTrigger className="text-xl font-semibold dark:text-slate-200">Tags</AccordionTrigger>
             <AccordionContent>
               <div className="pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tags">Article tags</Label>
-                  <Input
-                    id="tags"
-                    name="tags"
-                    value={formData.tags}
-                    onChange={handleChange}
-                    placeholder="Enter the tags separated by commas (ex: technology, business, design)"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Tags help to categorize your article and improve its visibility
-                  </p>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="tagInput">Ajouter un tag</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        id="tagInput"
+                        type="text"
+                        value={currentTag}
+                        onChange={(e) => setCurrentTag(e.target.value)}
+                        placeholder="Saisissez un tag et appuyez sur Entrée"
+                        onKeyDown={handleTagKeyDown}
+                        className="flex-1"
+                      />
+                      <Button 
+                        type="button" 
+                        size="sm"
+                        onClick={handleAddTag}
+                        disabled={!currentTag.trim()}
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Les tags aident à catégoriser votre article et améliorent sa visibilité
+                    </p>
+                  </div>
+                  
+                  {parsedTags.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Tags ajoutés</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {parsedTags.map((tag, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="secondary"
+                            className="flex items-center gap-1 pl-3 pr-2 py-1.5 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTag(index)}
+                              className="ml-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 w-4 h-4 inline-flex items-center justify-center"
+                              aria-label={`Supprimer le tag ${tag}`}
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </AccordionContent>
