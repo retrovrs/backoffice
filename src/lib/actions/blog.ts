@@ -209,7 +209,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
         }
     </style>
 </head>
-<body>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
     <article>
         <header>
             <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>

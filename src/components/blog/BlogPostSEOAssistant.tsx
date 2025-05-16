@@ -74,7 +74,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   <!-- Canonical tag (prevents duplicate content) -->
   <link rel="canonical" href="https://retrovrs.com/blog/${formData.slug || 'article-url'}">
 </head>
-<body>
+<body style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
   <article>
     <!-- Article header -->
     <header>
@@ -104,7 +104,9 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     </figure>
     
     <!-- Article content -->
-    ${formData.content || 'Article content...'}
+    ${(formData.content || 'Article content...')
+      .replace(/<h2>/g, '<h2 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
+      .replace(/<h3>/g, '<h3 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')}
     
     ${formData.tags && formData.tags.trim() !== '' ? `
     <!-- Tags -->
@@ -214,13 +216,31 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
             <section className="article-content mb-8">
               {!formData.content ? (
                 <>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">First Important Subheading</h2>
+                  <h2 
+                    className="text-2xl font-bold text-gray-900 mb-4"
+                    style={{ 
+                      fontFamily: "'Bebas Neue Bold', 'Impact', sans-serif", 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '1px' 
+                    }}
+                  >
+                    First Important Subheading
+                  </h2>
                   <p className="mb-4 text-gray-700">
                     Content of the first paragraph with <strong className="font-bold text-gray-900">important words</strong> highlighted and relevant <a href="#" className="text-blue-600 hover:underline font-medium">internal links</a>.
                   </p>
                   <p className="mb-6 text-gray-700">Second paragraph with more details...</p>
                   
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Subsection of the first point</h3>
+                  <h3 
+                    className="text-xl font-bold text-gray-900 mb-3"
+                    style={{ 
+                      fontFamily: "'Bebas Neue Bold', 'Impact', sans-serif", 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '1px' 
+                    }}
+                  >
+                    Subsection of the first point
+                  </h3>
                   <p className="mb-6 text-gray-700">Development of the subsection with relevant content...</p>
                 </>
               ) : (
@@ -229,8 +249,8 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                     className="blog-content"
                     dangerouslySetInnerHTML={{
                       __html: formData.content
-                        .replace(/<h2>/g, '<h2 class="text-2xl font-bold text-gray-900 mb-4">')
-                        .replace(/<h3>/g, '<h3 class="text-xl font-bold text-gray-900 mb-3">')
+                        .replace(/<h2>/g, '<h2 class="text-2xl font-bold text-gray-900 mb-4" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
+                        .replace(/<h3>/g, '<h3 class="text-xl font-bold text-gray-900 mb-3" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
                         .replace(/<p>/g, '<p class="mb-4 text-gray-700">')
                         .replace(/<strong>/g, '<strong class="font-bold text-gray-900">')
                         .replace(/<a /g, '<a class="text-blue-600 hover:underline font-medium" ')
