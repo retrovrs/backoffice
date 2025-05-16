@@ -132,6 +132,9 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
     <meta property="og:description" content="${description}">
     ${mainImageUrl ? `<meta property="og:image" content="${mainImageUrl}">` : ''}
     <meta property="og:type" content="article">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -209,7 +212,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
 <body>
     <article>
         <header>
-            <h1>${title}</h1>
+            <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>
             <div class="article-meta">
                 ${authorName ? `<span class="author">Par ${authorName}</span>` : ''}
             </div>

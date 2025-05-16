@@ -31,6 +31,11 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   
   return (
     <Tabs defaultValue="preview" className="w-full">
+      {/* Style pour charger Bebas Neue pour l'aperçu */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+      `}</style>
+      
       <TabsList className="grid w-full grid-cols-3 mb-6">
         <TabsTrigger value="html">Generated HTML</TabsTrigger>
         <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -47,6 +52,11 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${formData.title || 'Article Title'} - RetroVrs</title>
   <meta name="description" content="${formData.excerpt || 'Article summary...'}">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   
   <!-- Open Graph Meta for social networks -->
   <meta property="og:title" content="${formData.title || 'Article Title'}">
@@ -68,7 +78,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   <article>
     <!-- Article header -->
     <header>
-      <h1>${formData.title || 'Article Title'}</h1>
+      <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${formData.title || 'Article Title'}</h1>
       <p class="meta">
         By ${formData.authorLink 
            ? `<a href="${formData.authorLink}">${formData.author || 'Author'}</a>` 
@@ -147,7 +157,14 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
         <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-[60vh] overflow-y-auto">
           <article className="prose lg:prose-lg mx-auto max-w-[600px]">
             <header className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <h1 
+                className="text-3xl font-bold text-gray-900 mb-4"
+                style={{ 
+                  fontFamily: "'Bebas Neue Bold', 'Impact', sans-serif", 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px' 
+                }}
+              >
                 {formData.title || 'Article Title'}
               </h1>
               <div className="flex items-center justify-between text-gray-600 text-sm">
