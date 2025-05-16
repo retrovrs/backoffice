@@ -25,6 +25,37 @@ interface BlogPostSEOAssistantProps {
   disabled?: boolean
 }
 
+// Fonction pour obtenir la couleur associée à une catégorie
+function getCategoryColor(category: string): { bg: string, text: string, border: string } {
+  // Par défaut
+  let bg = '#9C27B0'; // Violet
+  let text = '#FFFFFF';
+  let border = '#7B1FA2';
+
+  // Couleurs selon la catégorie (convertir en minuscules pour faciliter la comparaison)
+  const categoryLower = category.toLowerCase();
+  
+  if (categoryLower.includes('provenance')) {
+    bg = '#6A1B9A'; // Violet très foncé
+    text = '#FFFFFF';
+    border = '#4A148C';
+  } else if (categoryLower.includes('blog') || categoryLower === 'blog') {
+    bg = '#00796B'; // Vert teal foncé
+    text = '#FFFFFF';
+    border = '#004D40';
+  } else if (categoryLower.includes('news') || categoryLower.includes('actualité')) {
+    bg = '#D81B60'; // Fuchsia/magenta
+    text = '#FFFFFF';
+    border = '#AD1457';
+  } else if (categoryLower.includes('guide') || categoryLower.includes('tutorial')) {
+    bg = '#F57F17'; // Jaune orangé
+    text = '#000000';
+    border = '#E65100';
+  }
+
+  return { bg, text, border };
+}
+
 // Composant séparé pour le contenu de l'assistant SEO
 export function BlogPostSEOAssistantContent({ formData, disabled = false }: BlogPostSEOAssistantProps) {
   const seoScore = getScorePercentage(formData)
@@ -33,7 +64,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     <Tabs defaultValue="preview" className="w-full">
       {/* Style pour charger Bebas Neue pour l'aperçu */}
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500&display=swap');
       `}</style>
       
       <TabsList className="grid w-full grid-cols-3 mb-6">
@@ -56,7 +87,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
   
   <!-- Open Graph Meta for social networks -->
   <meta property="og:title" content="${formData.title || 'Article Title'}">
@@ -79,17 +110,22 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     <!-- Article header -->
     <header>
       <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${formData.title || 'Article Title'}</h1>
-      <p class="meta">
-        By ${formData.authorLink 
-           ? `<a href="${formData.authorLink}">${formData.author || 'Author'}</a>` 
-           : formData.author || 'Author'}
-        <time datetime="${formData.publishDate || new Date().toISOString().split('T')[0]}">${new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
-        in <a href="/category/${formData.category}">${formData.category}</a>
-      </p>
+      <div class="meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-family: 'Poppins', sans-serif; font-weight: 500;">By ${formData.authorLink 
+             ? `<a href="${formData.authorLink}" style="text-decoration: none; color: inherit;">${formData.author || 'Author'}</a>` 
+             : formData.author || 'Author'}</span>
+          <time datetime="${formData.publishDate || new Date().toISOString().split('T')[0]}" style="font-family: 'Poppins', sans-serif; opacity: 0.8; font-size: 0.9em;">${new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+        </div>
+        ${formData.category ? (() => {
+          const categoryColors = getCategoryColor(formData.category);
+          return `<span style="display: inline-block; background-color: ${categoryColors.bg}; color: ${categoryColors.text}; border: 1px solid ${categoryColors.border}; padding: 0.25rem 0.75rem; border-radius: 9999px; font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500;">${formData.category}</span>`;
+        })() : ''}
+      </div>
     </header>
     
     <!-- Introduction -->
-    <p class="lead">${formData.introText || formData.excerpt || 'Article summary...'}</p>
+    <p class="lead" style="font-family: 'Poppins', sans-serif; font-weight: 400;">${formData.introText || formData.excerpt || 'Article summary...'}</p>
     
     <!-- Main image -->
     <figure>
@@ -106,7 +142,11 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     <!-- Article content -->
     ${(formData.content || 'Article content...')
       .replace(/<h2>/g, '<h2 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
-      .replace(/<h3>/g, '<h3 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')}
+      .replace(/<h3>/g, '<h3 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
+      .replace(/<p>/g, '<p style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+      .replace(/<ul>/g, '<ul style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+      .replace(/<ol>/g, '<ol style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+      .replace(/<li>/g, '<li style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')}
     
     ${formData.tags && formData.tags.trim() !== '' ? `
     <!-- Tags -->
@@ -171,11 +211,16 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
               </h1>
               <div className="flex items-center justify-between text-gray-600 text-sm">
                 <div className="flex items-center">
-                  <span>By {formData.authorLink 
-                    ? <a href={formData.authorLink} className="text-blue-600 hover:underline">{formData.author || 'Author'}</a> 
-                    : formData.author || 'Author'}</span>
+                  <span style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    By {formData.authorLink 
+                      ? <a href={formData.authorLink} className="text-blue-600 hover:underline">{formData.author || 'Author'}</a> 
+                      : formData.author || 'Author'}
+                  </span>
                   <span className="mx-2">•</span>
-                  <time dateTime={formData.publishDate || new Date().toISOString().split('T')[0]}>
+                  <time 
+                    dateTime={formData.publishDate || new Date().toISOString().split('T')[0]}
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                  >
                     {new Date(formData.publishDate || Date.now()).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -184,9 +229,28 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                   </time>
                 </div>
                 <div>
-                  <a href={`/category/${formData.category}`} className="text-blue-600 hover:underline">
-                    {formData.category}
-                  </a>
+                  {formData.category && (
+                    (() => {
+                      const categoryColors = getCategoryColor(formData.category);
+                      return (
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            backgroundColor: categoryColors.bg,
+                            color: categoryColors.text,
+                            border: `1px solid ${categoryColors.border}`,
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontFamily: "'Poppins', sans-serif",
+                            fontSize: '0.875rem',
+                            fontWeight: 500
+                          }}
+                        >
+                          {formData.category}
+                        </span>
+                      );
+                    })()
+                  )}
                 </div>
               </div>
             </header>
@@ -226,10 +290,24 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                   >
                     First Important Subheading
                   </h2>
-                  <p className="mb-4 text-gray-700">
+                  <p 
+                    className="mb-4 text-gray-700"
+                    style={{ 
+                      fontFamily: "'Poppins', sans-serif", 
+                      fontWeight: 400
+                    }}
+                  >
                     Content of the first paragraph with <strong className="font-bold text-gray-900">important words</strong> highlighted and relevant <a href="#" className="text-blue-600 hover:underline font-medium">internal links</a>.
                   </p>
-                  <p className="mb-6 text-gray-700">Second paragraph with more details...</p>
+                  <p 
+                    className="mb-6 text-gray-700"
+                    style={{ 
+                      fontFamily: "'Poppins', sans-serif", 
+                      fontWeight: 400
+                    }}
+                  >
+                    Second paragraph with more details...
+                  </p>
                   
                   <h3 
                     className="text-xl font-bold text-gray-900 mb-3"
@@ -241,7 +319,15 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                   >
                     Subsection of the first point
                   </h3>
-                  <p className="mb-6 text-gray-700">Development of the subsection with relevant content...</p>
+                  <p 
+                    className="mb-6 text-gray-700"
+                    style={{ 
+                      fontFamily: "'Poppins', sans-serif", 
+                      fontWeight: 400
+                    }}
+                  >
+                    Development of the subsection with relevant content...
+                  </p>
                 </>
               ) : (
                 <div className="content-wrapper">
@@ -251,11 +337,12 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                       __html: formData.content
                         .replace(/<h2>/g, '<h2 class="text-2xl font-bold text-gray-900 mb-4" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
                         .replace(/<h3>/g, '<h3 class="text-xl font-bold text-gray-900 mb-3" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
-                        .replace(/<p>/g, '<p class="mb-4 text-gray-700">')
+                        .replace(/<p>/g, '<p class="mb-4 text-gray-700" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
                         .replace(/<strong>/g, '<strong class="font-bold text-gray-900">')
                         .replace(/<a /g, '<a class="text-blue-600 hover:underline font-medium" ')
-                        .replace(/<ul>/g, '<ul class="list-disc pl-5 space-y-2 mb-6">')
-                        .replace(/<ol>/g, '<ol class="list-decimal pl-5 space-y-2 mb-6">')
+                        .replace(/<ul>/g, '<ul class="list-disc pl-5 space-y-2 mb-6" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+                        .replace(/<ol>/g, '<ol class="list-decimal pl-5 space-y-2 mb-6" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+                        .replace(/<li>/g, '<li style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
                     }}
                   />
                 </div>
@@ -265,7 +352,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
             {formData.tags && formData.tags.trim() !== '' && (
               <footer className="mt-8 pt-6 border-t border-gray-200">
                 <section className="tags">
-                  <h2 className="text-xl font-semibold mb-3">Tags</h2>
+                  {/* <h2 className="text-xl font-semibold mb-3">Tags</h2> */}
                   <ul className="flex flex-wrap gap-2">
                     {formData.tags.split(',').map((tag, index) => {
                       const tagText = tag.trim();

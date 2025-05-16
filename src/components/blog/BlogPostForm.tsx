@@ -405,11 +405,11 @@ export default function BlogPostForm({
           case 'h3':
             return `  <h3>${element.content}</h3>`
           case 'paragraph':
-            return `  <p>${element.content}</p>`
+            return `  <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">${element.content}</p>`
           case 'list':
             if (element.listItems && element.listItems.length > 0) {
-              const listItems = element.listItems.map((item: string) => `    <li>${item}</li>`).join('\n')
-              return `  <ul>\n${listItems}\n  </ul>`
+              const listItems = element.listItems.map((item: string) => `    <li style="font-family: 'Poppins', sans-serif; font-weight: 400;">${item}</li>`).join('\n')
+              return `  <ul style="font-family: 'Poppins', sans-serif; font-weight: 400;">\n${listItems}\n  </ul>`
             }
             return ''
           case 'image':
@@ -800,14 +800,14 @@ export default function BlogPostForm({
               <div className="pt-4">
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="tagInput">Ajouter un tag</Label>
+                    <Label htmlFor="tagInput">Add a tag</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Input
                         id="tagInput"
                         type="text"
                         value={currentTag}
                         onChange={(e) => setCurrentTag(e.target.value)}
-                        placeholder="Saisissez un tag et appuyez sur Entrée"
+                        placeholder="Enter a tag and press Enter"
                         onKeyDown={handleTagKeyDown}
                         className="flex-1"
                       />
@@ -817,17 +817,17 @@ export default function BlogPostForm({
                         onClick={handleAddTag}
                         disabled={!currentTag.trim()}
                       >
-                        Ajouter
+                        Add
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Les tags aident à catégoriser votre article et améliorent sa visibilité
+                      Tags help categorize your article and improve its visibility
                     </p>
                   </div>
                   
                   {parsedTags.length > 0 && (
                     <div className="space-y-2">
-                      <Label>Tags ajoutés</Label>
+                      <Label>Added tags</Label>
                       <div className="flex flex-wrap gap-2">
                         {parsedTags.map((tag, index) => (
                           <Badge 
@@ -840,7 +840,7 @@ export default function BlogPostForm({
                               type="button"
                               onClick={() => handleRemoveTag(index)}
                               className="ml-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 w-4 h-4 inline-flex items-center justify-center"
-                              aria-label={`Supprimer le tag ${tag}`}
+                              aria-label={`Remove the tag ${tag}`}
                             >
                               ×
                             </button>

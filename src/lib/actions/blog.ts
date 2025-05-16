@@ -80,11 +80,11 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
                 case 'h3':
                     return `  <h3 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${element.content}</h3>`
                 case 'paragraph':
-                    return `  <p>${element.content}</p>`
+                    return `  <p style="font-family: 'Poppins', sans-serif; font-weight: 400;">${element.content}</p>`
                 case 'list':
                     if (element.listItems && element.listItems.length > 0) {
-                        const listItems = element.listItems.map((item: string) => `    <li>${item}</li>`).join('\n')
-                        return `  <ul>\n${listItems}\n  </ul>`
+                        const listItems = element.listItems.map((item: string) => `    <li style="font-family: 'Poppins', sans-serif; font-weight: 400;">${item}</li>`).join('\n')
+                        return `  <ul style="font-family: 'Poppins', sans-serif; font-weight: 400;">\n${listItems}\n  </ul>`
                     }
                     return ''
                 case 'image':
@@ -134,7 +134,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
     <meta property="og:type" content="article">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -209,12 +209,19 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
         }
     </style>
 </head>
-<body style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+<body style="font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
     <article>
         <header>
             <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>
-            <div class="article-meta">
-                ${authorName ? `<span class="author">Par ${authorName}</span>` : ''}
+            <div class="article-meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">Par ${authorName}</span>` : ''}
+                    ${postData?.createdAt ? `<time datetime="${new Date(postData.createdAt).toISOString().split('T')[0]}" style="font-family: 'Poppins', sans-serif; opacity: 0.8; font-size: 0.9em;">${new Date(postData.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</time>` : ''}
+                </div>
+                ${postData?.category?.name ? (() => {
+            const categoryColors = getCategoryColor(postData.category.name);
+            return `<span style="display: inline-block; background-color: ${categoryColors.bg}; color: ${categoryColors.text}; border: 1px solid ${categoryColors.border}; padding: 0.25rem 0.75rem; border-radius: 9999px; font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500;">${postData.category.name}</span>`;
+        })() : ''}
             </div>
             ${mainImageUrl ?
             `<figure class="main-image">
@@ -222,7 +229,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
                     ${mainImageCaption ? `<figcaption>${mainImageCaption}</figcaption>` : ''}
                 </figure>` : ''
         }
-            ${introText ? `<div class="article-intro">${introText}</div>` : ''}
+            ${introText ? `<div class="article-intro" style="font-family: 'Poppins', sans-serif; font-weight: 400;">${introText}</div>` : ''}
         </header>
         <div class="article-content">
 ${sectionsContent}
@@ -298,6 +305,37 @@ ${tagsList}
     </style>
   </section>
 </footer>`;
+}
+
+// Fonction pour obtenir la couleur associée à une catégorie
+function getCategoryColor(category: string): { bg: string, text: string, border: string } {
+    // Par défaut
+    let bg = '#9C27B0'; // Violet
+    let text = '#FFFFFF';
+    let border = '#7B1FA2';
+
+    // Couleurs selon la catégorie (convertir en minuscules pour faciliter la comparaison)
+    const categoryLower = category.toLowerCase();
+
+    if (categoryLower.includes('provenance')) {
+        bg = '#6A1B9A'; // Violet très foncé
+        text = '#FFFFFF';
+        border = '#4A148C';
+    } else if (categoryLower.includes('blog') || categoryLower === 'blog') {
+        bg = '#00796B'; // Vert teal foncé
+        text = '#FFFFFF';
+        border = '#004D40';
+    } else if (categoryLower.includes('news') || categoryLower.includes('actualité')) {
+        bg = '#D81B60'; // Fuchsia/magenta
+        text = '#FFFFFF';
+        border = '#AD1457';
+    } else if (categoryLower.includes('guide') || categoryLower.includes('tutorial')) {
+        bg = '#F57F17'; // Jaune orangé
+        text = '#000000';
+        border = '#E65100';
+    }
+
+    return { bg, text, border };
 }
 
 export async function createBlogPost(formData: BlogPostFormValues) {
