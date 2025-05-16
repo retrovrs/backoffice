@@ -295,7 +295,16 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
         <div className="space-y-8">
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">SEO Score</h3>
+              <h3 
+                className="text-xl font-bold text-gray-900"
+                style={{ 
+                  fontFamily: "'Bebas Neue Bold', 'Impact', sans-serif", 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px' 
+                }}
+              >
+                SEO Score
+              </h3>
               <div className="flex items-center">
                 <div className="bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 w-24 h-3 rounded-full overflow-hidden mr-3">
                   <div 

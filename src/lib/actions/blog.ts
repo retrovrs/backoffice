@@ -76,9 +76,9 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
         const sectionContent = section.elements.map((element: any) => {
             switch (element.type) {
                 case 'h2':
-                    return `  <h2>${element.content}</h2>`
+                    return `  <h2 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${element.content}</h2>`
                 case 'h3':
-                    return `  <h3>${element.content}</h3>`
+                    return `  <h3 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${element.content}</h3>`
                 case 'paragraph':
                     return `  <p>${element.content}</p>`
                 case 'list':
