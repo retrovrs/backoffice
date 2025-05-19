@@ -2,31 +2,32 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
+import { z } from 'zod'
+
+// Définition du schéma de validation pour l'email
+const emailSchema = z.object({
+    email: z.string().email('Format d\'email invalide')
+})
 
 export async function POST(request: Request) {
     try {
-        // Vérification de l'authentification
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
+        const body = await request.json()
 
-        if (!session?.user) {
+        // Validation avec Zod
+        const result = emailSchema.safeParse(body)
+
+        if (!result.success) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-                
-        const { email } = await request.json()
-
-
-        // Validate the email
-        if (!email || typeof email !== 'string') {
-            return NextResponse.json(
-                { isWhitelisted: false, message: 'Invalid email' },
+                {
+                    isWhitelisted: false,
+                    message: 'Email invalide',
+                    errors: result.error.format()
+                },
                 { status: 400 }
             )
         }
+
+        const { email } = result.data
 
         // Check if the email is in the whitelist
         const whitelisted = await prisma.userWhiteListed.findFirst({
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ isWhitelisted: true }, { status: 200 })
     } catch (error) {
-        console.error('Error while checking the whitelist:', error)
+        console.error('Erreur lors de la vérification de la liste blanche:', error)
         return NextResponse.json(
             {
                 isWhitelisted: false,

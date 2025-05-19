@@ -12,7 +12,7 @@ export default function ProtectedLayout({
 }) {
   const session = useSession()
   const isAuthenticated = !!session.data?.user
-  const isLoading = session.status === 'loading'
+  const isLoading = session.isPending
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

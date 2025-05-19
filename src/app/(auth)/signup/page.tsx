@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { signUp as validateAndSignUp, type SignupFormState } from './actions'
 import { signUp } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +11,7 @@ import { LogoHeader } from '@/components/LogoHeader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ExclamationTriangleIcon, CheckCircledIcon } from '@radix-ui/react-icons'
 import { toast } from 'sonner'
+import { SignupFormState, validateSignupForm } from './actions'
 
 const initialState: SignupFormState = {}
 
@@ -24,14 +24,14 @@ function SubmitButton() {
       className="w-full"
       disabled={pending}
     >
-      {pending ? 'Création du compte...' : 'S\'inscrire'}
+      {pending ? 'Account creation...' : 'Sign up'}
     </Button>
   )
 }
 
 export default function SignupPage() {
   const router = useRouter()
-  const [state, formAction] = useActionState(validateAndSignUp, initialState)
+  const [state, formAction] = useActionState(validateSignupForm, initialState)
   const [loading, setLoading] = useState(false)
   const [registered, setRegistered] = useState(false)
 

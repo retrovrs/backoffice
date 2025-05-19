@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { LogoHeader } from '@/components/LogoHeader'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons'
+import { signInZodValidation } from './actions'
 
 // Fonction pour vérifier si un email est dans la liste blanche
 async function checkEmailInWhitelist(email: string) {
@@ -38,8 +39,16 @@ export default function SigninPage() {
     e.preventDefault()
     
     const formData = new FormData(e.currentTarget)
-    const email = formData.get('email')?.toString() || ''
+    let email = formData.get('email')?.toString() || ''
     const password = formData.get('password')?.toString() || ''
+
+    const responseZodValidation = await signInZodValidation(formData)
+    if (responseZodValidation.success) {
+      email = responseZodValidation.email as string
+    } else {
+      setError(responseZodValidation.msgError as string)
+      return
+    }
 
     if (!email || !password) {
       setError('Please fill in all fields')
@@ -52,6 +61,7 @@ export default function SigninPage() {
       // Check if the email is in the whitelist
       const whitelistCheck = await checkEmailInWhitelist(email)
       
+      console.log("whitelistCheck", whitelistCheck)
       if (!whitelistCheck.isWhitelisted) {
         setLoading(false)
         const errorMessage = whitelistCheck.message || 'You are not authorized to use this application. Please contact an administrator.'
