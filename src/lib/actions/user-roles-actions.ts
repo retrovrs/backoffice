@@ -43,7 +43,7 @@ export async function updateUserRole(userId: string, role: UserRole) {
         })
 
         if (!session?.user) {
-            return { error: 'Non authentifié' }
+            return { error: 'Not authenticated' }
         }
         
         if (!userId) {

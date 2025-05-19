@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { userId: string } }
+    context: { params: Promise<{ userId: string }> }
 ) {
     try {
         // Vérification de l'authentification
@@ -15,12 +15,14 @@ export async function GET(
 
         if (!session?.user) {
             return NextResponse.json(
-                { error: 'Non authentifié' },
+                { error: 'Not authenticated' },
                 { status: 401 }
             )
         }
         
-        const { userId } = params
+        const params = await context.params;
+
+        const userId = params.userId
 
         if (!userId) {
             return NextResponse.json(

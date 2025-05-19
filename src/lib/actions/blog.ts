@@ -625,7 +625,7 @@ export async function getBlogPost(id: number) {
         })
 
         if (!session?.user) {
-            return { error: 'Non authentifié' }
+            return { error: 'Not authenticated' }
         }
 
         const post = await prisma.seoPost.findUnique({

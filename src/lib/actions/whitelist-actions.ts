@@ -38,7 +38,7 @@ export async function addWhitelistedUser(email: string) {
         })
 
         if (!session?.user) {
-            return { error: 'Non authentifié' }
+            return { error: 'Not authenticated' }
         }
         
         // Vérifier que l'email est valide

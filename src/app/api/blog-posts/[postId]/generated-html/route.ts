@@ -5,8 +5,8 @@ import { auth } from '@/lib/auth'
 
 export async function GET(
     request: Request,
-    { params }: { params: { postId: string } }
-) {
+    context: { params: Promise<{ postId: string }> }
+): Promise<NextResponse> {
     try {
         // Vérification de l'authentification
         const session = await auth.api.getSession({
@@ -15,11 +15,11 @@ export async function GET(
 
         if (!session?.user) {
             return NextResponse.json(
-                { error: 'Non authentifié' },
+                { error: 'Not authenticated' },
                 { status: 401 }
             )
         }
-        
+        const params = await context.params;
 
         const postId = parseInt(params.postId, 10)
 
