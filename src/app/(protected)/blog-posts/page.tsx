@@ -43,6 +43,7 @@ interface BlogPost {
   updatedAt: string
   status: 'DRAFT' | 'PUBLISHED'
   published: boolean
+  pinned: boolean
   generatedHtml?: string
 }
 
@@ -193,6 +194,7 @@ export default function BlogPostsPage() {
                 <TableHead className="font-semibold text-gray-700">Author</TableHead>
                 <TableHead className="font-semibold text-gray-700">Creation date</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                <TableHead className="font-semibold text-gray-700">Pinned</TableHead>
                 {isAdmin && (
                   <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
                 )}
@@ -201,7 +203,7 @@ export default function BlogPostsPage() {
             <TableBody>
               {posts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 5 : 4} className="h-24 text-center text-gray-500">
+                  <TableCell colSpan={isAdmin ? 6 : 5} className="h-24 text-center text-gray-500">
                     No article found
                   </TableCell>
                 </TableRow>
@@ -226,6 +228,13 @@ export default function BlogPostsPage() {
                           post.status === 'DRAFT' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 
                           'bg-gray-100 text-gray-800 border border-gray-200'}`}>
                         {post.status === 'PUBLISHED' ? 'Published' : 'Draft'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                        ${post.pinned ? 'bg-blue-100 text-blue-800 border border-blue-200' : 
+                          'bg-gray-100 text-gray-800 border border-gray-200'}`}>
+                        {post.pinned ? 'Yes' : 'No'}
                       </div>
                     </TableCell>
                     {isAdmin && (

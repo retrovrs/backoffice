@@ -8,6 +8,8 @@ import { headers } from 'next/headers'
  * 
  * Cette route reçoit le slug de l'article et son nouvel état "épinglé"
  * puis met à jour uniquement ce champ dans la base de données.
+ * 
+ * Un seul article peut être épinglé à la fois dans la base de données.
  */
 export async function PATCH(request: NextRequest) {
     try {
@@ -64,11 +66,35 @@ export async function PATCH(request: NextRequest) {
             )
         }
 
-        // Mettre à jour uniquement le champ pinned
-        const updatedPost = await prisma.seoPost.update({
-            where: { id: postId },
-            data: { pinned }
-        })
+        let updatedPost;
+
+        // Si on veut épingler l'article
+        if (pinned) {
+            // Étape 1: Trouver l'article actuellement épinglé (s'il existe)
+            const currentlyPinnedPost = await prisma.seoPost.findFirst({
+                where: { pinned: true }
+            })
+
+            // Étape 2: Désépingler l'article actuellement épinglé (s'il existe)
+            if (currentlyPinnedPost && currentlyPinnedPost.id !== postId) {
+                await prisma.seoPost.update({
+                    where: { id: currentlyPinnedPost.id },
+                    data: { pinned: false }
+                })
+            }
+
+            // Étape 3: Épingler le nouvel article
+            updatedPost = await prisma.seoPost.update({
+                where: { id: postId },
+                data: { pinned: true }
+            })
+        } else {
+            // Si on veut désépingler l'article, on le fait simplement
+            updatedPost = await prisma.seoPost.update({
+                where: { id: postId },
+                data: { pinned: false }
+            })
+        }
 
         return NextResponse.json({
             success: true,
