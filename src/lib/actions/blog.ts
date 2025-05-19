@@ -233,8 +233,8 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
         </header>
         <div class="article-content">
 ${sectionsContent}
+${tagsHTML}
         </div>
-        ${tagsHTML}
     </article>
 </body>
 </html>`
@@ -245,6 +245,114 @@ function extractYouTubeId(url: string): string {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
     const match = url.match(regExp)
     return (match && match[2].length === 11) ? match[2] : ''
+}
+
+// Fonction pour générer le JSON-LD pour les articles de blog
+function generateJsonLd(postData: any): string {
+    // URL du logo RetroVRS
+    const logoUrl = 'http://localhost:3000/_next/image?url=%2Fimages%2Flogos%2Fretro%2FRetro_logo_1.png&w=256&q=75';
+
+    // Date actuelle formatée en ISO pour la date de modification
+    const modifiedDate = new Date().toISOString();
+
+    // Date de publication (soit depuis les données du post, soit la date actuelle)
+    const publishDate = postData.publishDate || postData.createdAt || new Date().toISOString();
+
+    // Construction de l'objet JSON-LD avec typage approprié
+    const jsonLd: {
+        "@context": string;
+        "@type": string;
+        "headline": string;
+        "image": string;
+        "datePublished": string;
+        "dateModified": string;
+        "author": {
+            "@type": string;
+            "name": string;
+            "url"?: string;
+        };
+        "publisher": {
+            "@type": string;
+            "name": string;
+            "logo": {
+                "@type": string;
+                "url": string;
+            }
+        };
+        "description": string;
+    } = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": postData.title || '',
+        "image": postData.mainImageUrl || '',
+        "datePublished": publishDate,
+        "dateModified": modifiedDate,
+        "author": {
+            "@type": "Person",
+            "name": postData.author || ''
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "RetroVRS Marketplace",
+            "logo": {
+                "@type": "ImageObject",
+                "url": logoUrl
+            }
+        },
+        "description": postData.metaDescription || postData.excerpt || ''
+    };
+
+    // Si l'auteur a un lien, l'ajouter
+    if (postData.authorLink) {
+        jsonLd.author.url = postData.authorLink;
+    }
+
+    return JSON.stringify(jsonLd, null, 2);
+}
+
+// Fonction pour extraire uniquement la partie <article> du HTML généré
+function extractArticleContent(fullHtml: string): string {
+    if (!fullHtml) return '';
+
+    try {
+        // Essayer d'extraire tout ce qui est entre les balises <article> et </article>
+        const articleRegex = /<article>([\s\S]*?)<\/article>/i;
+        const match = fullHtml.match(articleRegex);
+
+        if (match && match[1]) {
+            // Renvoyer le contenu de l'article en ajoutant les balises ouvrantes et fermantes
+            return `<article>${match[1]}</article>`;
+        }
+
+        // Si nous n'avons pas trouvé de balise article, essayons une autre approche
+        // en recherchant le corps du document
+        const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+        const bodyMatch = fullHtml.match(bodyRegex);
+
+        if (bodyMatch && bodyMatch[1]) {
+            // S'il y a un contenu dans le body mais pas d'article,
+            // créons un article à partir du contenu du body
+            const bodyContent = bodyMatch[1].trim();
+
+            // Cherchons si un élément article existe dans le body
+            const articleInBodyRegex = /<article[^>]*>([\s\S]*?)<\/article>/i;
+            const articleInBodyMatch = bodyContent.match(articleInBodyRegex);
+
+            if (articleInBodyMatch && articleInBodyMatch[0]) {
+                return articleInBodyMatch[0];
+            }
+
+            // Si toujours pas d'article, on prend tout le contenu du body en l'encapsulant
+            // dans des balises article
+            return `<article>${bodyContent}</article>`;
+        }
+
+        console.log('Aucun contenu d\'article ou de body trouvé dans le HTML');
+        return '';
+    } catch (error) {
+        console.error('Erreur lors de l\'extraction du contenu de l\'article:', error);
+        return '';
+    }
 }
 
 // Fonction utilitaire pour générer le HTML des tags
@@ -287,24 +395,22 @@ function generateTagsHTML(tags: string | string[]): string {
         .join('\n')
 
     return `
-<footer>
-  <section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
-    <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Tags</h2>
-    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+<section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
+  <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Tags</h2>
+  <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
 ${tagsList}
-    </ul>
-    <style>
-      @media (prefers-color-scheme: dark) {
-        footer .tags {
-          border-top-color: #374151;
-        }
-        footer .tags h2 {
-          color: #e5e7eb;
-        }
+  </ul>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .tags {
+        border-top-color: #374151;
       }
-    </style>
-  </section>
-</footer>`;
+      .tags h2 {
+        color: #e5e7eb;
+      }
+    }
+  </style>
+</section>`;
 }
 
 // Fonction pour obtenir la couleur associée à une catégorie
@@ -450,9 +556,24 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
             : formData.content || '';
 
+        // Extraire uniquement la partie <article> pour le champ generatedArticleHtml
+        const generatedArticleHtml = extractArticleContent(generatedHtml);
+
+        // Générer le JSON-LD pour les métadonnées structurées
+        const jsonLdData = {
+            ...postDataForHTML,
+            title: formData.title,
+            mainImageUrl: formData.mainImageUrl,
+            createdAt: new Date().toISOString(),
+            publishDate: formData.publishDate
+        };
+        const jsonLd = generateJsonLd(jsonLdData);
+
         console.log('Content to save (start):', content.substring(0, 200) + '...');
         console.log('Length of the content JSON:', content.length);
         console.log('Generated HTML to save (start):', generatedHtml.substring(0, 200) + '...');
+        console.log('Generated Article HTML to save (start):', generatedArticleHtml.substring(0, 200) + '...');
+        console.log('Generated JSON-LD:', jsonLd);
 
         // Prepare minimal data needed for post creation
         const postData = {
@@ -465,7 +586,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             mainImageAlt: formData.mainImageAlt,
             mainImageCaption: formData.mainImageCaption,
             content,
-            generatedHtml, // Ajouter le HTML généré
+            generatedHtml, // HTML complet généré
+            generatedArticleHtml, // Uniquement la partie <article>
+            jsonLd, // JSON-LD généré
             status, // Use the enum value
             published: formData.status === 'published',
             categoryId: category.id,
@@ -523,7 +646,9 @@ export async function getBlogPost(id: number) {
         console.log('- HTML brut (début):', rawContent.substring(0, 500) + '...');
         console.log('- JSON structuré disponible:', !!structuredContent);
         console.log('- HTML généré stocké (début):', post.generatedHtml?.substring(0, 500) + '...');
+        console.log('- Article HTML généré stocké (début):', post.generatedArticleHtml?.substring(0, 500) + '...');
         console.log('- Tags récupérés:', post.tags);
+        console.log('- JSON-LD récupéré:', post.jsonLd);
 
         if (structuredContent) {
             console.log('- Structure JSON (aperçu):',
@@ -543,7 +668,9 @@ export async function getBlogPost(id: number) {
                 // On transmet directement la structure JSON pour l'éditeur
                 structuredContent,
                 // On transmet également le HTML généré stocké
-                generatedHtml: post.generatedHtml || rawContent
+                generatedHtml: post.generatedHtml || rawContent,
+                // On transmet également le HTML de l'article uniquement
+                generatedArticleHtml: post.generatedArticleHtml || extractArticleContent(post.generatedHtml || rawContent)
             }
         }
     } catch (error) {
@@ -645,8 +772,28 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
             : formData.content || '';
 
+        // Extraire uniquement la partie <article> pour le champ generatedArticleHtml
+        const generatedArticleHtml = extractArticleContent(generatedHtml);
+
+        // Récupérer l'article existant pour obtenir la date de création
+        const existingPost = await prisma.seoPost.findUnique({
+            where: { id }
+        });
+
+        // Générer le JSON-LD pour les métadonnées structurées
+        const jsonLdData = {
+            ...postDataForHTML,
+            title: formData.title,
+            mainImageUrl: formData.mainImageUrl,
+            createdAt: existingPost?.createdAt?.toISOString() || new Date().toISOString(),
+            publishDate: formData.publishDate
+        };
+        const jsonLd = generateJsonLd(jsonLdData);
+
         console.log('Content to save (start):', content.substring(0, 200) + '...');
         console.log('Generated HTML to save (start):', generatedHtml.substring(0, 200) + '...');
+        console.log('Generated Article HTML to save (start):', generatedArticleHtml.substring(0, 200) + '...');
+        console.log('Generated JSON-LD:', jsonLd);
 
         // Prepare data for update
         const postData = {
@@ -659,7 +806,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             mainImageAlt: formData.mainImageAlt,
             mainImageCaption: formData.mainImageCaption,
             content,
-            generatedHtml, // Ajouter le HTML généré
+            generatedHtml, // HTML complet généré
+            generatedArticleHtml, // Uniquement la partie <article>
+            jsonLd, // JSON-LD généré
             status,
             published: formData.status === 'published',
             category: {

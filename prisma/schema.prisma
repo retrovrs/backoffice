@@ -36,7 +36,9 @@ model SeoPost {
   viewsCount        Int         @default(0)
   estimatedReadTime Int?
   generatedHtml     String?
+  generatedArticleHtml String?
   tags              String?
+  jsonLd            String?
   category          SeoCategory @relation(fields: [categoryId], references: [id])
   categoryId        Int
 
