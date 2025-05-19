@@ -45,6 +45,11 @@ interface BlogPost {
   published: boolean
   pinned: boolean
   generatedHtml?: string
+  category?: {
+    id: number
+    name: string
+    description?: string
+  } | null
 }
 
 export default function BlogPostsPage() {
@@ -78,6 +83,9 @@ export default function BlogPostsPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        setIsLoading(true)
+        setError(null)
+        
         const response = await fetch('/api/blog-posts')
         
         if (!response.ok) {
@@ -85,17 +93,25 @@ export default function BlogPostsPage() {
         }
         
         const data = await response.json()
-        setPosts(data)
-        setIsLoading(false)
+        console.log('Posts received from API:', data)
+        
+        // Vérification et traitement des données reçues
+        if (Array.isArray(data)) {
+          setPosts(data)
+        } else {
+          console.error('Unexpected data format:', data)
+          throw new Error('Unexpected data format')
+        }
       } catch (err) {
         console.error('Error:', err)
         setError('Error when loading the blog articles')
-        setIsLoading(false)
         toast({
           title: 'Error',
           description: 'Impossible to load the blog articles',
           variant: 'destructive'
         })
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -163,7 +179,7 @@ export default function BlogPostsPage() {
 
   return (
     <>
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .dialog-open .fixed:has([role="dialog"]) ~ * {
           width: 100% !important;
           transform: none !important;
@@ -171,7 +187,7 @@ export default function BlogPostsPage() {
         body.overflow-hidden {
           padding-right: 0 !important;
         }
-      `}</style>
+      `}} />
       <div className="space-y-6 w-full">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">Blog articles</h1>
@@ -195,6 +211,7 @@ export default function BlogPostsPage() {
                 <TableHead className="font-semibold text-gray-700">Creation date</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
                 <TableHead className="font-semibold text-gray-700">Pinned</TableHead>
+                <TableHead className="font-semibold text-gray-700">Catégorie</TableHead>
                 {isAdmin && (
                   <TableHead className="text-right font-semibold text-gray-700">Actions</TableHead>
                 )}
@@ -203,7 +220,7 @@ export default function BlogPostsPage() {
             <TableBody>
               {posts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 6 : 5} className="h-24 text-center text-gray-500">
+                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-gray-500">
                     No article found
                   </TableCell>
                 </TableRow>
@@ -236,6 +253,19 @@ export default function BlogPostsPage() {
                           'bg-gray-100 text-gray-800 border border-gray-200'}`}>
                         {post.pinned ? 'Yes' : 'No'}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {post.category ? (
+                        <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                          bg-purple-100 text-purple-800 border border-purple-200">
+                          {post.category.name}
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                          bg-gray-100 text-gray-800 border border-gray-200">
+                          Non catégorisé
+                        </div>
+                      )}
                     </TableCell>
                     {isAdmin && (
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
