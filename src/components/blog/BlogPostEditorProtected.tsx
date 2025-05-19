@@ -16,17 +16,17 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [initialData, setInitialData] = useState<Partial<BlogPostFormValues>>({})
+  const [initialData, setInitialData] = useState<Partial<BlogPostFormValues> & { id?: number }>({})
 
-  // Charger les données de l'article
+  // Load the blog post data
   useEffect(() => {
     async function loadBlogPost() {
       try {
         const postId = parseInt(id)
         if (isNaN(postId)) {
           toast({
-            title: 'Erreur',
-            description: 'ID d\'article invalide',
+            title: 'Error',
+            description: 'Invalid blog post ID',
             variant: 'destructive'
           })
           router.push('/blog-posts')
@@ -37,7 +37,7 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
         
         if (result.error) {
           toast({
-            title: 'Erreur',
+            title: 'Error',
             description: result.error,
             variant: 'destructive'
           })
@@ -46,18 +46,22 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
         }
 
         if (result.post) {
-          // Formater les données pour le formulaire
-          console.log('Données du post chargées:', {
+          // Format the data for the form
+          console.log('Blog post data loaded:', {
+            id: postId,
             tags: result.post.tags,
             metaKeywords: result.post.metaKeywords
           });
           
           setInitialData({
+            // Ajout de l'ID pour l'épinglage et autres opérations
+            id: postId,
             title: result.post.title,
             slug: result.post.slug,
             excerpt: result.post.metaDescription,
             status: result.post.status === 'PUBLISHED' ? 'published' : 'draft',
             category: result.post.category.name,
+            pinned: result.post.pinned || false, // S'assurer que pinned est toujours inclus
             author: result.post.author,
             authorLink: result.post.authorLink || '',
             publishDate: result.post.createdAt ? new Date(result.post.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -70,15 +74,15 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
             tags: result.post.tags || ''
           })
           
-          console.log('initialData préparé avec tags:', result.post.tags);
+          console.log('initialData prepared with tags:', result.post.tags);
         }
 
         setIsLoading(false)
       } catch (error) {
-        console.error('Erreur lors du chargement de l\'article:', error)
+        console.error('Error loading the blog post:', error)
         toast({
-          title: 'Erreur',
-          description: 'Impossible de charger l\'article',
+          title: 'Error',
+          description: 'Unable to load the blog post',
           variant: 'destructive'
         })
         router.push('/blog-posts')
@@ -100,15 +104,15 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
       }
       
       toast({
-        title: 'Succès',
-        description: 'Article mis à jour avec succès',
+        title: 'Success',
+        description: 'Blog post updated successfully',
       })
       
       router.push('/blog-posts')
     } catch (error) {
       toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Échec de la mise à jour de l\'article',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update the blog post',
         variant: 'destructive'
       })
     } finally {
@@ -117,7 +121,7 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Chargement de l'article...</div>
+    return <div className="flex justify-center items-center h-64">Loading blog post...</div>
   }
 
   return (

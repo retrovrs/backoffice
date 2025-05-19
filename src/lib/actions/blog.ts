@@ -642,6 +642,7 @@ export async function getBlogPost(id: number) {
         // Décoder le contenu structuré s'il existe
         const { rawContent, structuredContent } = decodeStructuredContent(post.content)
 
+        /*
         console.log('getBlogPost - Contenu décodé:');
         console.log('- HTML brut (début):', rawContent.substring(0, 500) + '...');
         console.log('- JSON structuré disponible:', !!structuredContent);
@@ -649,6 +650,7 @@ export async function getBlogPost(id: number) {
         console.log('- Article HTML généré stocké (début):', post.generatedArticleHtml?.substring(0, 500) + '...');
         console.log('- Tags récupérés:', post.tags);
         console.log('- JSON-LD récupéré:', post.jsonLd);
+        */
 
         if (structuredContent) {
             console.log('- Structure JSON (aperçu):',

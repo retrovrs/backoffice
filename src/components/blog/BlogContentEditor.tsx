@@ -788,7 +788,7 @@ ${sectionsContent}
   
   // Si l'initialisation n'est pas encore terminée, afficher un indicateur de chargement
   if (!dataRef.current.isInitialized) {
-    return <div className="py-4 text-center">Chargement de l'éditeur...</div>
+    return <div className="py-4 text-center">Loading editor...</div>
   }
   
   return (

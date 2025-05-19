@@ -39,6 +39,7 @@ model SeoPost {
   generatedArticleHtml String?
   tags              String?
   jsonLd            String?
+  pinned            Boolean     @default(false)
   category          SeoCategory @relation(fields: [categoryId], references: [id])
   categoryId        Int
 

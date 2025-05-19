@@ -24,6 +24,7 @@ export interface BlogPostFormValues {
     excerpt: string;
     status: string;
     category: string;
+    pinned?: boolean;
 
     // Données header
     author: string;

@@ -90,7 +90,7 @@ export default function Home() {
                   disabled={isSigningUp}
                   onClick={handleSignUp}
                 >
-                  {isSigningUp ? 'Chargement...' : 'Sign up'}
+                  {isSigningUp ? 'Loading...' : 'Sign up'}
                 </Button>
               </div>
             </div>

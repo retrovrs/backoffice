@@ -165,7 +165,7 @@ const CategorySelector = memo(({
 CategorySelector.displayName = 'CategorySelector'
 
 interface BlogPostFormProps {
-  initialData?: Partial<BlogPostFormValues>
+  initialData?: Partial<BlogPostFormValues> & { id?: number }
   onSubmit: (formData: BlogPostFormValues) => Promise<void>
   isSubmitting: boolean
   mode: 'create' | 'edit'
@@ -211,6 +211,7 @@ export default function BlogPostForm({
     excerpt: initialData.excerpt || '',
     status: initialData.status || 'draft',
     category: initialData.category || 'blog',
+    pinned: initialData.pinned || false,
     
     // Données header
     author: initialData.author || '',
@@ -633,12 +634,73 @@ export default function BlogPostForm({
     setParsedTags(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  // Fonction simplifiée pour gérer le basculement de l'état épinglé
+  const handleTogglePin = useCallback(async () => {
+    try {
+      // Nouvelle valeur de pinned (inverse de l'état actuel)
+      const newPinnedValue = !formData.pinned;
+      
+      // On a besoin de l'ID pour identifier l'article
+      if (!initialData.id) {
+        console.error("ID de l'article manquant");
+        return;
+      }
+      
+      // Mettre à jour l'interface utilisateur immédiatement
+      setFormData(prev => ({
+        ...prev,
+        pinned: newPinnedValue
+      }));
+      
+      // Appeler l'API pour mettre à jour uniquement le champ "pinned"
+      const response = await fetch(`/api/blog-posts/toggle-pin`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          id: initialData.id, 
+          pinned: newPinnedValue 
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Échec de la mise à jour');
+      }
+      
+      // Notification de succès
+      toast({
+        title: newPinnedValue ? "Article épinglé" : "Article désépinglé",
+        description: newPinnedValue 
+          ? "L'article sera affiché en priorité" 
+          : "L'article a été retiré des articles épinglés",
+        variant: "default"
+      });
+      
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'épinglage:", error);
+      
+      // Rétablir l'état précédent en cas d'erreur
+      setFormData(prev => ({
+        ...prev,
+        pinned: !prev.pinned
+      }));
+      
+      // Notification d'erreur
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la modification de l'épinglage",
+        variant: "destructive"
+      });
+    }
+  }, [formData.pinned, formData.slug, toast]);
+
   return (
     <div className="space-y-6 relative ml-16">
       {/* Bouton SEO Assistant en position fixe */}
       <Button 
         variant="outline"
-        className="fixed left-60 top-1/2 transform -translate-y-1/2 z-50 bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200 shadow-md dark:bg-purple-900 dark:text-purple-100 dark:border-purple-800 dark:hover:bg-purple-800"
+        className="fixed left-60 top-1/2 transform -translate-y-1/2 z-50 bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-purple-400 hover:from-indigo-600 hover:to-purple-700 shadow-lg transition-all duration-300 hover:shadow-purple-300/50 hover:scale-105 dark:from-indigo-700 dark:to-purple-800 dark:text-white dark:border-purple-700 dark:hover:from-indigo-800 dark:hover:to-purple-900"
         onClick={handleOpenSEOAssistant}
         disabled={isSubmitting}
       >
@@ -678,15 +740,34 @@ export default function BlogPostForm({
               {formData.status === 'published' ? 'PUBLISHED' : 'DRAFT'}
             </Badge>
           )}
+          {mode === 'edit' && formData.pinned && (
+            <Badge 
+              variant="outline" 
+              className="ml-2 bg-blue-100 text-blue-800 border-blue-300"
+            >
+              PINNED
+            </Badge>
+          )}
           <BlogPostSEOHelper />
         </div>
-        <Button
-          variant="outline"
-          onClick={() => router.push('/blog-posts')}
-          className="border-gray-300"
-        >
-          Cancel
-        </Button>
+        <div className="flex gap-2">
+          {mode === 'edit' && (
+            <Button
+              variant="outline"
+              onClick={handleTogglePin}
+              className={`border-gray-300 bg-fuchsia-500 ${formData.pinned ? 'bg-blue-100 hover:bg-blue-200' : ''}`}
+            >
+              {formData.pinned ? 'Unpin' : 'Pin'}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => router.push('/blog-posts')}
+            className="border-gray-300"
+          >
+            Cancel
+          </Button>
+        </div>
       </div>
 
       <form onSubmit={handleFormSubmit} className="space-y-8 bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-700 dark:shadow-[0_0_15px_rgba(59,130,246,0.07)]">
