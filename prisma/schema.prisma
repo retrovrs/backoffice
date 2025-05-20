@@ -104,7 +104,8 @@ model SeoCategory {
   name        String    @unique
   url         String?
   color       String?
-  description String?
+  shortDescription String?
+  longDescription String?
   posts       SeoPost[]
 
   @@schema("backoffice")

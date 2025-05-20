@@ -35,7 +35,7 @@ const CategoryItem = memo(({
   isSelected, 
   onSelect 
 }: { 
-  category: { id: number; name: string; description: string | null }
+  category: { id: number; name: string; shortDescription: string | null }
   isSelected: boolean
   onSelect: () => void
 }) => {
@@ -52,9 +52,9 @@ const CategoryItem = memo(({
         <Label htmlFor={`category-${category.id}`} className="font-medium">
           {category.name}
         </Label>
-        {category.description && (
+        {category.shortDescription && (
           <p className="text-sm text-gray-500">
-            {category.description}
+            {category.shortDescription}
           </p>
         )}
       </div>
@@ -71,7 +71,7 @@ const CategorySelector = memo(({
   selectedCategory: string,
   onCategoryChange: (category: string) => void
 }) => {
-  const [categories, setCategories] = useState<{ id: number; name: string; description: string | null }[]>([])
+  const [categories, setCategories] = useState<{ id: number; name: string; shortDescription: string | null }[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [manualCategory, setManualCategory] = useState('')
   

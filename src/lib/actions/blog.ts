@@ -503,7 +503,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             update: {},
             create: {
                 name: formData.category,
-                description: `Category for ${formData.category} posts`,
+                shortDescription: `Category for ${formData.category} posts`,
             },
         })
 
@@ -725,7 +725,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             update: {},
             create: {
                 name: formData.category,
-                description: `Category for ${formData.category} posts`,
+                shortDescription: `Category for ${formData.category} posts`,
             },
         })
 
