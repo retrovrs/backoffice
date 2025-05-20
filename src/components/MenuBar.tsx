@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useSession } from '@/lib/auth-client'
+import { useSession, signOut } from '@/lib/auth-client'
 import { useUserRole } from '@/hooks/useUserRole'
 import {
   Menubar,
@@ -22,6 +22,11 @@ export function MenuBar() {
   const canCreatePost = isAdmin || isEditor
   const sessionData = data?.session
   const router = useRouter()
+
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   // Ne pas rendre le menu si l'utilisateur n'est pas connecté
   if (!isAuthenticated) {
@@ -45,6 +50,8 @@ export function MenuBar() {
             <MenubarItem onClick={() => router.push('/')}>Dashboard</MenubarItem>
             <MenubarSeparator />
             <MenubarItem>My Profil</MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={handleLogout}>Log out</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
