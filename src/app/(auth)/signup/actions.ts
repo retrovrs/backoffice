@@ -4,11 +4,14 @@ import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { hash } from 'bcrypt'
 
-// Schéma de validation pour le formulaire d'inscription
+// Schema for signup form validation
 const signupSchema = z.object({
-    name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
-    email: z.string().email({ message: 'Email invalide' }),
-    password: z.string().min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères' })
+    name: z.string().min(2, { message: 'Name must contain at least 2 characters' }),
+    email: z.string().email({ message: 'Invalid email address' }),
+    password: z.string()
+        .min(8, { message: 'Password must contain at least 8 characters' })
+        .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+        .regex(/[0-9]/, { message: 'Password must contain at least one number' })
 })
 
 export type CheckEmailResponse = {
@@ -18,12 +21,11 @@ export type CheckEmailResponse = {
 
 export async function checkEmailInWhitelist(email: string): Promise<CheckEmailResponse> {
     try {
-        // Vérifier si l'email est dans la liste blanche
+        // Check if email is in whitelist
         const whitelisted = await prisma.userWhiteListed.findUnique({
             where: { email }
         })
 
-        console.log('whitelisted', whitelisted)
         if (!whitelisted) {
             return {
                 isWhitelisted: false,
@@ -60,63 +62,14 @@ export type SignupFormState = {
 }
 
 export async function validateSignupForm(prevState: SignupFormState, formData: FormData): Promise<SignupFormState> {
-    // Valider les données du formulaire
+    // Validate form data
     const validatedFields = signupSchema.safeParse({
         name: formData.get('name'),
         email: formData.get('email'),
         password: formData.get('password')
     })
 
-    // Si la validation échoue, retourner les erreurs
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            success: false
-        }
-    }
-
-    const { email } = validatedFields.data
-
-    try {
-        // Vérifier si l'email est dans la liste blanche
-        const whitelistCheck = await checkEmailInWhitelist(email)
-
-        console.log('whitelistCheck', whitelistCheck)
-        if (!whitelistCheck.isWhitelisted) {
-            return {
-                errors: {
-                    _form: [whitelistCheck.message || 'Email non autorisé']
-                },
-                success: false,
-                isWhitelisted: false
-            }
-        }
-
-        // Si tout est OK, retourner succès
-        return {
-            success: true,
-            isWhitelisted: true
-        }
-    } catch (error) {
-        console.error('Validation erreur:', error)
-        return {
-            errors: {
-                _form: ['An Error occurred. Please try again.']
-            },
-            success: false
-        }
-    }
-}
-
-export async function signUp(prevState: SignupFormState, formData: FormData): Promise<SignupFormState> {
-    // Valider les données du formulaire
-    const validatedFields = signupSchema.safeParse({
-        name: formData.get('name'),
-        email: formData.get('email'),
-        password: formData.get('password')
-    })
-
-    // Si la validation échoue, retourner les erreurs
+    // If validation fails, return errors
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
@@ -126,26 +79,21 @@ export async function signUp(prevState: SignupFormState, formData: FormData): Pr
 
     const { name, email, password } = validatedFields.data
 
-    console.log('name', name)
-    console.log('email', email)
-    console.log('password', password)
     try {
-        // Vérifier si l'email est dans la liste blanche
-        const whitelisted = await prisma.userWhiteListed.findUnique({
-            where: { email }
-        })
+        // Check if email is in whitelist
+        const whitelistCheck = await checkEmailInWhitelist(email)
 
-        console.log('whitelisted', whitelisted)
-        if (!whitelisted) {
+        if (!whitelistCheck.isWhitelisted) {
             return {
                 errors: {
-                    _form: ['You are not authorized to use this application. Please contact an administrator.']
+                    _form: [whitelistCheck.message || 'Email not authorized']
                 },
-                success: false
+                success: false,
+                isWhitelisted: false
             }
         }
 
-        // Tout est OK, renvoyer les données validées pour que le client puisse appeler better-auth
+        // All good, return validated data
         return {
             success: true,
             isWhitelisted: true,
@@ -156,12 +104,17 @@ export async function signUp(prevState: SignupFormState, formData: FormData): Pr
             }
         }
     } catch (error) {
-        console.error('Signup error:', error)
+        console.error('Validation error:', error)
         return {
             errors: {
-                _form: ['An Error occurred. Please try again.']
+                _form: ['An error occurred. Please try again.']
             },
             success: false
         }
     }
+}
+
+// For backward compatibility - can be removed if not used elsewhere
+export async function signUp(prevState: SignupFormState, formData: FormData): Promise<SignupFormState> {
+    return validateSignupForm(prevState, formData)
 } 

@@ -35,9 +35,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [registered, setRegistered] = useState(false)
 
-  // Appeler better-auth quand les données sont validées côté serveur
+  // Call auth client when server-side validation is successful
   useEffect(() => {
-    const handleBetterAuthSignup = async () => {
+    const handleSignup = async () => {
       if (state.success && state.isWhitelisted && state.validatedData && !registered) {
         const { name, email, password } = state.validatedData
 
@@ -54,28 +54,28 @@ export default function SignupPage() {
                 setLoading(false)
               },
               onError: (ctx) => {
-                toast.error(ctx.error.message || 'Error during Signup')
+                toast.error(ctx.error.message || 'Error during signup')
                 setLoading(false)
               },
               onSuccess: () => {
                 setRegistered(true)
-                toast.success('Your account has been created successfully')
+                toast.success('Your account has been successfully created!')
                 setLoading(false)
               }
             }
           })
         } catch (error) {
-          console.error('Error during Signup:', error)
+          console.error('Error during signup:', error)
           toast.error('An error occurred during the registration process')
           setLoading(false)
         }
       }
     }
 
-    handleBetterAuthSignup()
+    handleSignup()
   }, [state, registered])
 
-  // Rediriger vers la page d'accueil après inscription réussie
+  // Redirect to home page after successful registration
   useEffect(() => {
     if (registered) {
       const timer = setTimeout(() => {
@@ -108,7 +108,7 @@ export default function SignupPage() {
           <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
             <CheckCircledIcon className="h-4 w-4 text-green-600" />
             <AlertDescription>
-              Account created successfully ! You will be redirected to the home page.
+              Account created successfully! You will be redirected to the home page.
             </AlertDescription>
           </Alert>
         )}
@@ -140,7 +140,7 @@ export default function SignupPage() {
               name="email"
               type="email"
               required
-              placeholder="votre@email.com"
+              placeholder="your@email.com"
               className={`w-full ${state.errors?.email ? 'border-destructive' : ''}`}
               disabled={loading || registered}
             />
@@ -151,7 +151,7 @@ export default function SignupPage() {
 
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium">
-              Mot de passe
+              Password
             </label>
             <Input
               id="password"
@@ -165,6 +165,11 @@ export default function SignupPage() {
             {state.errors?.password && (
               <p className="text-sm text-destructive">{state.errors.password[0]}</p>
             )}
+            {!state.errors?.password && (
+              <p className="text-xs text-muted-foreground">
+                Must be at least 8 characters with one uppercase letter and one number
+              </p>
+            )}
           </div>
 
           <Button
@@ -172,17 +177,17 @@ export default function SignupPage() {
             className="w-full"
             disabled={loading || registered}
           >
-            {loading ? 'Registration in progress...' : (registered ? 'Registered !' : 'Sign up')}
+            {loading ? 'Registration in progress...' : (registered ? 'Registered!' : 'Sign up')}
           </Button>
         </form>
 
         <div className="mt-6 text-center text-sm">
-          You already have an account ?{' '}
+          Already have an account?{' '}
           <a
             href="/signin"
             className="text-primary font-medium hover:underline"
           >
-            Login
+            Sign in
           </a>
         </div>
       </div>
