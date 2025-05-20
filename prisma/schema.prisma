@@ -102,6 +102,8 @@ model Account {
 model SeoCategory {
   id          Int       @id @default(autoincrement())
   name        String    @unique
+  url         String?
+  color       String?
   description String?
   posts       SeoPost[]
 
