@@ -53,7 +53,7 @@ export function MenuBar() {
             <MenubarItem onClick={() => router.push('/blog-posts')}>Blog Posts</MenubarItem>
             {canCreatePost && (
               <MenubarItem onClick={() => router.push('/blog-posts/new')}>
-                Nouvel article
+                New Blog Post
               </MenubarItem>
             )}
           </MenubarContent>
