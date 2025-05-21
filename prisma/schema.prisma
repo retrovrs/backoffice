@@ -105,6 +105,8 @@ model SeoCategory {
   color       String?
   shortDescription String?
   longDescription String?
+  textCTA     String?
+  linkCTA     String?
   posts       SeoPost[]
 
   @@schema("backoffice")
