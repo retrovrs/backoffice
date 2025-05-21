@@ -20,6 +20,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import { getCategories } from '@/lib/actions/category'
 import { BlogPostFormValues } from '@/types/blog'
+import { generateSlug as utilsGenerateSlug } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -247,12 +248,9 @@ export default function BlogPostForm({
   
   const [parsedTags, setParsedTags] = useState<string[]>(initialTagsArray)
   
-  // Définition de generateSlug avant son utilisation
+  // Utilisation de la fonction externalisée avec useCallback pour la mémorisation
   const generateSlug = useCallback((title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-')
+    return utilsGenerateSlug(title)
   }, [])
   
   // Détermine si on doit générer automatiquement le slug:

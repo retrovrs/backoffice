@@ -15,3 +15,14 @@ export function formatDate(dateString: string): string {
   }
   return new Date(dateString).toLocaleDateString('en-US', options)
 }
+
+/**
+ * Génère un slug à partir d'un titre
+ * Convertit en minuscules, retire les caractères spéciaux et remplace les espaces par des tirets
+ */
+export function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '')
+    .replace(/\s+/g, '-')
+}
