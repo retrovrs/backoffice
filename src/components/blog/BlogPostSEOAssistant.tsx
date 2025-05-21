@@ -157,7 +157,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
           const tagText = tag.trim();
           if (!tagText) return '';
           const tagSlug = tagText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-');
-          return `<li><a href="/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">${tagText}</a></li>`;
+          return `<li><a href="/blog/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">${tagText}</a></li>`;
         }).join('\n          ')}
       </ul>
     </section>` : ''}
@@ -335,7 +335,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                     return (
                       <li key={index}>
                         <a 
-                          href={`/tags/${tagSlug}`} 
+                          href={`/blog/tags/${tagSlug}`} 
                           rel="tag"
                           className="inline-block bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full border border-gray-300 transition-colors"
                         >

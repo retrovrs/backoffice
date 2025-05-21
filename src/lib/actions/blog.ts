@@ -373,7 +373,7 @@ function generateTagsHTML(tags: string | string[]): string {
     const tagsList = tagsArray
         .map((tag: string) => {
             const tagSlug = tag.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
-            return `    <li><a href="/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">
+            return `    <li><a href="/blog/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">
   ${tag}
   <style>
     @media (prefers-color-scheme: dark) {
