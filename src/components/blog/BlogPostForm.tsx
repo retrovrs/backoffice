@@ -232,9 +232,6 @@ export default function BlogPostForm({
     // Tags
     tags: initialData.tags || ''
   })
-  const [shouldAutoUpdateSlug, setShouldAutoUpdateSlug] = useState(mode === 'create')
-  const [isSEODialogOpen, setIsSEODialogOpen] = useState(false)
-  const [currentTag, setCurrentTag] = useState('')
   
   // Initialisons correctement les tags à partir des données initiales
   let initialTagsArray: string[] = [];
@@ -249,6 +246,25 @@ export default function BlogPostForm({
   }
   
   const [parsedTags, setParsedTags] = useState<string[]>(initialTagsArray)
+  
+  // Définition de generateSlug avant son utilisation
+  const generateSlug = useCallback((title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-')
+  }, [])
+  
+  // Détermine si on doit générer automatiquement le slug:
+  // En mode création: toujours activé par défaut
+  // En mode édition: activé si le slug est vide ou identique au slug généré à partir du titre
+  const initialAutoUpdateSlug = mode === 'create' || 
+    !initialData.slug || 
+    initialData.slug === generateSlug(initialData.title || '');
+  
+  const [shouldAutoUpdateSlug, setShouldAutoUpdateSlug] = useState(initialAutoUpdateSlug)
+  const [isSEODialogOpen, setIsSEODialogOpen] = useState(false)
+  const [currentTag, setCurrentTag] = useState('')
   
   // Synchroniser parsedTags avec formData.tags
   useEffect(() => {
@@ -271,13 +287,6 @@ export default function BlogPostForm({
   //     )
   //   }
   // }, [formData.tags])
-
-  const generateSlug = useCallback((title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-')
-  }, [])
 
   // Auto-update slug based on title if enabled
   useEffect(() => {

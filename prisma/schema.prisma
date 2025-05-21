@@ -10,38 +10,61 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
   //directUrl = env("DIRECT_URL")
-  schemas   = ["backoffice", "public"]
+  schemas  = ["backoffice", "public"]
 }
 
 model SeoPost {
-  id                Int         @id @default(autoincrement())
-  title             String
-  mainImageUrl      String?
-  mainImageAlt      String?
-  mainImageCaption  String?
-  metaDescription   String
-  metaKeywords      String[]
-  content           String
-  slug              String      @unique
-  excerpt           String?
-  status            PostStatus  @default(DRAFT)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  author            String
-  authorLink        String?
-  viewsCount        Int         @default(0)
-  estimatedReadTime Int?
-  generatedHtml     String?
+  id                   Int          @id @default(autoincrement())
+  title                String
+  mainImageUrl         String?
+  mainImageAlt         String?
+  mainImageCaption     String?
+  metaDescription      String
+  metaKeywords         String[]
+  content              String
+  slug                 String       @unique
+  excerpt              String?
+  status               PostStatus   @default(DRAFT)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  author               String
+  authorLink           String?
+  viewsCount           Int          @default(0)
+  estimatedReadTime    Int?
+  generatedHtml        String?
   generatedArticleHtml String?
-  tags              String?
-  jsonLd            String?
-  pinned            Boolean     @default(false)
-  category          SeoCategory @relation(fields: [categoryId], references: [id])
-  categoryId        Int
+  jsonLd               String?
+  pinned               Boolean      @default(false)
+  category             SeoCategory  @relation(fields: [categoryId], references: [id])
+  categoryId           Int
+  tags                 SeoPostTag[]
 
+  @@schema("backoffice")
+}
+
+model SeoTag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  slug        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  posts       SeoPostTag[]
+
+  @@schema("backoffice")
+}
+
+model SeoPostTag {
+  post      SeoPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  tag       SeoTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     Int
+  createdAt DateTime @default(now())
+
+  @@id([postId, tagId])
   @@schema("backoffice")
 }
 
@@ -99,15 +122,15 @@ model Account {
 }
 
 model SeoCategory {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  url         String?
-  color       String?
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  url              String?
+  color            String?
   shortDescription String?
-  longDescription String?
-  textCTA     String?
-  linkCTA     String?
-  posts       SeoPost[]
+  longDescription  String?
+  textCTA          String?
+  linkCTA          String?
+  posts            SeoPost[]
 
   @@schema("backoffice")
 }
