@@ -593,7 +593,6 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             categoryId: category.id,
             author: formData.author,
             authorLink: formData.authorLink,
-            tags: formData.tags
         }
 
         console.log('Prepared post data:', postData)
@@ -603,11 +602,39 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             data: postData
         })
 
+        // Si nous avons des tags, les ajouter via la relation
+        if (parsedTags.length > 0) {
+            // Créer ou connecter chaque tag pour ce post
+            await Promise.all(parsedTags.map(async (tagName) => {
+                // D'abord créer ou récupérer le tag
+                const tag = await prisma.seoTag.upsert({
+                    where: { name: tagName },
+                    update: {},
+                    create: {
+                        name: tagName,
+                        slug: tagName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+                    }
+                });
+
+                // Ensuite créer la relation
+                await prisma.seoPostTag.create({
+                    data: {
+                        postId: post.id,
+                        tagId: tag.id
+                    }
+                });
+            }));
+
+            // Stocker également la liste des tags sous forme de chaîne dans la table SeoPost
+            const tagsString = parsedTags.join(',');
+            await prisma.$executeRaw`UPDATE "backoffice"."SeoPost" SET "tags" = ${tagsString} WHERE "id" = ${post.id}`;
+        }
+
         console.log('Post created successfully:', post.id)
 
         revalidatePath('/blog-posts')
 
-        return { success: true, post }
+        return { success: true, post, postId: post.id }
     } catch (error) {
         console.error('Failed to create blog post:', error)
         if (error instanceof Error) {
@@ -816,7 +843,6 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             },
             author: formData.author,
             authorLink: formData.authorLink,
-            tags: formData.tags
         }
 
         // Update the post
@@ -825,10 +851,78 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             data: postData
         })
 
+        // Mettre à jour les tags séparément
+        // Récupérer d'abord tous les tags existants pour ce post
+        const existingPostTags = await prisma.seoPostTag.findMany({
+            where: {
+                postId: id
+            },
+            include: {
+                tag: true
+            }
+        });
+
+        // Extraire les noms des tags existants
+        const existingTagNames = existingPostTags.map(pt => pt.tag.name);
+
+        // Identifier les tags à ajouter (tags présents dans parsedTags mais pas dans existingTagNames)
+        const tagsToAdd = parsedTags.filter(tagName => !existingTagNames.includes(tagName));
+
+        // Identifier les tags à supprimer (tags présents dans existingTagNames mais pas dans parsedTags)
+        const tagsToRemove = existingPostTags.filter(pt => !parsedTags.includes(pt.tag.name));
+
+        // Ajouter les nouveaux tags
+        if (tagsToAdd.length > 0) {
+            await Promise.all(tagsToAdd.map(async (tagName) => {
+                // D'abord créer ou récupérer le tag
+                const tag = await prisma.seoTag.upsert({
+                    where: { name: tagName },
+                    update: {},
+                    create: {
+                        name: tagName,
+                        slug: tagName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+                    }
+                });
+
+                // Ensuite créer la relation
+                await prisma.seoPostTag.create({
+                    data: {
+                        postId: id,
+                        tagId: tag.id
+                    }
+                });
+            }));
+        }
+
+        // Supprimer les relations pour les tags qui ne sont plus présents
+        if (tagsToRemove.length > 0) {
+            await Promise.all(tagsToRemove.map(async (postTag) => {
+                await prisma.seoPostTag.delete({
+                    where: {
+                        postId_tagId: {
+                            postId: id,
+                            tagId: postTag.tag.id
+                        }
+                    }
+                });
+            }));
+        }
+
+        // Mettre à jour le champ tags dans le post lui-même pour la compatibilité
+        // Le schéma Prisma indique que tags est une relation, mais il semble y avoir 
+        // un besoin de stocker la liste des tags sous forme de chaîne également.
+        // Nous pouvons utiliser la méthode executeRaw pour mettre à jour ce champ directement.
+
+        // Convertir la liste de tags en chaîne
+        const tagsString = parsedTags.join(',');
+
+        // Mettre à jour le champ tags dans la table SeoPost
+        await prisma.$executeRaw`UPDATE "backoffice"."SeoPost" SET "tags" = ${tagsString} WHERE "id" = ${id}`;
+
         console.log('Article mis à jour avec succès:', post.id);
         revalidatePath('/blog-posts')
 
-        return { success: true, post }
+        return { success: true, post, postId: post.id }
     } catch (error) {
         console.error('Error when updating the article:', error)
         if (error instanceof Error) {

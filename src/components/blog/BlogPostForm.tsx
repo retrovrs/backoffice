@@ -29,6 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { createOrUpdateSeoTags, getSeoTagsByPostId } from '@/lib/actions/seo-tags'
 
 // Composant individuel pour un élément de catégorie
 const CategoryItem = memo(({ 
@@ -167,7 +168,7 @@ CategorySelector.displayName = 'CategorySelector'
 
 interface BlogPostFormProps {
   initialData?: Partial<BlogPostFormValues> & { id?: number }
-  onSubmit: (formData: BlogPostFormValues) => Promise<void>
+  onSubmit: (formData: BlogPostFormValues) => Promise<{ success: boolean; postId?: number } | void>
   isSubmitting: boolean
   mode: 'create' | 'edit'
 }
@@ -277,14 +278,31 @@ export default function BlogPostForm({
     console.log('Tags updated:', parsedTags)
   }, [parsedTags])
   
-  // Ce useEffect n'est plus nécessaire car nous initialisons directement les tags à partir des données initiales
-  // useEffect(() => {
-  //   if (formData.tags && !parsedTags.length) {
-  //     setParsedTags(
-  //       formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-  //     )
-  //   }
-  // }, [formData.tags])
+  // Ajoutés pour la gestion des tags SEO
+  const [isSyncingTags, setIsSyncingTags] = useState(false)
+  
+  // Ajoutons un useEffect pour charger les tags SEO en mode édition
+  useEffect(() => {
+    if (mode === 'edit' && initialData.id) {
+      const loadSeoTags = async () => {
+        try {
+          const result = await getSeoTagsByPostId(initialData.id as number);
+          if (result.success && result.tags.length > 0) {
+            // Si on a déjà chargé des tags depuis le champ tags, on conserve ceux-là
+            // Sinon on utilise les tags SEO
+            if (!parsedTags.length) {
+              console.log('Chargement des tags SEO:', result.tags);
+              setParsedTags(result.tags);
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des tags SEO:', error);
+        }
+      };
+      
+      loadSeoTags();
+    }
+  }, [mode, initialData.id, parsedTags.length]);
 
   // Auto-update slug based on title if enabled
   useEffect(() => {
@@ -447,8 +465,8 @@ export default function BlogPostForm({
     // Validate category first
     if (!formData.category) {
       toast({
-        title: "Error",
-        description: "Please select a category",
+        title: "Erreur",
+        description: "Veuillez sélectionner une catégorie",
         variant: "destructive"
       });
       return;
@@ -484,25 +502,70 @@ export default function BlogPostForm({
               : "Absent"
           });
           
-          // Soumettre directement avec les données mises à jour
-          await onSubmit(updatedFormData);
+          // Soumettre le formulaire
+          const result = await onSubmit(updatedFormData);
+          
+          // Si nous avons un ID de post (création ou édition réussie)
+          // Le postId peut venir du résultat ou de initialData.id en mode édition
+          const postId = result && 'postId' in result ? result.postId : (mode === 'edit' ? initialData.id : undefined);
+          
+          if (postId) {
+            // Synchroniser les tags SEO
+            setIsSyncingTags(true);
+            try {
+              const tagNames = parsedTags.map(tag => tag.trim());
+              await createOrUpdateSeoTags(postId, tagNames);
+            } catch (error) {
+              console.error('Erreur lors de la synchronisation des tags SEO:', error);
+              toast({
+                title: "Avertissement",
+                description: "L'article a été enregistré mais il y a eu un problème avec les tags SEO",
+                variant: "default"
+              });
+            } finally {
+              setIsSyncingTags(false);
+            }
+          }
+          
           return;
         }
       }
       
       // Fallback si la synchronisation ne fonctionne pas
       console.log("Soumission avec données non synchronisées (fallback)");
-      await onSubmit(formData);
+      const result = await onSubmit(formData);
+      
+      // Si nous avons un ID de post (création ou édition réussie)
+      // Le postId peut venir du résultat ou de initialData.id en mode édition
+      const postId = result && 'postId' in result ? result.postId : (mode === 'edit' ? initialData.id : undefined);
+      
+      if (postId) {
+        // Synchroniser les tags SEO
+        setIsSyncingTags(true);
+        try {
+          const tagNames = parsedTags.map(tag => tag.trim());
+          await createOrUpdateSeoTags(postId, tagNames);
+        } catch (error) {
+          console.error('Erreur lors de la synchronisation des tags SEO:', error);
+          toast({
+            title: "Avertissement",
+            description: "L'article a été enregistré mais il y a eu un problème avec les tags SEO",
+            variant: "default"
+          });
+        } finally {
+          setIsSyncingTags(false);
+        }
+      }
       
     } catch (error) {
-      console.error('Error when submitting the form:', error);
+      console.error('Erreur lors de la soumission du formulaire:', error);
       toast({
-        title: "Error",
-        description: "An error occurred when submitting the form",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la soumission du formulaire",
         variant: "destructive"
       });
     }
-  }, [formData, onSubmit, toast, generateRawContentFromSections]);
+  }, [formData, onSubmit, toast, generateRawContentFromSections, parsedTags, mode, initialData.id]);
 
   // Gestionnaire d'ouverture de l'assistant SEO
   const handleOpenSEOAssistant = useCallback(() => {
@@ -559,12 +622,34 @@ export default function BlogPostForm({
       setTimeout(async () => {
         try {
           console.log("Soumission du formulaire pour publication:", updatedFormData);
-          await onSubmit(updatedFormData);
+          const result = await onSubmit(updatedFormData);
+          
+          // Si nous avons un ID de post (création ou édition réussie)
+          // Le postId peut venir du résultat ou de initialData.id en mode édition
+          const postId = result && 'postId' in result ? result.postId : (mode === 'edit' ? initialData.id : undefined);
+          
+          if (postId) {
+            // Synchroniser les tags SEO
+            setIsSyncingTags(true);
+            try {
+              const tagNames = parsedTags.map(tag => tag.trim());
+              await createOrUpdateSeoTags(postId, tagNames);
+            } catch (error) {
+              console.error('Erreur lors de la synchronisation des tags SEO:', error);
+              toast({
+                title: "Avertissement",
+                description: "L'article a été publié mais il y a eu un problème avec les tags SEO",
+                variant: "default"
+              });
+            } finally {
+              setIsSyncingTags(false);
+            }
+          }
         } catch (error) {
-          console.error('Error when publishing the article:', error);
+          console.error('Erreur lors de la publication de l\'article:', error);
           toast({
-            title: "Error",
-            description: "An error occurred when publishing the article",
+            title: "Erreur",
+            description: "Une erreur est survenue lors de la publication de l'article",
             variant: "destructive"
           });
         }
@@ -572,7 +657,7 @@ export default function BlogPostForm({
       
       return updatedFormData;
     });
-  }, [onSubmit, generateRawContentFromSections, toast]);
+  }, [onSubmit, generateRawContentFromSections, toast, parsedTags, mode, initialData.id]);
 
   // Fonction pour gérer le clic sur le bouton Dépublier
   const handleUnpublish = useCallback(async () => {
@@ -601,19 +686,41 @@ export default function BlogPostForm({
           }
         }
       } catch (error) {
-        console.error('Error when synchronizing the content for unpublishing:', error);
+        console.error('Erreur lors de la synchronisation du contenu pour dépublication:', error);
       }
       
       // Soumettre les données mises à jour à la base de données
       setTimeout(async () => {
         try {
-          console.log("Submission of the form for unpublishing:", updatedFormData);
-          await onSubmit(updatedFormData);
+          console.log("Soumission du formulaire pour dépublication:", updatedFormData);
+          const result = await onSubmit(updatedFormData);
+          
+          // Si nous avons un ID de post (création ou édition réussie)
+          // Le postId peut venir du résultat ou de initialData.id en mode édition
+          const postId = result && 'postId' in result ? result.postId : (mode === 'edit' ? initialData.id : undefined);
+          
+          if (postId) {
+            // Synchroniser les tags SEO
+            setIsSyncingTags(true);
+            try {
+              const tagNames = parsedTags.map(tag => tag.trim());
+              await createOrUpdateSeoTags(postId, tagNames);
+            } catch (error) {
+              console.error('Erreur lors de la synchronisation des tags SEO:', error);
+              toast({
+                title: "Avertissement",
+                description: "L'article a été dépublié mais il y a eu un problème avec les tags SEO",
+                variant: "default"
+              });
+            } finally {
+              setIsSyncingTags(false);
+            }
+          }
         } catch (error) {
-          console.error('Error when unpublishing the article:', error);
+          console.error('Erreur lors de la dépublication de l\'article:', error);
           toast({
-            title: "Error",
-            description: "An error occurred when unpublishing the article",
+            title: "Erreur",
+            description: "Une erreur est survenue lors de la dépublication de l'article",
             variant: "destructive"
           });
         }
@@ -621,7 +728,7 @@ export default function BlogPostForm({
       
       return updatedFormData;
     });
-  }, [onSubmit, generateRawContentFromSections, toast]);
+  }, [onSubmit, generateRawContentFromSections, toast, parsedTags, mode, initialData.id]);
 
   const handleTagKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -1119,19 +1226,19 @@ export default function BlogPostForm({
             type="button"
             variant="outline"
             onClick={() => router.push('/blog-posts')}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSyncingTags}
             className="dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700"
           >
-            Cancel
+            Annuler
           </Button>
           {mode === 'edit' && formData.status === 'draft' && (
             <Button 
               type="button" 
               className="bg-green-600 hover:bg-green-700 transition-colors dark:bg-green-700 dark:hover:bg-green-800 dark:text-white"
               onClick={handlePublish}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSyncingTags}
             >
-              Publish
+              Publier
             </Button>
           )}
           {mode === 'edit' && formData.status === 'published' && (
@@ -1139,17 +1246,17 @@ export default function BlogPostForm({
               type="button" 
               className="bg-amber-600 hover:bg-amber-700 transition-colors dark:bg-amber-700 dark:hover:bg-amber-800 dark:text-white"
               onClick={handleUnpublish}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSyncingTags}
             >
-              Unpublish
+              Dépublier
             </Button>
           )}
           <Button 
             type="submit" 
             className="bg-indigo-600 hover:bg-indigo-700 transition-colors dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:text-white"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSyncingTags}
           >
-            {submitButtonText}
+            {isSubmitting || isSyncingTags ? 'Enregistrement...' : submitButtonText}
           </Button>
         </div>
       </form>
