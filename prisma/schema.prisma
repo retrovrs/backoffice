@@ -27,7 +27,6 @@ model SeoPost {
   content           String
   slug              String      @unique
   excerpt           String?
-  published         Boolean     @default(false)
   status            PostStatus  @default(DRAFT)
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt

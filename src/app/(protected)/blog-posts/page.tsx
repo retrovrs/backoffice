@@ -42,7 +42,6 @@ interface BlogPost {
   createdAt: string
   updatedAt: string
   status: 'DRAFT' | 'PUBLISHED'
-  published: boolean
   pinned: boolean
   generatedHtml?: string
   category?: {

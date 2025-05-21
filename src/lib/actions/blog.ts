@@ -590,7 +590,6 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             generatedArticleHtml, // Uniquement la partie <article>
             jsonLd, // JSON-LD généré
             status, // Use the enum value
-            published: formData.status === 'published',
             categoryId: category.id,
             author: formData.author,
             authorLink: formData.authorLink,
@@ -812,7 +811,6 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             generatedArticleHtml, // Uniquement la partie <article>
             jsonLd, // JSON-LD généré
             status,
-            published: formData.status === 'published',
             category: {
                 connect: { id: category.id }
             },
