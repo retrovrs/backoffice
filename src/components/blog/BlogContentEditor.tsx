@@ -275,9 +275,9 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
       const sectionContent = section.elements.map(element => {
         switch (element.type) {
           case 'h2':
-            return `  <h2>${element.content}</h2>`
+            return `  <br/><h2>${element.content}</h2>`
           case 'h3':
-            return `  <h3>${element.content}</h3>`
+            return `  <br/><h3>${element.content}</h3>`
           case 'paragraph':
             return `  <p>${element.content}</p>`
           case 'list':

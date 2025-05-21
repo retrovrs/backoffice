@@ -141,8 +141,8 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     
     <!-- Article content -->
     ${(formData.content || 'Article content...')
-      .replace(/<h2>/g, '<h2 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
-      .replace(/<h3>/g, '<h3 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
+      .replace(/<h2>/g, '<br/><h2 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem;">')
+      .replace(/<h3>/g, '<br/><h3 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 1.5rem;">')
       .replace(/<p>/g, '<p style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
       .replace(/<ul>/g, '<ul style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
       .replace(/<ol>/g, '<ol style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
@@ -310,8 +310,8 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                     className="blog-content"
                     dangerouslySetInnerHTML={{
                       __html: formData.content
-                        .replace(/<h2>/g, '<h2 class="text-2xl font-bold text-gray-900 mb-4" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
-                        .replace(/<h3>/g, '<h3 class="text-xl font-bold text-gray-900 mb-3" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px;">')
+                        .replace(/<h2>/g, '<br/><br/><h2 class="text-2xl font-bold text-gray-900 mb-4" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem;">')
+                        .replace(/<h3>/g, '<br/><br/><h3 class="text-xl font-bold text-gray-900 mb-3" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 1.5rem;">')
                         .replace(/<p>/g, '<p class="mb-4 text-gray-700" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
                         .replace(/<strong>/g, '<strong class="font-bold text-gray-900">')
                         .replace(/<a /g, '<a class="text-blue-600 hover:underline font-medium" ')
