@@ -657,13 +657,22 @@ export async function getBlogPost(id: number) {
         const post = await prisma.seoPost.findUnique({
             where: { id },
             include: {
-                category: true
+                category: true,
+                tags: {
+                    include: {
+                        tag: true
+                    }
+                }
             }
         })
 
         if (!post) {
             return { error: 'Article not found' }
         }
+
+        // Récupérer les noms des tags et les joindre en une chaîne
+        const tagNames = post.tags.map(postTag => postTag.tag.name);
+        const tagsString = tagNames.join(',');
 
         // Décoder le contenu structuré s'il existe
         const { rawContent, structuredContent } = decodeStructuredContent(post.content)
@@ -698,7 +707,9 @@ export async function getBlogPost(id: number) {
                 // On transmet également le HTML généré stocké
                 generatedHtml: post.generatedHtml || rawContent,
                 // On transmet également le HTML de l'article uniquement
-                generatedArticleHtml: post.generatedArticleHtml || extractArticleContent(post.generatedHtml || rawContent)
+                generatedArticleHtml: post.generatedArticleHtml || extractArticleContent(post.generatedHtml || rawContent),
+                // On ajoute la chaîne de tags
+                tags: tagsString
             }
         }
     } catch (error) {
