@@ -31,7 +31,7 @@ export default function BlogPostsLayout({
       {isAdmin && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-md">
           <p className="text-amber-800 font-medium">
-            Cette section est accessible aux administrateurs et aux éditeurs
+            This section is accessible to administrators and editors
           </p>
         </div>
       )}
