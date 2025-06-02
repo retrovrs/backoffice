@@ -395,7 +395,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
         <header>
             <h1>${title}</h1>
             <div class="article-meta">
-                ${authorName ? `<span class="author">Par ${authorName}</span>` : ''}
+                ${authorName ? `<span class="author">By ${authorName}</span>` : ''}
             </div>
             ${mainImageUrl ? 
                 `<figure class="main-image">
