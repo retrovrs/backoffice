@@ -215,7 +215,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
             <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>
             <div class="article-meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">Par ${authorName}</span>` : ''}
+                    ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">By ${authorName}</span>` : ''}
                     ${postData?.createdAt ? `<time datetime="${new Date(postData.createdAt).toISOString().split('T')[0]}" style="font-family: 'Poppins', sans-serif; opacity: 0.8; font-size: 0.9em;">${new Date(postData.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</time>` : ''}
                 </div>
                 ${postData?.category?.name ? (() => {
