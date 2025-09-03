@@ -142,7 +142,7 @@ export function RichTextEditor({
             'h-8 w-8 p-0',
             isBoldActive && 'bg-primary text-primary-foreground'
           )}
-          title="Gras (Ctrl+B)"
+          title="Bold (Ctrl+B)"
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -156,7 +156,7 @@ export function RichTextEditor({
             'h-8 w-8 p-0',
             isItalicActive && 'bg-primary text-primary-foreground'
           )}
-          title="Italique (Ctrl+I)"
+          title="Italic (Ctrl+I)"
         >
           <Italic className="h-4 w-4" />
         </Button>
