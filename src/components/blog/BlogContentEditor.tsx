@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import {
   Card,
   CardContent,
@@ -956,11 +957,14 @@ ${sectionsContent}
                   
                   {element.type === 'paragraph' && (
                     <div className="space-y-1">
-                      <Textarea 
-                        id={`paragraph-${element.id}`}
-                        defaultValue={element.content}
-                        placeholder="Paragraph content ..."
-                        className="min-h-[100px] border-pink-100 focus:border-pink-200 focus:ring-pink-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-slate-500 dark:focus:ring-slate-700/50 dark:placeholder-slate-400"
+                      <RichTextEditor
+                        initialValue={element.content}
+                        placeholder="Contenu du paragraphe..."
+                        onChange={(content) => {
+                          element.content = content
+                        }}
+                        className="border-pink-100 focus-within:border-pink-200 focus-within:ring-pink-100 dark:border-slate-600 dark:bg-slate-800 dark:focus-within:border-slate-500 dark:focus-within:ring-slate-700/50"
+                        minHeight="120px"
                       />
                     </div>
                   )}

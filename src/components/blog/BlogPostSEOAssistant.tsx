@@ -144,6 +144,8 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
       .replace(/<h2>/g, '<br/><h2 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem;">')
       .replace(/<h3>/g, '<br/><h3 style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 1.5rem;">')
       .replace(/<p>/g, '<p style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+      .replace(/<strong>/g, '<strong style="font-weight: bold;">')
+      .replace(/<em>/g, '<em style="font-style: italic;">')
       .replace(/<ul>/g, '<ul style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
       .replace(/<ol>/g, '<ol style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
       .replace(/<li>/g, '<li style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')}
@@ -314,6 +316,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                         .replace(/<h3>/g, '<br/><br/><h3 class="text-xl font-bold text-gray-900 mb-3" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 1.5rem;">')
                         .replace(/<p>/g, '<p class="mb-4 text-gray-700" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
                         .replace(/<strong>/g, '<strong class="font-bold text-gray-900">')
+                        .replace(/<em>/g, '<em class="italic">')
                         .replace(/<a /g, '<a class="text-blue-600 hover:underline font-medium" ')
                         .replace(/<ul>/g, '<ul class="list-disc pl-5 space-y-2 mb-6" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
                         .replace(/<ol>/g, '<ol class="list-decimal pl-5 space-y-2 mb-6" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
