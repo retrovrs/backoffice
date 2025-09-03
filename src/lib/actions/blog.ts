@@ -111,7 +111,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
     const description = postData?.metaDescription || postData?.excerpt || '';
     const authorName = postData?.author || '';
     const authorLink = postData?.authorLink || '';
-    const publishDate = postData?.publishDate || '';
+    const createdAt = postData?.createdAt || '';
     const mainImageUrl = postData?.mainImageUrl || '';
     const mainImageAlt = postData?.mainImageAlt || '';
     const mainImageCaption = postData?.mainImageCaption || '';
@@ -217,10 +217,10 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
             <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>
             <div class="article-meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">By ${authorLink
-            ? '<a href="' + authorLink + '" style="text-decoration: none; color: inherit;">' + authorName + '</a>'
+                                        ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">By ${authorLink
+            ? '<a href="' + authorLink + '" style="color: #8b5cf6; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px;">' + authorName + '</a>'
             : authorName}</span>` : ''}
-                    ${publishDate ? '<time datetime="' + publishDate + '" style="font-family: \'Poppins\', sans-serif; opacity: 0.8; font-size: 0.9em;">' + new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
+                    ${createdAt ? '<time datetime="' + new Date(createdAt).toISOString().split('T')[0] + '" style="font-family: \'Poppins\', sans-serif; opacity: 0.8; font-size: 0.9em;">' + new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
                 </div>
                 ${postData?.category?.name ? (() => {
             const categoryColors = getCategoryColor(postData.category.name);
@@ -551,7 +551,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             mainImageCaption: formData.mainImageCaption,
             author: formData.author,
             authorLink: formData.authorLink,
-            publishDate: formData.publishDate,
+            createdAt: new Date().toISOString(),
             introText: formData.introText,
             tags: formData.tags
         };
@@ -791,6 +791,11 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         // Set the proper status as an enum value
         const status: PostStatus = formData.status === 'published' ? PostStatus.PUBLISHED : PostStatus.DRAFT
 
+        // Récupérer l'article existant pour obtenir la date de création
+        const existingPost = await prisma.seoPost.findUnique({
+            where: { id }
+        });
+
         // Stocker uniquement le JSON structuré dans le champ content
         // Si structuredContent n'existe pas, on stocke le contenu brut comme fallback
         const content = formData.structuredContent
@@ -807,7 +812,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             mainImageCaption: formData.mainImageCaption,
             author: formData.author,
             authorLink: formData.authorLink,
-            publishDate: formData.publishDate,
+            createdAt: existingPost?.createdAt?.toISOString() || new Date().toISOString(),
             introText: formData.introText,
             tags: formData.tags
         };
@@ -819,11 +824,6 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
 
         // Extraire uniquement la partie <article> pour le champ generatedArticleHtml
         const generatedArticleHtml = extractArticleContent(generatedHtml);
-
-        // Récupérer l'article existant pour obtenir la date de création
-        const existingPost = await prisma.seoPost.findUnique({
-            where: { id }
-        });
 
         // Générer le JSON-LD pour les métadonnées structurées
         const jsonLdData = {

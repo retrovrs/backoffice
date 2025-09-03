@@ -317,7 +317,7 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     const description = postData.metaDescription || postData.excerpt || ''
     const authorName = postData.author || ''
     const authorLink = postData.authorLink || ''
-    const publishDate = postData.publishDate || ''
+    const createdAt = postData.createdAt || ''
     const mainImageUrl = postData.mainImageUrl || ''
     const mainImageAlt = postData.mainImageAlt || ''
     const mainImageCaption = postData.mainImageCaption || ''
@@ -383,11 +383,14 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
             margin-bottom: 2em;
         }
         .article-meta a {
-            color: inherit;
-            text-decoration: none;
+            color: #8b5cf6;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
         }
         .article-meta a:hover {
-            text-decoration: underline;
+            color: #7c3aed;
+            text-decoration-thickness: 2px;
         }
         .article-meta time {
             opacity: 0.8;
@@ -409,9 +412,9 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
             <div class="article-meta">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     ${authorName ? `<span class="author">By ${authorLink 
-                        ? '<a href="' + authorLink + '" style="text-decoration: none; color: inherit;">' + authorName + '</a>' 
+                        ? '<a href="' + authorLink + '" style="color: #8b5cf6; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px;">' + authorName + '</a>' 
                         : authorName}</span>` : ''}
-                    ${publishDate ? '<time datetime="' + publishDate + '" style="opacity: 0.8; font-size: 0.9em;">' + new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
+                    ${createdAt ? '<time datetime="' + new Date(createdAt).toISOString().split('T')[0] + '" style="opacity: 0.8; font-size: 0.9em;">' + new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
                 </div>
             </div>
             ${mainImageUrl ? 
