@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog'
 import { BlogPostSEOAssistantContent } from '@/components/blog/BlogPostSEOAssistant'
 import { BlogPostFormValues } from '@/types/blog'
+import { deleteBlogPost } from '@/lib/actions/blog'
 
 // Styles pour empêcher le déplacement de la page lors de l'ouverture de la modale
 const fixedStyles = {
@@ -59,6 +60,9 @@ export default function BlogPostsPage() {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewHtml, setPreviewHtml] = useState<string>('')
+  const [postToDelete, setPostToDelete] = useState<BlogPost | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeletingPost, setIsDeletingPost] = useState(false)
   const { toast } = useToast()
   const { isAdmin, isEditor } = useUserRole()
   const router = useRouter()
@@ -161,6 +165,53 @@ export default function BlogPostsPage() {
       
       fetchPostHtml()
     }
+  }
+
+  const handleDeleteClick = (post: BlogPost) => {
+    setPostToDelete(post)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!postToDelete) return
+    
+    setIsDeletingPost(true)
+    try {
+      const result = await deleteBlogPost(postToDelete.id)
+      
+      if (result.success) {
+        // Supprimer le post de la liste locale
+        setPosts(prevPosts => prevPosts.filter(post => post.id !== postToDelete.id))
+        
+        toast({
+          title: 'Success',
+          description: `Article "${postToDelete.title}" has been successfully deleted.`,
+          variant: 'default'
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to delete the article',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while deleting the article',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsDeletingPost(false)
+      setIsDeleteModalOpen(false)
+      setPostToDelete(null)
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false)
+    setPostToDelete(null)
   }
 
   if (isLoading) {
@@ -272,6 +323,7 @@ export default function BlogPostsPage() {
                           variant="outline" 
                           size="sm" 
                           className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors"
+                          onClick={() => handleDeleteClick(post)}
                         >
                           Delete
                         </Button>
@@ -309,6 +361,54 @@ export default function BlogPostsPage() {
             </DialogContent>
           </Dialog>
         )}
+
+        {/* Modale de confirmation de suppression */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="text-red-600 font-semibold">
+                Delete Article
+              </DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Are you sure you want to delete this article? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            {postToDelete && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="font-medium text-gray-900 mb-2">Article to delete:</h4>
+                <p className="text-sm text-gray-700 font-medium">{postToDelete.title}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  By {postToDelete.author} • {formatDate(postToDelete.createdAt)}
+                </p>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={handleDeleteCancel}
+                disabled={isDeletingPost}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteConfirm}
+                disabled={isDeletingPost}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeletingPost ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner size="sm" />
+                    Deleting...
+                  </div>
+                ) : (
+                  'Delete Article'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   )

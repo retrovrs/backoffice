@@ -947,4 +947,51 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         }
         return { error: 'Error when updating the article' }
     }
+}
+
+export async function deleteBlogPost(id: number) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        })
+
+        if (!session?.user) {
+            return { error: 'Not authenticated' }
+        }
+
+        // Vérifier si l'article existe
+        const existingPost = await prisma.seoPost.findUnique({
+            where: { id },
+            include: {
+                tags: true
+            }
+        })
+
+        if (!existingPost) {
+            return { error: 'Article not found' }
+        }
+
+        // Supprimer d'abord toutes les relations avec les tags
+        await prisma.seoPostTag.deleteMany({
+            where: {
+                postId: id
+            }
+        })
+
+        // Supprimer l'article
+        await prisma.seoPost.delete({
+            where: { id }
+        })
+
+        console.log('Article deleted successfully:', id)
+        revalidatePath('/blog-posts')
+
+        return { success: true, message: 'Article deleted successfully' }
+    } catch (error) {
+        console.error('Error when deleting the article:', error)
+        if (error instanceof Error) {
+            console.error('Error details:', error.message, error.stack)
+        }
+        return { error: 'Error when deleting the article' }
+    }
 } 
