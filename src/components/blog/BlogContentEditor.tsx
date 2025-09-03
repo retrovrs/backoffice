@@ -316,6 +316,8 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
     const title = postData.title || 'Article de blog'
     const description = postData.metaDescription || postData.excerpt || ''
     const authorName = postData.author || ''
+    const authorLink = postData.authorLink || ''
+    const publishDate = postData.publishDate || ''
     const mainImageUrl = postData.mainImageUrl || ''
     const mainImageAlt = postData.mainImageAlt || ''
     const mainImageCaption = postData.mainImageCaption || ''
@@ -380,6 +382,16 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
             color: #666;
             margin-bottom: 2em;
         }
+        .article-meta a {
+            color: inherit;
+            text-decoration: none;
+        }
+        .article-meta a:hover {
+            text-decoration: underline;
+        }
+        .article-meta time {
+            opacity: 0.8;
+        }
         .article-intro {
             font-size: 1.1em;
             line-height: 1.8;
@@ -395,7 +407,12 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
         <header>
             <h1>${title}</h1>
             <div class="article-meta">
-                ${authorName ? `<span class="author">By ${authorName}</span>` : ''}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    ${authorName ? `<span class="author">By ${authorLink 
+                        ? '<a href="' + authorLink + '" style="text-decoration: none; color: inherit;">' + authorName + '</a>' 
+                        : authorName}</span>` : ''}
+                    ${publishDate ? '<time datetime="' + publishDate + '" style="opacity: 0.8; font-size: 0.9em;">' + new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
+                </div>
             </div>
             ${mainImageUrl ? 
                 `<figure class="main-image">

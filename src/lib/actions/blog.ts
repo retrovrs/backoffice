@@ -110,6 +110,8 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
     const title = postData?.title || 'Article de blog';
     const description = postData?.metaDescription || postData?.excerpt || '';
     const authorName = postData?.author || '';
+    const authorLink = postData?.authorLink || '';
+    const publishDate = postData?.publishDate || '';
     const mainImageUrl = postData?.mainImageUrl || '';
     const mainImageAlt = postData?.mainImageAlt || '';
     const mainImageCaption = postData?.mainImageCaption || '';
@@ -215,8 +217,10 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
             <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>
             <div class="article-meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">By ${authorName}</span>` : ''}
-                    ${postData?.createdAt ? `<time datetime="${new Date(postData.createdAt).toISOString().split('T')[0]}" style="font-family: 'Poppins', sans-serif; opacity: 0.8; font-size: 0.9em;">${new Date(postData.createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</time>` : ''}
+                    ${authorName ? `<span class="author" style="font-family: 'Poppins', sans-serif; font-weight: 500;">By ${authorLink
+            ? '<a href="' + authorLink + '" style="text-decoration: none; color: inherit;">' + authorName + '</a>'
+            : authorName}</span>` : ''}
+                    ${publishDate ? '<time datetime="' + publishDate + '" style="font-family: \'Poppins\', sans-serif; opacity: 0.8; font-size: 0.9em;">' + new Date(publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
                 </div>
                 ${postData?.category?.name ? (() => {
             const categoryColors = getCategoryColor(postData.category.name);
@@ -547,6 +551,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             mainImageCaption: formData.mainImageCaption,
             author: formData.author,
             authorLink: formData.authorLink,
+            publishDate: formData.publishDate,
             introText: formData.introText,
             tags: formData.tags
         };
@@ -802,6 +807,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             mainImageCaption: formData.mainImageCaption,
             author: formData.author,
             authorLink: formData.authorLink,
+            publishDate: formData.publishDate,
             introText: formData.introText,
             tags: formData.tags
         };
