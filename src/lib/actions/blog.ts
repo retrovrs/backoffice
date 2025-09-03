@@ -227,13 +227,13 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
             return `<span style="display: inline-block; background-color: ${categoryColors.bg}; color: ${categoryColors.text}; border: 1px solid ${categoryColors.border}; padding: 0.25rem 0.75rem; border-radius: 9999px; font-family: 'Poppins', sans-serif; font-size: 0.875rem; font-weight: 500;">${postData.category.name}</span>`;
         })() : ''}
             </div>
+            ${introText ? `<div class="article-intro" style="font-family: 'Poppins', sans-serif; font-weight: 400;">${introText}</div>` : ''}
             ${mainImageUrl ?
             `<figure class="main-image">
                     <img src="${mainImageUrl}" alt="${mainImageAlt}" />
                     ${mainImageCaption ? `<figcaption>${mainImageCaption}</figcaption>` : ''}
                 </figure>` : ''
         }
-            ${introText ? `<div class="article-intro" style="font-family: 'Poppins', sans-serif; font-weight: 400;">${introText}</div>` : ''}
         </header>
         <div class="article-content">
 ${sectionsContent}

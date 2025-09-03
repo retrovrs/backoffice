@@ -417,13 +417,13 @@ export function BlogContentEditor({ initialContent, onChange }: BlogContentEdito
                     ${createdAt ? '<time datetime="' + new Date(createdAt).toISOString().split('T')[0] + '" style="opacity: 0.8; font-size: 0.9em;">' + new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + '</time>' : ''}
                 </div>
             </div>
+            ${introText ? `<div class="article-intro">${introText}</div>` : ''}
             ${mainImageUrl ? 
                 `<figure class="main-image">
                     <img src="${mainImageUrl}" alt="${mainImageAlt}" />
                     ${mainImageCaption ? `<figcaption>${mainImageCaption}</figcaption>` : ''}
                 </figure>` : ''
             }
-            ${introText ? `<div class="article-intro">${introText}</div>` : ''}
         </header>
         <div class="article-content">
 ${sectionsContent}
