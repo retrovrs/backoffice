@@ -161,7 +161,7 @@ export default function RetrovrsUsersListPage() {
         <CardHeader>
           <CardTitle>Search for users</CardTitle>
           <CardDescription>
-            Recherchez par nom d'utilisateur, email, prénom ou nom
+            Search by username, email, first name or last name
           </CardDescription>
         </CardHeader>
         <CardContent>
