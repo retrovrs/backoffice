@@ -67,7 +67,7 @@ export function MenuBar() {
         </MenubarMenu>
         {isAdmin && (
           <MenubarMenu>
-            <MenubarTrigger>Users</MenubarTrigger>
+            <MenubarTrigger>Backoffice Users</MenubarTrigger>
             <MenubarContent>
               <MenubarItem onClick={() => router.push('/users/whitelist')}>
                 Handle White Listed Users
