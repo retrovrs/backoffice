@@ -79,6 +79,16 @@ export function MenuBar() {
             </MenubarContent>
           </MenubarMenu>
         )}
+        {isAdmin && (
+          <MenubarMenu>
+            <MenubarTrigger>RetroVrs Users</MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem onClick={() => router.push('/admin/retrovrs-users/list')}>
+                List of users
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+        )}
       </div>
       <div className="flex items-center">
         <ThemeToggle />
