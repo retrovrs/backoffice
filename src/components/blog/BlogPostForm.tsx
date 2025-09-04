@@ -214,6 +214,9 @@ export default function BlogPostForm({
     status: initialData.status || 'draft',
     category: initialData.category || 'blog',
     pinned: initialData.pinned || false,
+    createdAt: mode === 'edit' && initialData.createdAt 
+      ? new Date(initialData.createdAt).toISOString().split('T')[0] 
+      : undefined,
     
     // Données header
     author: initialData.author || '',
@@ -885,6 +888,30 @@ export default function BlogPostForm({
       </div>
 
       <form onSubmit={handleFormSubmit} className="space-y-8 bg-white dark:bg-slate-900 p-6 rounded-lg border border-gray-200 dark:border-slate-700 dark:shadow-[0_0_15px_rgba(59,130,246,0.07)]">
+        {/* Champ de modification de la date de création - Mode édition uniquement */}
+        {mode === 'edit' && (
+          <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800 mb-6">
+            <div className="space-y-2">
+              <Label htmlFor="createdAt" className="flex items-center gap-2 text-purple-800 dark:text-purple-200 font-medium">
+                <span>📅</span>
+                Creation date of the article
+              </Label>
+              <Input
+                id="createdAt"
+                name="createdAt"
+                type="date"
+                lang="en"
+                value={formData.createdAt || ''}
+                onChange={handleChange}
+                className="max-w-xs bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-600 focus:border-purple-500 dark:focus:border-purple-400"
+              />
+              <p className="text-xs text-purple-600 dark:text-purple-300">
+                Modify the creation date if necessary. This date will be used for display and sorting of articles.
+              </p>
+            </div>
+          </div>
+        )}
+        
         <Accordion type="multiple" defaultValue={['meta', 'category', 'header', 'intro', 'content', 'tags']} className="space-y-4 [&_input]:dark:bg-slate-800 [&_input]:dark:border-slate-700 [&_input]:dark:text-slate-200 [&_input::placeholder]:dark:text-slate-500 [&_textarea]:dark:bg-slate-800 [&_textarea]:dark:border-slate-700 [&_textarea]:dark:text-slate-200 [&_textarea::placeholder]:dark:text-slate-500 [&_[role=tablist]]:dark:bg-slate-800 [&_label]:dark:text-slate-300 [&_p]:dark:text-slate-400 [&_h3]:dark:text-slate-200 [&_div.border]:dark:border-slate-700 [&_.accordion-item]:dark:bg-slate-850 [&_button]:dark:border-slate-700 [&_button]:dark:text-slate-300">
           
           {/* Category */}

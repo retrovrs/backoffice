@@ -714,7 +714,9 @@ export async function getBlogPost(id: number) {
                 // On transmet également le HTML de l'article uniquement
                 generatedArticleHtml: post.generatedArticleHtml || extractArticleContent(post.generatedHtml || rawContent),
                 // On ajoute la chaîne de tags
-                tags: tagsString
+                tags: tagsString,
+                // S'assurer que createdAt est inclus dans le retour pour l'édition
+                createdAt: post.createdAt
             }
         }
     } catch (error) {
@@ -841,7 +843,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
         console.log('Generated JSON-LD:', jsonLd);
 
         // Prepare data for update
-        const postData = {
+        const postData: any = {
             title: formData.title,
             slug: formData.slug,
             metaDescription: formData.excerpt,
@@ -860,6 +862,12 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             },
             author: formData.author,
             authorLink: formData.authorLink,
+        }
+
+        // Ajouter createdAt seulement si elle est fournie (mode édition)
+        if (formData.createdAt) {
+            postData.createdAt = new Date(formData.createdAt);
+            console.log('Mise à jour de la date de création vers:', postData.createdAt);
         }
 
         // Update the post

@@ -25,6 +25,7 @@ export interface BlogPostFormValues {
     status: string;
     category: string;
     pinned?: boolean;
+    createdAt?: string; // Date de création (modifiable en mode édition uniquement)
 
     // Données header
     author: string;
