@@ -65,6 +65,41 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
       {/* Style pour charger Bebas Neue pour l'aperçu */}
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500&display=swap');
+        
+        .blog-preview-lists ul {
+          list-style-type: disc !important;
+          list-style-position: outside !important;
+          margin-left: 2rem !important;
+          padding-left: 0 !important;
+          margin-bottom: 1.5rem !important;
+          margin-top: 1rem !important;
+        }
+        
+        .blog-preview-lists ol {
+          list-style-type: decimal !important;
+          list-style-position: outside !important;
+          margin-left: 2rem !important;
+          padding-left: 0 !important;
+          margin-bottom: 1.5rem !important;
+          margin-top: 1rem !important;
+        }
+        
+        .blog-preview-lists li {
+          display: list-item !important;
+          margin-bottom: 0.5rem !important;
+          padding-left: 0.5rem !important;
+          list-style: inherit !important;
+        }
+        
+        .blog-preview-lists figcaption {
+          font-style: italic !important;
+          color: #9CA3AF !important;
+          font-size: 0.875rem !important;
+          text-align: center !important;
+          margin-top: 0.5rem !important;
+          margin-bottom: 1rem !important;
+          font-family: 'Poppins', sans-serif !important;
+        }
       `}</style>
       
       <TabsList className="grid w-full grid-cols-3 mb-6">
@@ -136,7 +171,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
         width="800" 
         height="500" 
         loading="lazy">
-      <figcaption>${formData.mainImageCaption || 'Image illustrating the article'}</figcaption>
+      <figcaption style="font-style: italic; color: #9CA3AF; font-size: 0.875rem; text-align: center; margin-top: 0.5rem; font-family: 'Poppins', sans-serif;">${formData.mainImageCaption || 'Image illustrating the article'}</figcaption>
     </figure>
     
     <!-- Article content -->
@@ -146,9 +181,10 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
       .replace(/<p>/g, '<p style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
       .replace(/<strong>/g, '<strong style="font-weight: bold;">')
       .replace(/<em>/g, '<em style="font-style: italic;">')
-      .replace(/<ul>/g, '<ul style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
-      .replace(/<ol>/g, '<ol style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
-      .replace(/<li>/g, '<li style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')}
+      .replace(/<ul>/g, '<ul style="font-family: \'Poppins\', sans-serif; font-weight: 400; list-style-type: disc; list-style-position: outside; margin-left: 2rem; padding-left: 0; margin-bottom: 1.5rem; margin-top: 1rem;">')
+      .replace(/<ol>/g, '<ol style="font-family: \'Poppins\', sans-serif; font-weight: 400; list-style-type: decimal; list-style-position: outside; margin-left: 2rem; padding-left: 0; margin-bottom: 1.5rem; margin-top: 1rem;">')
+      .replace(/<li>/g, '<li style="font-family: \'Poppins\', sans-serif; font-weight: 400; display: list-item; margin-bottom: 0.5rem; padding-left: 0.5rem;">')
+      .replace(/<figcaption>/g, '<figcaption style="font-style: italic; color: #9CA3AF; font-size: 0.875rem; text-align: center; margin-top: 0.5rem; margin-bottom: 1rem; font-family: \'Poppins\', sans-serif;">')}
     
     ${formData.tags && formData.tags.trim() !== '' ? `
     <!-- Tags -->
@@ -247,7 +283,14 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                   loading="lazy"
                 />
                 {formData.mainImageCaption && (
-                  <figcaption className="text-sm text-gray-600 mt-2 text-center">
+                  <figcaption 
+                    className="text-sm mt-2 text-center italic"
+                    style={{ 
+                      color: '#9CA3AF', 
+                      fontFamily: "'Poppins', sans-serif",
+                      fontStyle: 'italic'
+                    }}
+                  >
                     {formData.mainImageCaption}
                   </figcaption>
                 )}
@@ -309,7 +352,12 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
               ) : (
                 <div className="content-wrapper">
                   <div
-                    className="blog-content"
+                    className="blog-content blog-preview-lists"
+                    style={{
+                      fontSize: '16px',
+                      lineHeight: '1.6',
+                      color: '#374151'
+                    }}
                     dangerouslySetInnerHTML={{
                       __html: formData.content
                         .replace(/<h2>/g, '<br/><br/><h2 class="text-2xl font-bold text-gray-900 mb-4" style="font-family: \'Bebas Neue Bold\', \'Impact\', sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem;">')
@@ -318,9 +366,10 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
                         .replace(/<strong>/g, '<strong class="font-bold text-gray-900">')
                         .replace(/<em>/g, '<em class="italic">')
                         .replace(/<a /g, '<a class="text-blue-600 hover:underline font-medium" ')
-                        .replace(/<ul>/g, '<ul class="list-disc pl-5 space-y-2 mb-6" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
-                        .replace(/<ol>/g, '<ol class="list-decimal pl-5 space-y-2 mb-6" style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+                        .replace(/<ul>/g, '<ul style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+                        .replace(/<ol>/g, '<ol style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
                         .replace(/<li>/g, '<li style="font-family: \'Poppins\', sans-serif; font-weight: 400;">')
+                        .replace(/<figcaption>/g, '<figcaption style="font-style: italic; color: #9CA3AF; font-size: 0.875rem; text-align: center; margin-top: 0.5rem; margin-bottom: 1rem; font-family: \'Poppins\', sans-serif;">')
                     }}
                   />
                 </div>
