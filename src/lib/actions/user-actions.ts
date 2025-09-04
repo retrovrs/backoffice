@@ -13,7 +13,7 @@ export async function getUserRoleById(userId: string) {
             }
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.backofficeUser.findUnique({
             where: { id: userId },
             select: { role: true }
         })

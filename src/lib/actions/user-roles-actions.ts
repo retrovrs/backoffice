@@ -11,7 +11,7 @@ export type { User, UserRole } from '@/types/user-types'
 
 export async function getAllUsers() {
     try {
-        const users = await prisma.user.findMany({
+        const users = await prisma.backofficeUser.findMany({
             select: {
                 id: true,
                 email: true,
@@ -61,7 +61,7 @@ export async function updateUserRole(userId: string, role: UserRole) {
         }
 
         // Check if user exists
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.backofficeUser.findUnique({
             where: { id: userId }
         })
 
@@ -73,7 +73,7 @@ export async function updateUserRole(userId: string, role: UserRole) {
         }
 
         // Update user role
-        const updatedUser = await prisma.user.update({
+        const updatedUser = await prisma.backofficeUser.update({
             where: { id: userId },
             data: { role }
         })

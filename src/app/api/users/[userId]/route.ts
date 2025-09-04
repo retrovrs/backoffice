@@ -31,7 +31,7 @@ export async function GET(
             )
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.backofficeUser.findUnique({
             where: { id: userId },
             select: {
                 id: true,
