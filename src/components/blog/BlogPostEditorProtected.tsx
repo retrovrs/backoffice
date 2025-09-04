@@ -65,7 +65,7 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
             author: result.post.author,
             authorLink: result.post.authorLink || '',
             publishDate: result.post.createdAt ? new Date(result.post.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-            createdAt: result.post.createdAt, // Date de création pour modification
+            createdAt: result.post.createdAt ? new Date(result.post.createdAt).toISOString().split('T')[0] : undefined, // Date de création pour modification
             introText: result.post.excerpt || '',
             mainImageUrl: result.post.mainImageUrl || '',
             mainImageAlt: result.post.mainImageAlt || '',
