@@ -17,6 +17,7 @@ overrides:
   diff: '>=4.0.4'
   kysely: '>=0.28.12'
   flatted: '>=3.4.0'
+  defu: '>=6.1.5'
 
 importers:
 
@@ -1719,8 +1720,8 @@ packages:
     resolution: {integrity: sha512-8QmQKqEASLd5nx0U1B1okLElbUuuttJ/AnYmRXbbbGDWh6uS208EjD4Xqq/I9wK7u0v6O08XhTWnt5XtEbR6Dg==}
     engines: {node: '>= 0.4'}
 
-  defu@6.1.4:
-    resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
+  defu@6.1.7:
+    resolution: {integrity: sha512-7z22QmUWiQ/2d0KkdYmANbRUVABpZ9SNYyH5vx6PZ+nE5bcC0l7uFvEfHlyld/HcGBFTL536ClDt3DEcSlEJAQ==}
 
   delegates@1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
@@ -4430,7 +4431,7 @@ snapshots:
       '@noble/ciphers': 2.0.1
       '@noble/hashes': 2.0.1
       better-call: 1.1.5(zod@4.1.12)
-      defu: 6.1.4
+      defu: 6.1.7
       jose: 6.1.0
       kysely: 0.28.12
       nanostores: 1.0.1
@@ -4592,7 +4593,7 @@ snapshots:
       has-property-descriptors: 1.0.2
       object-keys: 1.1.1
 
-  defu@6.1.4: {}
+  defu@6.1.7: {}
 
   delegates@1.0.0: {}
 
