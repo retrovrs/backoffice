@@ -10,7 +10,7 @@ overrides:
   '@modelcontextprotocol/sdk': '>=1.26.0'
   hono: '>=4.11.4'
   '@hono/node-server': '>=1.19.10'
-  tar: '>=7.5.10'
+  tar: '>=7.5.11'
   minimatch: '>=9.0.7'
   ajv: '>=8.18.0'
   js-yaml: '>=4.1.1'
@@ -2982,8 +2982,8 @@ packages:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
 
-  tar@7.5.10:
-    resolution: {integrity: sha512-8mOPs1//5q/rlkNSPcCegA6hiHJYDmSLEI8aMH/CdSQJNWztHC9WHNam5zdQlfpTwB9Xp7IBEsHfV5LKMJGVAw==}
+  tar@7.5.13:
+    resolution: {integrity: sha512-tOG/7GyXpFevhXVh8jOPJrmtRpOTsYqUIkVdVooZYJS/z8WhfQUX8RJILmeuJNinGAMSu1veBr4asSHFt5/hng==}
     engines: {node: '>=18'}
 
   tinyglobby@0.2.13:
@@ -3490,7 +3490,7 @@ snapshots:
       npmlog: 5.0.1
       rimraf: 3.0.2
       semver: 7.7.1
-      tar: 7.5.10
+      tar: 7.5.13
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -6093,7 +6093,7 @@ snapshots:
 
   tapable@2.2.1: {}
 
-  tar@7.5.10:
+  tar@7.5.13:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
