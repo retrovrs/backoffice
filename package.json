@@ -67,7 +67,8 @@
       "kysely": ">=0.28.14",
       "flatted": ">=3.4.0",
       "defu": ">=6.1.5",
-      "express-rate-limit": ">=8.2.2"
+      "express-rate-limit": ">=8.2.2",
+      "picomatch": ">=4.0.4"
     }
   }
 }
