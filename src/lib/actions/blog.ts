@@ -598,6 +598,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             categoryId: category.id,
             author: formData.author,
             authorLink: formData.authorLink,
+            series: formData.series || null,
         }
 
         console.log('Prepared post data:', postData)
@@ -716,7 +717,8 @@ export async function getBlogPost(id: number) {
                 // On ajoute la chaîne de tags
                 tags: tagsString,
                 // S'assurer que createdAt est inclus dans le retour pour l'édition
-                createdAt: post.createdAt
+                createdAt: post.createdAt,
+                series: post.series
             }
         }
     } catch (error) {
@@ -862,6 +864,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             },
             author: formData.author,
             authorLink: formData.authorLink,
+            series: formData.series || null,
         }
 
         // Ajouter createdAt seulement si elle est fournie (mode édition)

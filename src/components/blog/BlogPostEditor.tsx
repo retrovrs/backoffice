@@ -62,7 +62,8 @@ export default function BlogPostEditor({ id }: BlogPostEditorProps) {
             mainImageCaption: result.post.mainImageCaption || '',
             content: result.post.content,
             structuredContent: result.post.structuredContent,
-            tags: result.post.tags || ''
+            tags: result.post.tags || '',
+            series: result.post.series || ''
           })
         }
 

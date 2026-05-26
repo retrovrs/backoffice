@@ -45,4 +45,7 @@ export interface BlogPostFormValues {
 
     // Tags
     tags: string;
+
+    // Série / rubrique éditoriale (optionnel)
+    series?: string;
 } 

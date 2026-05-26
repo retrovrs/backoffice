@@ -235,7 +235,10 @@ export default function BlogPostForm({
     generatedHtml: initialData.generatedHtml || '',
     
     // Tags
-    tags: initialData.tags || ''
+    tags: initialData.tags || '',
+
+    // Série / rubrique éditoriale
+    series: initialData.series || '',
   })
   
   // Initialisons correctement les tags à partir des données initiales
@@ -1117,6 +1120,20 @@ export default function BlogPostForm({
                   />
                   <p className="text-xs text-gray-500">
                     Optional URL to the author's profile or website
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="series">Column / Series</Label>
+                  <Input
+                    id="series"
+                    name="series"
+                    value={formData.series || ''}
+                    onChange={handleChange}
+                    placeholder="e.g. Notes From a Founding Collector"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Optional — group this post under a named editorial column or series within a section
                   </p>
                 </div>
 

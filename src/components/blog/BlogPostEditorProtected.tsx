@@ -72,7 +72,8 @@ export default function BlogPostEditorProtected({ id }: BlogPostEditorProtectedP
             mainImageCaption: result.post.mainImageCaption || '',
             content: result.post.content,
             structuredContent: result.post.structuredContent,
-            tags: result.post.tags || ''
+            tags: result.post.tags || '',
+            series: result.post.series || ''
           })
           
           console.log('initialData prepared with tags:', result.post.tags);
