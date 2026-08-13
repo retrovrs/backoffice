@@ -15,7 +15,9 @@ const eslintConfig = [
     ignores: [
       '**/node_modules/**',
       '**/src/generated/**',
-      '**/prisma/generated/**'
+      '**/prisma/generated/**',
+      '**/.history/**',
+      'next-env.d.ts'
     ]
   },
   {
