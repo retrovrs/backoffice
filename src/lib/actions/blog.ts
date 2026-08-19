@@ -118,6 +118,8 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
     const mainImageCaption = postData?.mainImageCaption || '';
     const introText = postData?.introText || '';
     const tags = postData?.tags || '';
+    const series = postData?.series || '';
+    const slugSeries = postData?.slugSeries || (series ? slugifySeries(series) : '');
 
     // Générer le HTML des tags en utilisant notre fonction utilitaire
     const tagsHTML = generateTagsHTML(tags);
@@ -184,6 +186,20 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
             color: #666;
             margin-bottom: 2em;
         }
+        .series-label {
+            display: block;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #8b5cf6;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+        }
+        .series-label:hover {
+            text-decoration: underline;
+        }
         .article-intro {
             font-size: 1.1em;
             line-height: 1.8;
@@ -215,6 +231,7 @@ function generateRawContentFromSections(sectionsArray: StructuredContent, postDa
 <body style="font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
     <article>
         <header>
+            ${series ? `<a href="/series/${slugSeries}" class="series-label">${series}</a>` : ''}
             <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${title}</h1>
             <div class="article-meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -243,6 +260,11 @@ ${tagsHTML}
     </article>
 </body>
 </html>`
+}
+
+// Fonction pour générer le slug d'une série (même convention que les slugs de tags)
+function slugifySeries(series: string): string {
+    return series.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
 }
 
 // Fonction pour extraire l'ID YouTube d'une URL
@@ -549,7 +571,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             authorLink: formData.authorLink,
             createdAt: new Date().toISOString(),
             introText: formData.introText,
-            tags: formData.tags
+            tags: formData.tags,
+            series: formData.series || '',
+            slugSeries: formData.series ? slugifySeries(formData.series) : ''
         };
 
         // Générer le HTML à partir du contenu structuré pour le stocker dans generatedHtml
@@ -595,6 +619,7 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             author: formData.author,
             authorLink: formData.authorLink,
             series: formData.series || null,
+            slugSeries: formData.series ? slugifySeries(formData.series) : null,
         }
 
         console.log('Prepared post data:', postData)
@@ -810,7 +835,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             authorLink: formData.authorLink,
             createdAt: existingPost?.createdAt?.toISOString() || new Date().toISOString(),
             introText: formData.introText,
-            tags: formData.tags
+            tags: formData.tags,
+            series: formData.series || '',
+            slugSeries: formData.series ? slugifySeries(formData.series) : ''
         };
 
         // Générer le HTML à partir du contenu structuré pour le stocker dans generatedHtml
@@ -857,6 +884,7 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             author: formData.author,
             authorLink: formData.authorLink,
             series: formData.series || null,
+            slugSeries: formData.series ? slugifySeries(formData.series) : null,
         }
 
         // Ajouter createdAt seulement si elle est fournie (mode édition)

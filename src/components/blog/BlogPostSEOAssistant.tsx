@@ -56,6 +56,11 @@ function getCategoryColor(category: string): { bg: string, text: string, border:
   return { bg, text, border };
 }
 
+// Fonction pour générer le slug d'une série (même convention que côté serveur)
+function slugifySeries(series: string): string {
+  return series.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+}
+
 // Composant séparé pour le contenu de l'assistant SEO
 export function BlogPostSEOAssistantContent({ formData, disabled = false }: BlogPostSEOAssistantProps) {
   const seoScore = getScorePercentage(formData)
@@ -144,6 +149,7 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
   <article>
     <!-- Article header -->
     <header>
+      ${formData.series ? `<a href="/series/${slugifySeries(formData.series)}" style="display: block; font-family: 'Poppins', sans-serif; font-size: 0.85em; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #8b5cf6; text-decoration: none; margin-bottom: 0.5rem;">${formData.series}</a>` : ''}
       <h1 style="font-family: 'Bebas Neue Bold', 'Impact', sans-serif; text-transform: uppercase; letter-spacing: 1px;">${formData.title || 'Article Title'}</h1>
       <div class="meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -212,7 +218,16 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
         <div className="bg-white border border-gray-200 rounded-lg p-6 max-h-[60vh] overflow-y-auto">
           <article className="prose lg:prose-lg mx-auto max-w-[600px]">
             <header className="mb-8">
-              <h1 
+              {formData.series && (
+                <a
+                  href={`/series/${slugifySeries(formData.series)}`}
+                  className="block text-sm font-semibold uppercase tracking-wide mb-2"
+                  style={{ fontFamily: "'Poppins', sans-serif", color: '#8b5cf6', textDecoration: 'none' }}
+                >
+                  {formData.series}
+                </a>
+              )}
+              <h1
                 className="text-3xl font-bold text-gray-900 mb-4"
                 style={{ 
                   fontFamily: "'Bebas Neue Bold', 'Impact', sans-serif", 
