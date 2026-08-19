@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { PrismaClient } from '@prisma/client'
+import { requireAdmin, AuthorizationError } from '@/lib/auth-guards'
 
 export interface RetrovrsUser {
     id: string
@@ -30,6 +31,9 @@ export async function getRetrovrsUsers(
     limit: number = 20
 ): Promise<GetUsersResult> {
     try {
+        // Exposes end-user PII (emails, names): admin-only.
+        await requireAdmin()
+
         // console.log('🔍 getRetrovrsUsers called with:', { page, limit })
         // console.log('🔍 prisma instance:', !!prisma)
         // console.log('🔍 prisma.user:', !!prisma?.user)
@@ -83,6 +87,9 @@ export async function getRetrovrsUsers(
         }
     } catch (error) {
         console.log('Erreur lors de la récupération des utilisateurs:', error)
+        if (error instanceof AuthorizationError) {
+            return { users: [], total: 0, hasMore: false, error: error.message }
+        }
         return {
             users: [],
             total: 0,
@@ -98,6 +105,9 @@ export async function searchRetrovrsUsers(
     limit: number = 20
 ): Promise<GetUsersResult> {
     try {
+        // Exposes end-user PII (emails, names): admin-only.
+        await requireAdmin()
+
         // Fallback: créer une nouvelle instance si la principale ne fonctionne pas
         let clientToUse = prisma
         if (!prisma?.user) {
@@ -159,6 +169,9 @@ export async function searchRetrovrsUsers(
         }
     } catch (error) {
         console.error('Erreur lors de la recherche des utilisateurs:', error)
+        if (error instanceof AuthorizationError) {
+            return { users: [], total: 0, hasMore: false, error: error.message }
+        }
         return {
             users: [],
             total: 0,

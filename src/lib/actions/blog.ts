@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { requireEditor, requireAdmin, AuthorizationError } from '@/lib/auth-guards'
 import { headers } from 'next/headers'
 import { PostStatus } from '@prisma/client'
 import { BlogPostFormValues, StructuredContent } from '@/types/blog'
@@ -450,13 +451,8 @@ function getCategoryColor(category: string): { bg: string, text: string, border:
 
 export async function createBlogPost(formData: BlogPostFormValues) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return { error: 'Not authenticated' }
-        }
+        // Authoring blog content is restricted to admins and editors.
+        await requireEditor()
 
         console.log('Starting blog post creation with data:', {
             title: formData.title,
@@ -642,6 +638,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
 
         return { success: true, post, postId: post.id }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, error: error.message }
+        }
         console.error('Failed to create blog post:', error)
         if (error instanceof Error) {
             console.error('Error details:', error.message, error.stack)
@@ -652,13 +651,8 @@ export async function createBlogPost(formData: BlogPostFormValues) {
 
 export async function getBlogPost(id: number) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return { error: 'Not authenticated' }
-        }
+        // Reading a draft is restricted to admins and editors.
+        await requireEditor()
 
         const post = await prisma.seoPost.findUnique({
             where: { id },
@@ -722,6 +716,9 @@ export async function getBlogPost(id: number) {
             }
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { error: error.message }
+        }
         console.error('Error when retrieving the article:', error)
         return { error: 'Error when retrieving the article' }
     }
@@ -729,13 +726,8 @@ export async function getBlogPost(id: number) {
 
 export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return { error: 'Not authenticated' }
-        }
+        // Authoring blog content is restricted to admins and editors.
+        await requireEditor()
 
         // Log détaillé des données reçues
         console.log('updateBlogPost - Données reçues:');
@@ -952,6 +944,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
 
         return { success: true, post, postId: post.id }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, error: error.message }
+        }
         console.error('Error when updating the article:', error)
         if (error instanceof Error) {
             console.error('Error details:', error.message, error.stack)
@@ -962,13 +957,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
 
 export async function deleteBlogPost(id: number) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return { error: 'Not authenticated' }
-        }
+        // Deleting an article is admin-only, matching the UI which only
+        // exposes the delete action to admins.
+        await requireAdmin()
 
         // Vérifier si l'article existe
         const existingPost = await prisma.seoPost.findUnique({
@@ -999,6 +990,9 @@ export async function deleteBlogPost(id: number) {
 
         return { success: true, message: 'Article deleted successfully' }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, error: error.message }
+        }
         console.error('Error when deleting the article:', error)
         if (error instanceof Error) {
             console.error('Error details:', error.message, error.stack)

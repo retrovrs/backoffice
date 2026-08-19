@@ -2,6 +2,7 @@
 
 import { generateSlug } from '@/lib/utils'
 import prisma from '../prisma'
+import { requireEditor, AuthorizationError } from '@/lib/auth-guards'
 
 /**
  * Crée les tags SEO qui n'existent pas encore et établit les relations avec un article
@@ -10,6 +11,9 @@ import prisma from '../prisma'
  */
 export async function createOrUpdateSeoTags(postId: number, tagNames: string[]) {
     try {
+        // Writes SEO tags: restricted to the roles allowed to author content.
+        await requireEditor()
+
         // Filtrer les tags vides
         const validTagNames = tagNames.filter(tag => tag.trim() !== '')
 
@@ -82,6 +86,9 @@ export async function createOrUpdateSeoTags(postId: number, tagNames: string[]) 
         return { success: true, message: 'Tags SEO mis à jour avec succès' }
     } catch (error) {
         console.error('Erreur lors de la mise à jour des tags SEO:', error)
+        if (error instanceof AuthorizationError) {
+            return { success: false, message: error.message }
+        }
         return { success: false, message: 'Erreur lors de la mise à jour des tags SEO' }
     }
 }
@@ -92,6 +99,8 @@ export async function createOrUpdateSeoTags(postId: number, tagNames: string[]) 
  */
 export async function getSeoTagsByPostId(postId: number) {
     try {
+        await requireEditor()
+
         const postTags = await prisma.seoPostTag.findMany({
             where: { postId },
             include: {
@@ -104,6 +113,9 @@ export async function getSeoTagsByPostId(postId: number) {
             tags: postTags.map((pt: any) => pt.tag.name)
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, tags: [], message: error.message }
+        }
         console.error('Erreur lors de la récupération des tags SEO:', error)
         return {
             success: false,

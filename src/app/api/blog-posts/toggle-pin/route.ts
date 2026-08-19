@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireEditor, authErrorResponse } from '@/lib/auth-guards'
 
 /**
  * Route API pour basculer l'état épinglé d'un article de blog
@@ -13,17 +12,9 @@ import { headers } from 'next/headers'
  */
 export async function PATCH(request: NextRequest) {
     try {
-        // Vérification de l'authentification
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: 'Non authentifié' },
-                { status: 401 }
-            )
-        }
+        // Enforce authorization server-side: the client-side role check is
+        // advisory only and can be bypassed by calling this route directly.
+        await requireEditor()
 
         // Récupérer les données de la requête
         const body = await request.json()
@@ -104,6 +95,9 @@ export async function PATCH(request: NextRequest) {
                 : 'Article désépinglé avec succès'
         })
     } catch (error) {
+        const denied = authErrorResponse(error)
+        if (denied) return denied
+
         console.error('Erreur lors de la mise à jour du statut épinglé:', error)
         return NextResponse.json(
             { error: 'Erreur lors de la mise à jour du statut épinglé' },

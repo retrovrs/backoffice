@@ -1,21 +1,12 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireEditor, authErrorResponse } from '@/lib/auth-guards'
 
 export async function GET() {
     try {
-        // Vérification de l'authentification
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: 'Not authenticated' },
-                { status: 401 }
-            )
-        }
+        // Enforce authorization server-side: the client-side role check is
+        // advisory only and can be bypassed by calling this route directly.
+        await requireEditor()
 
         // Vérifier d'abord si des enregistrements existent
         const count = await prisma.seoPost.count()
@@ -37,6 +28,9 @@ export async function GET() {
 
         return NextResponse.json(posts)
     } catch (error) {
+        const denied = authErrorResponse(error)
+        if (denied) return denied
+
         console.error('Error when loading the blog articles:', error)
         return NextResponse.json(
             { error: 'Error when loading the blog articles' },

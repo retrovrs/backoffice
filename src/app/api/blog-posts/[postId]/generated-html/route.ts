@@ -1,24 +1,15 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { headers } from 'next/headers'
-import { auth } from '@/lib/auth'
+import { requireEditor, authErrorResponse } from '@/lib/auth-guards'
 
 export async function GET(
     request: Request,
     context: { params: Promise<{ postId: string }> }
 ): Promise<NextResponse> {
     try {
-        // Vérification de l'authentification
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: 'Not authenticated' },
-                { status: 401 }
-            )
-        }
+        // Enforce authorization server-side: the client-side role check is
+        // advisory only and can be bypassed by calling this route directly.
+        await requireEditor()
         const params = await context.params;
 
         const postId = parseInt(params.postId, 10)
@@ -53,6 +44,9 @@ export async function GET(
             generatedHtml: post.generatedHtml || ''
         })
     } catch (error) {
+        const denied = authErrorResponse(error)
+        if (denied) return denied
+
         console.error('Error when loading the generated HTML:', error)
         return NextResponse.json(
             { error: 'Server error when loading the generated HTML' },

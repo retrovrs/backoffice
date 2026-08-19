@@ -3,14 +3,16 @@
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { User, UserRole, ROLES } from '@/types/user-types'
-import { auth } from '../auth'
-import { headers } from 'next/headers'
+import { requireAdmin, AuthorizationError } from '@/lib/auth-guards'
 
 
 export type { User, UserRole } from '@/types/user-types'
 
 export async function getAllUsers() {
     try {
+        // Listing every backoffice account and its role is admin-only.
+        await requireAdmin()
+
         const users = await prisma.backofficeUser.findMany({
             select: {
                 id: true,
@@ -28,6 +30,9 @@ export async function getAllUsers() {
             error: null
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { users: [], error: error.message }
+        }
         console.error('Error retrieving users:', error)
         return {
             users: [],
@@ -38,14 +43,10 @@ export async function getAllUsers() {
 
 export async function updateUserRole(userId: string, role: UserRole) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
+        // Granting roles is the highest-privilege operation in the app: it must
+        // be admin-only, otherwise any authenticated user could promote itself.
+        const actor = await requireAdmin()
 
-        if (!session?.user) {
-            return { error: 'Not authenticated' }
-        }
-        
         if (!userId) {
             return {
                 success: false,
@@ -72,6 +73,21 @@ export async function updateUserRole(userId: string, role: UserRole) {
             }
         }
 
+        // Prevent an admin from demoting themselves into a state where nobody
+        // can administer the backoffice any more.
+        if (actor.id === userId && role !== 'ADMIN') {
+            const otherAdmins = await prisma.backofficeUser.count({
+                where: { role: 'ADMIN', id: { not: userId } }
+            })
+
+            if (otherAdmins === 0) {
+                return {
+                    success: false,
+                    error: 'You are the last administrator: assign another admin before changing your own role'
+                }
+            }
+        }
+
         // Update user role
         const updatedUser = await prisma.backofficeUser.update({
             where: { id: userId },
@@ -86,6 +102,9 @@ export async function updateUserRole(userId: string, role: UserRole) {
             error: null
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, error: error.message }
+        }
         console.error('Error updating user role:', error)
         return {
             success: false,

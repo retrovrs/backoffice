@@ -2,8 +2,7 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { auth } from '../auth'
-import { headers } from 'next/headers'
+import { requireAdmin, AuthorizationError } from '@/lib/auth-guards'
 
 export type WhitelistedUser = {
     id: number
@@ -12,6 +11,9 @@ export type WhitelistedUser = {
 
 export async function getWhitelistedUsers() {
     try {
+        // The whitelist controls who may register: admin-only.
+        await requireAdmin()
+
         const users = await prisma.userWhiteListed.findMany({
             orderBy: {
                 email: 'asc'
@@ -23,6 +25,9 @@ export async function getWhitelistedUsers() {
             error: null
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { users: [], error: error.message }
+        }
         console.error('Error while retrieving whitelisted users:', error)
         return {
             users: [],
@@ -33,14 +38,8 @@ export async function getWhitelistedUsers() {
 
 export async function addWhitelistedUser(email: string) {
     try {
-        const session = await auth.api.getSession({
-            headers: await headers()
-        })
+        await requireAdmin()
 
-        if (!session?.user) {
-            return { error: 'Not authenticated' }
-        }
-        
         // Vérifier que l'email est valide
         if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
             return {
@@ -74,6 +73,9 @@ export async function addWhitelistedUser(email: string) {
             error: null
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, error: error.message }
+        }
         console.error('Error while adding user to whitelist:', error)
         return {
             success: false,
@@ -84,6 +86,8 @@ export async function addWhitelistedUser(email: string) {
 
 export async function removeWhitelistedUser(id: number) {
     try {
+        await requireAdmin()
+
         await prisma.userWhiteListed.delete({
             where: { id }
         })
@@ -95,6 +99,9 @@ export async function removeWhitelistedUser(id: number) {
             error: null
         }
     } catch (error) {
+        if (error instanceof AuthorizationError) {
+            return { success: false, error: error.message }
+        }
         console.error('Error while removing user from whitelist:', error)
         return {
             success: false,
