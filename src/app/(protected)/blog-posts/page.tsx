@@ -98,7 +98,10 @@ export default function BlogPostsPage() {
       }
     }
     fetchPosts()
-  }, [toast])
+    // Run once on mount: `toast` is a stable module-level function, and the list
+    // must not depend on anything that changes on window focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const uniqueCategories = useMemo(() =>
     [...new Set(posts.map(p => p.category?.name).filter(Boolean) as string[])].sort(),
