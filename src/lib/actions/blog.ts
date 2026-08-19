@@ -7,6 +7,7 @@ import { requireEditor, requireAdmin, AuthorizationError } from '@/lib/auth-guar
 import { headers } from 'next/headers'
 import { PostStatus } from '@prisma/client'
 import { BlogPostFormValues, StructuredContent } from '@/types/blog'
+import { sanitizeBlogHtml } from '@/lib/sanitize-html'
 
 // Préfixe pour identifier le contenu structuré (pour la rétrocompatibilité avec l'ancien format)
 const STRUCTURED_CONTENT_PREFIX = '<!-- STRUCTURED_CONTENT_JSON:'
@@ -400,43 +401,16 @@ function generateTagsHTML(tags: string | string[]): string {
     const tagsList = tagsArray
         .map((tag: string) => {
             const tagSlug = tag.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
-            return `    <li><a href="/blog/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">
-  ${tag}
-  <style>
-    @media (prefers-color-scheme: dark) {
-      a[rel="tag"] {
-        background-color: #374151;
-        color: #e5e7eb;
-        border-color: #4b5563;
-      }
-      a[rel="tag"]:hover {
-        background-color: #4b5563;
-      }
-    }
-    a[rel="tag"]:hover {
-      background-color: #e0e0e0;
-    }
-  </style>
-</a></li>`
+            return `    <li><a href="/blog/tags/${tagSlug}" rel="tag" class="tag-link">${tag}</a></li>`
         })
         .join('\n')
 
     return `
-<section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
-  <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Tags</h2>
-  <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+<section class="tags">
+  <h2>Tags</h2>
+  <ul class="tags-list">
 ${tagsList}
   </ul>
-  <style>
-    @media (prefers-color-scheme: dark) {
-      .tags {
-        border-top-color: #374151;
-      }
-      .tags h2 {
-        color: #e5e7eb;
-      }
-    }
-  </style>
 </section>`;
 }
 
@@ -555,9 +529,10 @@ export async function createBlogPost(formData: BlogPostFormValues) {
 
         // Stocker uniquement le JSON structuré dans le champ content
         // Si structuredContent n'existe pas, on stocke le contenu brut comme fallback
+        // (sanitizé pour retirer tout artefact de copier-coller Word/Google Docs)
         const content = formData.structuredContent
             ? JSON.stringify(formData.structuredContent)
-            : formData.content;
+            : sanitizeBlogHtml(formData.content);
 
         // Préparer les données complètes du post pour générer le HTML
         const postDataForHTML = {
@@ -581,8 +556,9 @@ export async function createBlogPost(formData: BlogPostFormValues) {
             ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
             : formData.content || '';
 
-        // Extraire uniquement la partie <article> pour le champ generatedArticleHtml
-        const generatedArticleHtml = extractArticleContent(generatedHtml);
+        // Extraire uniquement la partie <article> pour le champ generatedArticleHtml,
+        // puis sanitizer pour retirer tout artefact de copier-coller Word/Google Docs
+        const generatedArticleHtml = sanitizeBlogHtml(extractArticleContent(generatedHtml));
 
         // Générer le JSON-LD pour les métadonnées structurées
         const jsonLdData = {
@@ -819,9 +795,10 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
 
         // Stocker uniquement le JSON structuré dans le champ content
         // Si structuredContent n'existe pas, on stocke le contenu brut comme fallback
+        // (sanitizé pour retirer tout artefact de copier-coller Word/Google Docs)
         const content = formData.structuredContent
             ? JSON.stringify(formData.structuredContent)
-            : formData.content;
+            : sanitizeBlogHtml(formData.content);
 
         // Préparer les données complètes du post pour générer le HTML
         const postDataForHTML = {
@@ -845,8 +822,9 @@ export async function updateBlogPost(id: number, formData: BlogPostFormValues) {
             ? generateRawContentFromSections(formData.structuredContent, postDataForHTML)
             : formData.content || '';
 
-        // Extraire uniquement la partie <article> pour le champ generatedArticleHtml
-        const generatedArticleHtml = extractArticleContent(generatedHtml);
+        // Extraire uniquement la partie <article> pour le champ generatedArticleHtml,
+        // puis sanitizer pour retirer tout artefact de copier-coller Word/Google Docs
+        const generatedArticleHtml = sanitizeBlogHtml(extractArticleContent(generatedHtml));
 
         // Générer le JSON-LD pour les métadonnées structurées
         const jsonLdData = {
