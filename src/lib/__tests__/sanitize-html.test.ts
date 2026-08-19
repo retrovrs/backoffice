@@ -171,4 +171,33 @@ describe('sanitizeBlogHtml', () => {
 
     expect(result).not.toContain('evil.example.com')
   })
+
+  it('migrates legacy inline-styled tags markup to the class-based format', () => {
+    const legacyHtml = `
+      <section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
+        <h2 style="font-size: 1.25rem;">Tags</h2>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+          <li><a href="/blog/tags/vintage" rel="tag" style="display: inline-block; background-color: #f0f0f0; border-radius: 9999px;">
+            Vintage
+            <style>
+              @media (prefers-color-scheme: dark) {
+                a[rel="tag"] { background-color: #374151; }
+              }
+            </style>
+          </a></li>
+        </ul>
+      </section>
+    `
+
+    const result = sanitizeBlogHtml(legacyHtml)
+
+    expect(result).not.toContain('style=')
+    expect(result).not.toContain('<style')
+    expect(result).not.toContain('@media')
+    expect(result).not.toContain('prefers-color-scheme')
+    expect(result).toContain('class="tags"')
+    expect(result).toContain('Vintage')
+    expect(result).toContain('rel="tag"')
+    expect(result).toContain('href="/blog/tags/vintage"')
+  })
 })

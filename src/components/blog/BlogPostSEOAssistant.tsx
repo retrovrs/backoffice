@@ -194,14 +194,14 @@ export function BlogPostSEOAssistantContent({ formData, disabled = false }: Blog
     
     ${formData.tags && formData.tags.trim() !== '' ? `
     <!-- Tags -->
-    <section class="tags" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eaeaea;">
-      <h2 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Tags</h2>
-      <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+    <section class="tags">
+      <h2>Tags</h2>
+      <ul class="tags-list">
         ${formData.tags.split(',').map(tag => {
           const tagText = tag.trim();
           if (!tagText) return '';
           const tagSlug = tagText.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-');
-          return `<li><a href="/blog/tags/${tagSlug}" rel="tag" style="display: inline-block; background-color: #f0f0f0; color: #333; font-size: 0.875rem; padding: 0.25rem 0.75rem; margin: 0.25rem; border-radius: 9999px; text-decoration: none; transition: background-color 0.2s, color 0.2s; border: 1px solid #ddd; font-weight: 500;">${tagText}</a></li>`;
+          return `<li><a href="/blog/tags/${tagSlug}" rel="tag" class="tag-link">${tagText}</a></li>`;
         }).join('\n          ')}
       </ul>
     </section>` : ''}
