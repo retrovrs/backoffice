@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateInputUS } from '@/components/ui/date-input-us'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
@@ -899,14 +900,15 @@ export default function BlogPostForm({
                 <span>📅</span>
                 Creation date of the article
               </Label>
-              <Input
+              <DateInputUS
                 id="createdAt"
                 name="createdAt"
-                type="date"
-                lang="en"
                 value={formData.createdAt || ''}
-                onChange={handleChange}
-                className="max-w-xs bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-600 focus:border-purple-500 dark:focus:border-purple-400"
+                onValueChange={(isoDate) =>
+                  setFormData((prev) => ({ ...prev, createdAt: isoDate }))
+                }
+                wrapperClassName="max-w-xs"
+                className="bg-white dark:bg-slate-800 border-purple-300 dark:border-purple-600 focus:border-purple-500 dark:focus:border-purple-400"
               />
               <p className="text-xs text-purple-600 dark:text-purple-300">
                 Modify the creation date if necessary. This date will be used for display and sorting of articles.
@@ -1139,19 +1141,14 @@ export default function BlogPostForm({
 
                 <div className="space-y-2">
                   <Label htmlFor="publishDate">Publication date</Label>
-                  <Input
+                  <DateInputUS
                     id="publishDate"
                     name="publishDate"
-                    type="date"
                     value={formData.publishDate}
-                    onChange={handleChange}
+                    onValueChange={(isoDate) =>
+                      setFormData((prev) => ({ ...prev, publishDate: isoDate }))
+                    }
                     required
-                    onInvalid={(e: React.InvalidEvent<HTMLInputElement>) => 
-                      e.target.setCustomValidity('Please fill in this field')
-                    }
-                    onInput={(e: React.FormEvent<HTMLInputElement>) => 
-                      e.currentTarget.setCustomValidity('')
-                    }
                   />
                 </div>
               </div>
